@@ -3,6 +3,8 @@ import os
 import subprocess
 
 issue_directory = 'ISSUES'
+specimin_input = 'input'
+specimin_output = 'ouput'
 
 def read_json_from_file(file_path):
     try:
@@ -20,8 +22,8 @@ def create_directory(issue_container_dir, issue_id):
     issue_directory_name = os.path.join(issue_container_dir, issue_id)
     os.makedirs(issue_directory_name, exist_ok=True)
 
-    specimin_input_dir = os.path.join(issue_directory_name, "input")
-    specimin_output_dir = os.path.join(issue_directory_name, "output")
+    specimin_input_dir = os.path.join(issue_directory_name, specimin_input)
+    specimin_output_dir = os.path.join(issue_directory_name, specimin_output)
 
     os.makedirs(specimin_input_dir, exist_ok=True)
     os.makedirs(specimin_output_dir, exist_ok=True)
