@@ -1,0 +1,12 @@
+[
+    {
+        "issue_id" : "cf-1291",
+        "url": "",
+        "branch": "",
+        "commitHash":"",
+        "project_name": "this can be retrieved from github url",
+        "build_command": "this can be cf command or java",
+        "specimin_command": "command to run specimin",
+        "note": ""
+    }
+]
