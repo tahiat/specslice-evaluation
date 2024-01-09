@@ -30,11 +30,19 @@ def create_directory(issue_container_dir, issue_id):
 def clone_repository(url, directory):  #TODO: parallel cloning task 
     subprocess.run(["git", "clone", url, directory])
 
-def change_branch(directory, branch):
+def change_branch(branch, directory):
     pass
 
-def checkout_commit(commit_hash):
-    pass
+def checkout_commit(commit_hash, directory):   
+    command = ["git", "checkout", commit_hash]
+    result = subprocess.run(command, cwd=directory, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    # Check if the command was successful
+    if result.returncode == 0:
+        print(f"Successfully checked-out commit {commit_hash} in {directory}")
+    else:
+        print(f"Failed to checkout commit {commit_hash} in {directory}")
+        
 
 def run_specimin(build_command):
     pass
@@ -53,7 +61,7 @@ def performEvaluation(issue):
         change_branch(input_dir, branch)  
     
     if commit_hash:
-        checkout_commit(commit_hash)
+        checkout_commit(commit_hash, input_dir)
 
     success = run_specimin(specimin_command)
 
