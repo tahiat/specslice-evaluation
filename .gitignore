@@ -1,0 +1,5 @@
+# Ignore issue container directory
+ISSUES
+
+# macOS specific file
+.DS_Store

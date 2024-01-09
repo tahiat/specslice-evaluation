@@ -2,6 +2,8 @@ import json
 import os
 import subprocess
 
+issue_directory = 'ISSUES'
+
 def read_json_from_file(file_path):
     try:
         with open(file_path, 'r') as file:
@@ -14,45 +16,51 @@ def read_json_from_file(file_path):
         print(f"File not found: {file_path}")
         return None
 
-def create_directory(issue_id):
-    directory_name = f"={issue_id}"
-    os.makedirs(directory_name, exist_ok=True)
-    return directory_name
+def create_directory(issue_container_dir, issue_id):
+    issue_directory_name = os.path.join(issue_container_dir, issue_id)
+    os.makedirs(issue_directory_name, exist_ok=True)
 
-def clone_repository(url):
-    subprocess.run(["git", "clone", url])
+    specimin_input_dir = os.path.join(issue_directory_name, "input")
+    specimin_output_dir = os.path.join(issue_directory_name, "output")
+
+    os.makedirs(specimin_input_dir, exist_ok=True)
+    os.makedirs(specimin_output_dir, exist_ok=True)
+    return specimin_input_dir
+
+def clone_repository(url, directory):  #TODO: parallel cloning task 
+    subprocess.run(["git", "clone", url, directory])
 
 def change_branch(directory, branch):
-    os.chdir(directory)
-    subprocess.run(["git", "checkout", branch])
+    pass
 
 def checkout_commit(commit_hash):
-    subprocess.run(["git", "checkout", commit_hash])
+    pass
 
 def run_specimin(build_command):
-    result = subprocess.run(build_command, shell=True)
-    return result.returncode == 0
+    pass
 
 def performEvaluation(issue):
-    test_id = issue['issue_id']
+    issue_id = issue['issue_id']
     url = issue['url']
     branch = issue['branch']
     commit_hash = issue['commitHash']
     specimin_command = issue['specimin_command']
 
-    
-    test_directory = create_directory(test_id)
+    input_dir = create_directory(issue_directory, issue_id)
+    clone_repository(url, input_dir)  # TODO: check if clonning is successful.
 
-    clone_repository(url)  # TODO: check if clonning is successful.
-    change_branch(test_directory, branch)  #
-    checkout_commit(commit_hash)
+    if branch:
+        change_branch(input_dir, branch)  
+    
+    if commit_hash:
+        checkout_commit(commit_hash)
 
     success = run_specimin(specimin_command)
 
     if success:
-        print(f"Test {test_id} successfully completed.")
+        print(f"Test {issue_id} successfully completed.")
     else:
-        print(f"Test {test_id} failed.")
+        print(f"Test {issue_id} failed.")
 
 def main():
    
