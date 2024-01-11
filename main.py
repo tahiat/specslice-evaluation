@@ -1,8 +1,10 @@
 import json
 import os
 import subprocess
+from Keyvalue import JsonKeys
 
-issue_directory = 'ISSUES'
+
+issue_folder_dir = 'ISSUES'
 specimin_input = 'input'
 specimin_output = 'ouput'
 specimin_project_name = 'specimin'
@@ -48,13 +50,9 @@ def checkout_commit(commit_hash, directory):
         print(f"Failed to checkout commit {commit_hash} in {directory}")
         
 
-def run_specimin(issue_id, root_dir, package_name, targets):
-    command = ["./gradlew", "run", "-"]
-
-
-    output_dir = os.path.join(issue_directory, issue_id, specimin_output)
-    root_dir = os.path.join(issue_directory, issue_id, specimin_input, root_dir) + os.sep
-
+def build_specimin_command(issue_id, root_dir, package_name, targets):
+    output_dir = os.path.join("..", issue_id, specimin_output)
+    root_dir = os.path.join("..", issue_id, specimin_input, root_dir) + os.sep
 
     dot_replaced_package_name = package_name.replace('.', '/')
 
@@ -62,8 +60,8 @@ def run_specimin(issue_id, root_dir, package_name, targets):
     target_method_list = []
 
     for target in targets:
-        method_name = target["method"]
-        file_name = target["file"]
+        method_name = target[JsonKeys.METHOD_NAME.value]
+        file_name = target[JsonKeys.FILE_NAME.value]
 
         if file_name:
             qualified_file_name = os.path.join(dot_replaced_package_name, file_name)
@@ -73,21 +71,37 @@ def run_specimin(issue_id, root_dir, package_name, targets):
             qualified_method_name = package_name + "." + os.path.splitext(file_name)[0]+ "#" + method_name
             target_method_list.append(qualified_method_name)
 
+    output_dir_subcommand = "--outputDirectory" + " " + f"\"{output_dir}\""
+    root_dir_subcommand = "--root" + " " + f"\"{root_dir}\""
 
+    target_file_subcommand = ""
+    for file in target_file_list:
+        target_file_subcommand += "--targetFile" + " " + f"\"{file}\""
 
+    target_method_subcommand = ""
+    for method in target_method_list:
+        target_method_subcommand += "--targetMethod" + " " + f"\"{method}\""
 
+    command_args = root_dir_subcommand + " " + output_dir_subcommand + " " + target_file_subcommand + " " + target_method_subcommand
+    command = "./gradlew" + " " + "run" + " " + "--args=" + f"\'{command_args}\'"
+    
+    return command
 
-
-
+def run_specimin(command, directory):
+    result = subprocess.run(command, cwd=directory, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True) # TODO:
+    if result.returncode == 0:
+        return True
+    else:
+        return False
+    
 
 def performEvaluation(issue):
-    issue_id = issue['issue_id']
-    url = issue['url']
-    branch = issue['branch']
-    commit_hash = issue['commitHash']
-    specimin_command = issue['specimin_command']
+    issue_id = issue[JsonKeys.ISSUE_ID.value]
+    url = issue[JsonKeys.URL.value]
+    branch = issue[JsonKeys.BRANCH.value]
+    commit_hash = issue[JsonKeys.COMMIT_HASH.value]
 
-    input_dir = create_directory(issue_directory, issue_id)
+    input_dir = create_directory(issue_folder_dir, issue_id)
     clone_repository(url, input_dir)  # TODO: check if clonning is successful.
 
     if branch:
@@ -96,7 +110,9 @@ def performEvaluation(issue):
     if commit_hash:
         checkout_commit(commit_hash, input_dir)
 
-    success = run_specimin(issue_id, issue['rootDir'], issue['package'], issue['targets'])
+    specimin_command = build_specimin_command(issue_id, issue[JsonKeys.ROOT_DIR.value], issue[JsonKeys.PACKAGE.value], issue[JsonKeys.TARGETS.value])
+
+    success = run_specimin(specimin_command, os.path.join(issue_folder_dir, specimin_project_name))
 
     if success:
         print(f"Test {issue_id} successfully completed.")
@@ -109,11 +125,12 @@ def perform_git_pull (directory):
     subprocess.run(command, cwd=directory)
 
 def clone_specimin(): 
-    spcimin_source_path = os.path.join(issue_directory, specimin_project_name)
+    spcimin_source_path = os.path.join(issue_folder_dir, specimin_project_name)
     if (os.path.exists(spcimin_source_path)) and os.path.isdir(spcimin_source_path):
         perform_git_pull(spcimin_source_path)
     else:
         clone_repository(specimin_source_url, spcimin_source_path)
+
 
 def main():
     clone_specimin()
