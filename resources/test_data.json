@@ -3,10 +3,10 @@
         "issue_id" : "cf-1291",
         "url": "git@github.com:codespecs/daikon.git",
         "branch": "",
-        "commitHash": "15d7c2d84",
+        "commit_hash": "15d7c2d84",
         "project_name": "daikon",
         "build_command": "this can be cf command or java",
-        "rootDir": "java",
+        "root_dir": "java",
         "package": "daikon.chicory", 
         "targets": [
             {

@@ -8,7 +8,7 @@ class JsonKeys(Enum):
     PROJECT_NAME = 'project_name'
     BUILD_COMMAND = 'build_command'
     ROOT_DIR = 'root_dir'
-    package = 'package'
+    PACKAGE = 'package'
     TARGETS = 'targets'
     METHOD_NAME = 'method'
     FILE_NAME = 'file'
