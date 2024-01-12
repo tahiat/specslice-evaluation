@@ -1,14 +1,21 @@
 import unittest
 import main
-
+import shutil
 
 class TestMain(unittest.TestCase):
 
-    def setUp(self):
-        pass
+    @classmethod
+    def setUpClass(cls):
+        # cloning the specimin 
+        main.clone_repository('git@github.com:kelloggm/specimin.git', 'resources')
 
-    def tearDown(self):
-        pass
+    @classmethod
+    def tearDownClass(cls):
+        # deleting specimin from resources
+        try:
+            shutil.rmtree('resources/specimin')
+        except Exception as e:
+            print(f"Error occurred {e}")
 
     def test_get_repository_name(self):
         url = 'git@github.com:codespecs/daikon.git'
@@ -55,6 +62,21 @@ class TestMain(unittest.TestCase):
         with open('resources/specimin_command_cf-6019.txt','r') as file:
             target_command = file.read()
         self.assertEqual(command, target_command)
+ 
+    def test_run_specimin(self):
+        proj_name = 'test_proj'
+        root = ''
+        package = 'com.example'
+        targets = [{
+                    "method": "bar()",
+                    "file": "Simple.java"
+                   }]
+        specimin_dir = 'resources/specimin'
+        target_dir = 'resources/onefilesimple'
+
+        command = main.build_specimin_command(proj_name, target_dir, specimin_dir, root, package, targets)
+        result = main.run_specimin(command, 'resources/specimin')
+        self.assertTrue(result)
 
 
 
