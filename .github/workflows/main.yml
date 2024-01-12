@@ -12,10 +12,13 @@ jobs:
     steps:
       - name: Checkout project sources
         uses: actions/checkout@v3
-        
+        with:
+          fetch-depth: 0 # so that spotless can ratchet; see https://github.com/diffplug/spotless/issues/710
       - name: Setup Python
         uses: actions/setup-python@v2
         with:
           python-version: 3.8
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
       - name: Run tests
         run: python TestMain.py
