@@ -30,6 +30,9 @@ class TestMain(unittest.TestCase):
         url = 'git@github.com:awslabs/aws-kms-compliance-checker.git'
         self.assertEqual(main.get_repository_name(url), 'aws-kms-compliance-checker')
 
+        url = 'https://github.com/tahiat/specimin.git'
+        self.assertEqual(main.get_repository_name(url), 'specimin')
+
         url = 'git@github.com:awslabs/aws-kms-compliance-checker.git' 
         self.assertNotEqual(main.get_repository_name(url), 'aws-km-compliance-checker')
     
