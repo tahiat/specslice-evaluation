@@ -7,7 +7,7 @@ class TestMain(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # cloning the specimin 
-        main.clone_repository('git@github.com:kelloggm/specimin.git', 'resources')
+        main.clone_repository('https://github.com/kelloggm/specimin.git', 'resources')
 
     @classmethod
     def tearDownClass(cls):
