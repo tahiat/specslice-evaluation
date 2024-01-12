@@ -139,7 +139,7 @@ def perform_git_pull (directory):
 
 def clone_specimin(path_to_clone, url): 
     '''
-    Clone the latest Speimin project from github
+    Clone the latest Specimin project from github
 
     Parameters:
         path_to_clone (str): Path where Specimin is to be clonned
