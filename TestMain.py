@@ -13,7 +13,6 @@ class TestMain(unittest.TestCase):
         cls.json_data = main.read_json_from_file('resources/test_data.json')[0]
         cls.specimin_dir = "resources/specimin"
 
-
     @classmethod
     def tearDownClass(cls):
         # deleting specimin from resources
@@ -43,7 +42,7 @@ class TestMain(unittest.TestCase):
         url = 'git@github.com:awslabs/aws-kms-compliance-checker.git'
         self.assertEqual(main.get_repository_name(url), 'aws-kms-compliance-checker')
 
-        url = 'https://github.com/tahiat/specimin.git'
+        url = 'https://github.com/kelloggm/specimin.git'
         self.assertEqual(main.get_repository_name(url), 'specimin')
 
         url = 'git@github.com:awslabs/aws-kms-compliance-checker.git' 
