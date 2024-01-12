@@ -1,7 +1,7 @@
 [
     {
         "issue_id" : "cf-1291",
-        "url": "git@github.com:codespecs/daikon.git",
+        "url": "https://github.com/codespecs/daikon.git",
         "branch": "",
         "commit_hash": "15d7c2d84",
         "project_name": "daikon",
