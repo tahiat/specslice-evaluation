@@ -61,7 +61,7 @@ def create_issue_directory(issue_container_dir, issue_id):
         issue_id (str): Name of the directory to be created
 
     Returns:
-        specimin_input_dir (str): A target directory of SPECIMIN.  
+        specimin_input_dir (str): A target directory of SPECIMIN. (issue_container_dir/issue_id/input) 
     '''
     issue_directory_name = os.path.join(issue_container_dir, issue_id)
     os.makedirs(issue_directory_name, exist_ok=True)
@@ -93,6 +93,9 @@ def clone_repository(url, directory):
         url (str): repository url
         directory (str): directory to clone in
     '''
+    project_name = get_repository_name(url)
+    if (os.path.exists(f"{directory}/{project_name}")):
+        print(f"{project_name} repository already exists. Aborting cloning")
     subprocess.run(["git", "clone", url], cwd=directory)
 
 def change_branch(branch, directory):
@@ -126,6 +129,7 @@ def checkout_commit(commit_hash, directory):
         print(f"Successfully checked-out commit {commit_hash} in {directory}")
     else:
         print(f"Failed to checkout commit {commit_hash} in {directory}")
+    return result.returncode == 0 if True else False
 
 def perform_git_pull (directory):
     '''
