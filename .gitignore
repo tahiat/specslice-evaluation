@@ -3,3 +3,8 @@ ISSUES
 
 # macOS specific file
 .DS_Store
+
+__pycache__/
+
+#Ignore compiled class file
+*.class

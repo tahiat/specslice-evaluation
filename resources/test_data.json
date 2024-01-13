@@ -1,14 +1,21 @@
 [
     {
         "issue_id" : "cf-1291",
-        "url": "git@github.com:codespecs/daikon.git",
+        "url": "https://github.com/codespecs/daikon.git",
         "branch": "",
-        "commitHash":"15d7c2d84",
+        "commit_hash": "15d7c2d84",
         "project_name": "daikon",
         "build_command": "this can be cf command or java",
-        "specimin_command": "command to run specimin",
-        "note": "",
+        "root_dir": "java",
+        "package": "daikon.chicory", 
+        "targets": [
+            {
+                "method": "executePureMethod(Method, Object, Object[])",
+                "file": "PureMethodInfo.java"
+            }
+        ],
         "cf_version": "2.1.10",
-        "java_version":""
+        "java_version": "",
+        "note": ""
     }
 ]
