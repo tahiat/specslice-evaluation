@@ -17,5 +17,81 @@
         "cf_version": "2.1.10",
         "java_version": "",
         "note": ""
+    },
+    {
+        "issue_id" : "cf-6282",
+        "url": "https://github.com/tahiat/Chronicle-Core.git",
+        "branch": "yoo/checkerframework-crash",
+        "commit_hash": "",
+        "project_name": "Chronicle-Core",
+        "build_command": "mvn -X compile",
+        "root_dir": "src/main/java",
+        "package": "net.openhft.chronicle.core.internal", 
+        "targets": [
+            {
+                "method": "setAccessible(AccessibleObject)",
+                "file": "ClassUtil.java"
+            }
+        ],
+        "cf_version": "3.40.0",
+        "java_version": "",
+        "note": ""
+    },
+    {
+        "issue_id" : "cf-6077",
+        "url": "https://github.com/jacek-lewandowski/cassandra.git",
+        "branch": "checker-framework-testing",
+        "commit_hash": "7b3c4ce8e5d6da41791492903ec367b8857cd57d",
+        "project_name": "cassandra",
+        "build_command": "ant cf-only -Dcf.check.only=org/apache/cassandra/index/sasi/conf/IndexMode.java",
+        "root_dir": "src/java",
+        "package": "org.apache.cassandra.index.sasi.conf", 
+        "targets": [
+            {
+                "method": "getMode(ColumnMetadata, Map<String, String>)",
+                "file": "IndexMode.java"
+            }
+        ],
+        "cf_version": "3.36.0",
+        "java_version": "",
+        "note": ""
+    },
+    {
+        "issue_id" : "cf-6060",
+        "url": "https://github.com/tahiat/jOOQ.git",
+        "branch": "specimin",
+        "commit_hash": "",
+        "project_name": "jOOQ",
+        "build_command": "mvn -V -B -e clean compile -Dcheckerframework.checkers=org.checkerframework.checker.signedness.SignednessChecker -Dcheckerframework.suppress=\"type.anno.before\"",
+        "root_dir": "src/java",
+        "package": "org.apache.cassandra.index.sasi.conf", 
+        "targets": [
+            {
+                "method": "getMode(ColumnMetadata, Map<String, String>)",
+                "file": "IndexMode.java"
+            }
+        ],
+        "cf_version": "3.36.0",
+        "java_version": "",
+        "note": ""
+    },
+    {
+        "issue_id" : "cf-6030",
+        "url": "https://github.com/tahiat/jOOQ.git",
+        "branch": "specimin",
+        "commit_hash": "",
+        "project_name": "jOOQ",
+        "build_command": "mvn -V -B -e clean compile -Dcheckerframework.checkers=org.checkerframework.checker.signedness.SignednessChecker -Dcheckerframework.suppress=\"type.anno.before\"",
+        "root_dir": "src/java",
+        "package": "org.apache.cassandra.index.sasi.conf", 
+        "targets": [
+            {
+                "method": "getMode(ColumnMetadata, Map<String, String>)",
+                "file": "IndexMode.java"
+            }
+        ],
+        "cf_version": "3.39.0",
+        "java_version": "jdk-11",
+        "note": ""
     }
 ]
