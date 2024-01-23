@@ -51,14 +51,14 @@ class TestMain(unittest.TestCase):
     def test_build_specimin_command(self):
         proj_name = 'cassandra'
         root = 'src/java'
-        package = 'org.apache.cassandra.index.sasi.conf'
         targets = [{
                     "method": "getMode(ColumnMetadata, Map<String, String>)",
-                    "file": "IndexMode.java"
+                    "file": "IndexMode.java",
+                    "package": 'org.apache.cassandra.index.sasi.conf'
                    }]
         specimin_dir = 'user/specimin'
         target_dir = 'user/ISSUES/cf-6077'
-        command = main.build_specimin_command(proj_name, target_dir, specimin_dir, root, package, targets)
+        command = main.build_specimin_command(proj_name, target_dir, specimin_dir, root, targets)
         target_command = ''
         with open('resources/specimin_command_cf-6077.txt','r') as file:
             target_command = file.read()
@@ -66,14 +66,14 @@ class TestMain(unittest.TestCase):
         # not executing since this crashes specimin
         proj_name = 'kafka-sensors'
         root = 'src/main/java/'
-        package = 'com.fillmore_labs.kafka.sensors.serde.confluent.interop'
         targets = [{
                     "method": "transform(String, byte[])",
-                    "file": "Avro2Confluent.java"
+                    "file": "Avro2Confluent.java",
+                    "package": 'com.fillmore_labs.kafka.sensors.serde.confluent.interop'
                    }]
         specimin_dir = 'user/specimin'
         target_dir = 'user/ISSUES/cf-6019'
-        command = main.build_specimin_command(proj_name, target_dir, specimin_dir, root, package, targets)
+        command = main.build_specimin_command(proj_name, target_dir, specimin_dir, root, targets)
         with open('resources/specimin_command_cf-6019.txt','r') as file:
             target_command = file.read()
         self.assertEqual(command, target_command)
@@ -90,7 +90,7 @@ class TestMain(unittest.TestCase):
         self.assertTrue(main.checkout_commit(self.json_data[JsonKeys.COMMIT_HASH.value],f"resources/{issue_name}/input/{project_name}"))
         self.assertTrue(main.is_git_directory(f"resources/{issue_name}/input/{project_name}")) 
 
-        command = main.build_specimin_command(project_name, f"resources/{issue_name}", self.specimin_dir, self.json_data[JsonKeys.ROOT_DIR.value], self.json_data[JsonKeys.PACKAGE.value], self.json_data[JsonKeys.TARGETS.value])
+        command = main.build_specimin_command(project_name, f"resources/{issue_name}", self.specimin_dir, self.json_data[JsonKeys.ROOT_DIR.value], self.json_data[JsonKeys.TARGETS.value])
         print(command)
         result = main.run_specimin(command, self.specimin_dir)
         self.assertTrue(result)
@@ -98,15 +98,15 @@ class TestMain(unittest.TestCase):
     def test_run_specimin(self):
         proj_name = 'test_proj'
         root = ''
-        package = 'com.example'
         targets = [{
                     "method": "bar()",
-                    "file": "Simple.java"
+                    "file": "Simple.java",
+                    "package": "com.example"
                    }]
         specimin_dir = 'resources/specimin'
         target_dir = 'resources/onefilesimple'
 
-        command = main.build_specimin_command(proj_name, target_dir, specimin_dir, root, package, targets)
+        command = main.build_specimin_command(proj_name, target_dir, specimin_dir, root, targets)
         result = main.run_specimin(command, 'resources/specimin')
         self.assertTrue(result)
 
