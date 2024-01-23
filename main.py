@@ -265,7 +265,7 @@ def performEvaluation(issue_data):
     if commit_hash:
         checkout_commit(commit_hash, f"{input_dir}/{repo_name}")
 
-    specimin_command = build_specimin_command(repo_name, os.path.join(issue_folder_dir, issue_id), os.path.join(issue_folder_dir, specimin_project_name), issue_data[JsonKeys.ROOT_DIR.value], issue_data[JsonKeys.TARGETS.value])
+    specimin_command = build_specimin_command(repo_name, os.path.join(issue_folder_dir, issue_id), os.path.join(issue_folder_dir, specimin_project_name), issue_data[JsonKeys.TARGETS.value])
 
     success = run_specimin(specimin_command, os.path.join(issue_folder_dir, specimin_project_name))
 
