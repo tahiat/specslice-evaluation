@@ -159,8 +159,7 @@ def clone_specimin(path_to_clone, url):
 def build_specimin_command(project_name: str,
                            issue_input_dir: str,
                            specimin_dir: str, 
-                           root_dir: str, 
-                           package_name: str, 
+                           root_dir: str,  
                            targets: list):
     '''
     Build the gradle command to execute Specimin on target project
@@ -178,8 +177,7 @@ def build_specimin_command(project_name: str,
         issue_input_dir (str): path of the target project directory. Ex: ISSUES/cf-1291
         specimin_dir (str): Specimin directory path
         root_dir (str): A directory path relative to the project base directory where java package stored.
-        package_name (str): A valid Java package
-        targets ({'method': '', 'file': ''}) : target java file and method name data
+        targets ({'method': '', 'file': '', 'package': ''}) : target java file and method name data
     
     Retruns:
         command (str): The gradle command of SPECIMIN for the issue.
@@ -191,14 +189,16 @@ def build_specimin_command(project_name: str,
     root_dir = os.path.join(relative_path_of_target_dir, specimin_input, project_name, root_dir)
     root_dir = root_dir.rstrip('/') + os.sep
 
-    dot_replaced_package_name = package_name.replace('.', '/')
-
     target_file_list = []
     target_method_list = []
 
     for target in targets:
+
         method_name = target[JsonKeys.METHOD_NAME.value]
         file_name = target[JsonKeys.FILE_NAME.value]
+        package_name = target[JsonKeys.PACKAGE.value]
+
+        dot_replaced_package_name = package_name.replace('.', '/')
 
         if file_name:
             qualified_file_name = os.path.join(dot_replaced_package_name, file_name)
@@ -265,7 +265,7 @@ def performEvaluation(issue_data):
     if commit_hash:
         checkout_commit(commit_hash, f"{input_dir}/{repo_name}")
 
-    specimin_command = build_specimin_command(repo_name, os.path.join(issue_folder_dir, issue_id), os.path.join(issue_folder_dir, specimin_project_name), issue_data[JsonKeys.ROOT_DIR.value], issue_data[JsonKeys.PACKAGE.value], issue_data[JsonKeys.TARGETS.value])
+    specimin_command = build_specimin_command(repo_name, os.path.join(issue_folder_dir, issue_id), os.path.join(issue_folder_dir, specimin_project_name), issue_data[JsonKeys.TARGETS.value])
 
     success = run_specimin(specimin_command, os.path.join(issue_folder_dir, specimin_project_name))
 

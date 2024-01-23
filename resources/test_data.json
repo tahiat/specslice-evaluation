@@ -7,14 +7,152 @@
         "project_name": "daikon",
         "build_command": "this can be cf command or java",
         "root_dir": "java",
-        "package": "daikon.chicory", 
         "targets": [
             {
                 "method": "executePureMethod(Method, Object, Object[])",
-                "file": "PureMethodInfo.java"
+                "file": "PureMethodInfo.java",
+                "package": "daikon.chicory"
             }
         ],
         "cf_version": "2.1.10",
+        "java_version": "",
+        "note": ""
+    },
+    {
+        "issue_id" : "cf-6282",
+        "url": "https://github.com/tahiat/Chronicle-Core.git",
+        "branch": "yoo/checkerframework-crash",
+        "commit_hash": "",
+        "project_name": "Chronicle-Core",
+        "build_command": "mvn -X compile",
+        "root_dir": "src/main/java",
+        "targets": [
+            {
+                "method": "setAccessible(AccessibleObject)",
+                "file": "ClassUtil.java",
+                "package": "net.openhft.chronicle.core.internal"
+            }
+        ],
+        "cf_version": "3.40.0",
+        "java_version": "",
+        "note": ""
+    },
+    {
+        "issue_id" : "cf-6077",
+        "url": "https://github.com/jacek-lewandowski/cassandra.git",
+        "branch": "checker-framework-testing",
+        "commit_hash": "7b3c4ce8e5d6da41791492903ec367b8857cd57d",
+        "project_name": "cassandra",
+        "build_command": "ant cf-only -Dcf.check.only=org/apache/cassandra/index/sasi/conf/IndexMode.java",
+        "root_dir": "src/java",
+        "targets": [
+            {
+                "method": "getMode(ColumnMetadata, Map<String, String>)",
+                "file": "IndexMode.java",
+                "package": "org.apache.cassandra.index.sasi.conf"
+            }
+        ],
+        "cf_version": "3.36.0",
+        "java_version": "",
+        "note": ""
+    },
+    {
+        "issue_id" : "cf-6060",
+        "url": "https://github.com/tahiat/jOOQ.git",
+        "branch": "specimin",
+        "commit_hash": "",
+        "project_name": "jOOQ",
+        "build_command": "mvn -V -B -e clean compile -Dcheckerframework.checkers=org.checkerframework.checker.signedness.SignednessChecker -Dcheckerframework.suppress=\"type.anno.before\"",
+        "root_dir": "src/main/java",
+        "targets": [
+            {
+                "method": "spliterator()",
+                "file": "ResultQuery.java",
+                "package": "org.jood"
+            }
+        ],
+        "cf_version": "",
+        "java_version": "",
+        "note": ""
+    },
+    {
+        "issue_id" : "cf-6030",
+        "url": "https://github.com/jacek-lewandowski/cassandra.git",
+        "branch": "cf-testing",
+        "commit_hash": "",
+        "project_name": "cassandra",
+        "build_command": "ant cf-only -Dcf.check.only=org/apache/cassandra/service/reads/DataResolver.java",
+        "root_dir": "src/java",
+        "targets": [
+            {
+                "method": "getData()",
+                "file": "DataResolver.java",
+                "package": "org.apache.cassandra.service.reads"
+            }
+        ],
+        "cf_version": "3.39.0",
+        "java_version": "jdk-11",
+        "note": "This issue describes multiple bugs. the second one is \"ant cf-only -Dcf.check.only=org/apache/cassandra/io/sstable/format/SSTableScanner.java\""
+    },
+    {
+        "issue_id" : "cf-6019",
+        "url": "https://github.com/tahiat/kafka-sensors.git",
+        "branch": "specimin-test",
+        "commit_hash": "",
+        "project_name": "kafka-sensors",
+        "build_command": "bazel test //src/test/...",
+        "root_dir": "src/main/java/", 
+        "targets": [
+            {
+                "method": "transform(String, byte[])",
+                "file": "Avro2Confluent.java",
+                "package": "com.fillmore_labs.kafka.sensors.serde.confluent.interop"
+            }
+        ],
+        "cf_version": "3.35.0",
+        "java_version": "jdk-17",
+        "note": ""
+    },
+    {
+        "issue_id" : "cf-4614",
+        "url": "https://github.com/tahiat/cf-parser-error.git",
+        "branch": "",
+        "commit_hash": "",
+        "project_name": "cf-parser-error",
+        "build_command": "javacheck -g Version.java -processor nullness",
+        "root_dir": "src/main/java/", 
+        "targets": [
+            {
+                "method": "method()",
+                "file": "Version.java",
+                "package": "net.mtu.eggplant.checker.parser_error"
+            }
+        ],
+        "cf_version": "3.12.0",
+        "java_version": "jdk-11",
+        "note": ""
+    },
+    {
+        "issue_id" : "cf-3850",
+        "url": "https://github.com/tahiat/calcite.git",
+        "branch": "cf-test",
+        "commit_hash": "",
+        "project_name": "calcite",
+        "build_command": "",
+        "root_dir": "core/src/main/java/", 
+        "targets": [
+            {
+                "method": "toPos(Iterable<? extends @PolyNull SqlNode>)",
+                "file": "SqlParserPos.java",
+                "package": "org.apache.calcite.sql.parser"
+            },
+            {
+                "method": "",
+                "file": "Util.java",
+                "package": "org.apache.calcite.util"
+            }
+        ],
+        "cf_version": "3.7.1",
         "java_version": "",
         "note": ""
     }
