@@ -11,6 +11,7 @@ specimin_input = 'input'
 specimin_output = 'output'
 specimin_project_name = 'specimin'
 specimin_source_url = 'https://github.com/kelloggm/specimin.git'
+TIMEOUT_DURATION = 300
 
 def read_json_from_file(file_path):
     '''
@@ -210,7 +211,11 @@ def build_specimin_command(project_name: str,
             target_file_list.append(qualified_file_name)
 
         if method_name:
-            qualified_method_name = package_name + "." + os.path.splitext(file_name)[0]+ "#" + method_name
+            inner_class_name = ""
+            if JsonKeys.INNER_CLASS.value in target and target[JsonKeys.INNER_CLASS.value] :
+                inner_class_name = f".{target[JsonKeys.INNER_CLASS.value]}"
+            
+            qualified_method_name = package_name + "." + os.path.splitext(file_name)[0]+ inner_class_name + "#" + method_name
             target_method_list.append(qualified_method_name)
 
     output_dir_subcommand = "--outputDirectory" + " " + f"\"{output_dir}\""
@@ -241,13 +246,20 @@ def run_specimin(issue_name, command, directory) -> Result:
         boolean: True/False based on successful execution of SPECIMIN
     '''
     try:
-        result = subprocess.run(command, cwd=directory, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, timeout=150) # TODO:
+        result = subprocess.run(command, cwd=directory, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, timeout=TIMEOUT_DURATION)
         if result.returncode == 0:
             return Result(issue_name, "PASS", "")
         else:
-            return Result(issue_name, "FAIL", f"{result.stderr}")
+            error_msg_file = os.path.join(issue_folder_dir, issue_name, f"{issue_name}_error.txt")
+            if os.path.exists(error_msg_file):
+                os.remove(error_msg_file)
+            with open(error_msg_file, 'w') as file:
+                file.write(result.stderr.decode("utf-8"))
+            return Result(issue_name, "FAIL", f"Please check {error_msg_file}")
     except subprocess.TimeoutExpired:
         return Result(issue_name, "FAIL", "Timeout")
+    except Exception as e:
+        return Result(issue_name, "FAIL", f"Unhandled exception occurred: {e}")
     
     
 
@@ -294,8 +306,6 @@ def main():
     evaluation_results = []
     if parsed_data:
         for issue in parsed_data:
-            if not (issue[JsonKeys.ISSUE_ID.value] == "cf-6019"):
-                continue
             result = performEvaluation(issue)
             evaluation_results.append(result)
 

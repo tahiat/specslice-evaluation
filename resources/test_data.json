@@ -95,6 +95,25 @@
         "note": "This issue describes multiple bugs. the second one is \"ant cf-only -Dcf.check.only=org/apache/cassandra/io/sstable/format/SSTableScanner.java\""
     },
     {
+        "issue_id" : "cf-6030b",
+        "url": "https://github.com/jacek-lewandowski/cassandra.git",
+        "branch": "cf-testing",
+        "commit_hash": "",
+        "project_name": "cassandra",
+        "build_command": "ant cf-only -Dcf.check.only=org/apache/cassandra/io/sstable/format/SSTableScanner.java",
+        "root_dir": "src/java",
+        "targets": [
+            {
+                "method": "hasNext()",
+                "file": "SSTableScanner.java",
+                "package": "org.apache.cassandra.io.sstable.format"
+            }
+        ],
+        "cf_version": "3.39.0",
+        "java_version": "jdk-11",
+        "note": ""
+    },
+    {
         "issue_id" : "cf-6019",
         "url": "https://github.com/tahiat/kafka-sensors.git",
         "branch": "specimin-test",
@@ -145,15 +164,107 @@
                 "method": "toPos(Iterable<? extends @PolyNull SqlNode>)",
                 "file": "SqlParserPos.java",
                 "package": "org.apache.calcite.sql.parser"
-            },
-            {
-                "method": "",
-                "file": "Util.java",
-                "package": "org.apache.calcite.util"
             }
         ],
         "cf_version": "3.7.1",
         "java_version": "",
+        "note": "Condsider adding Util.transform method in target method."
+    },
+    {
+        "issue_id" : "cf-577",
+        "url": "https://github.com/tahiat/issue-577.git",
+        "branch": "",
+        "commit_hash": "",
+        "project_name": "issue-577",
+        "build_command": "javac -processor nullness -AprintErrorStack java/util/stream/IncomparableTypes.java",
+        "root_dir": "src/", 
+        "targets": [
+            {
+                "method": "arrayForOne(int[], int, IntConsumer)",
+                "file": "IncomparableTypes.java",
+                "package": "java.util.stream",
+                "inner_class": "Splitr"
+            }
+        ],
+        "cf_version": "1.9.11",
+        "java_version": "Jdk-8",
+        "note": ""
+    },
+    {
+        "issue_id" : "cf-3032",
+        "url": "https://github.com/tahiat/nomulus.git",
+        "branch": "cf-3032",
+        "commit_hash": "",
+        "project_name": "nomulus",
+        "build_command": "javac -processor org.checkerframework.checker.units.UnitsChecker InvoicingPipeline.java",
+        "root_dir": "ore/src/main/java/", 
+        "targets": [
+            {
+                "method": "expand(PCollection<BillingEvent>)",
+                "file": "InvoicingPipeline.java",
+                "package": "google.registry.beam.invoicing",
+                "inner_class": "GenerateInvoiceRows"
+            }
+        ],
+        "cf_version": "3.1.0",
+        "java_version": "jdk-11",
+        "note": ""
+    },
+    {
+        "issue_id" : "cf-3619",
+        "url": "https://github.com/tahiat/calcite.git",
+        "branch": "cf-3619",
+        "commit_hash": "",
+        "project_name": "calcite",
+        "build_command": "",
+        "root_dir": "core/src/main/java/", 
+        "targets": [
+            {
+                "method": "equals(Object)",
+                "file": "ImmutableIntList.java",
+                "package": "org.apache.calcite.util"
+            }
+        ],
+        "cf_version": "3.6.0",
+        "java_version": "jdk-11",
+        "note": "Project build: ./gradlew build. Error should occur on nullness checker"
+    },
+    {
+        "issue_id" : "cf-3021",
+        "url": "https://github.com/tahiat/guava.git",
+        "branch": "cf-3021",
+        "commit_hash": "",
+        "project_name": "guava",
+        "build_command": "",
+        "root_dir": "guava/src/", 
+        "targets": [
+            {
+                "method": "checkedEntry(Entry<Class<? extends B>, B>)",
+                "file": "MutableClassToInstanceMap.java",
+                "package": "com.google.common.collect"
+            }
+        ],
+        "cf_version": "3.0.1",
+        "java_version": "Jdk-8",
+        "note": ""
+    },
+    {
+        "issue_id" : "cf-3020",
+        "url": "https://github.com/tahiat/guava.git",
+        "branch": "cf-3020",
+        "commit_hash": "",
+        "project_name": "guava",
+        "build_command": "",
+        "root_dir": "guava/src/", 
+        "targets": [
+            {
+                "method": "getBestValidator()",
+                "file": "FuturesGetChecked.java",
+                "package": "com.google.common.util.concurrent"
+            }
+        ],
+        "cf_version": "3.0.1",
+        "java_version": "Jdk-8",
         "note": ""
     }
 ]
