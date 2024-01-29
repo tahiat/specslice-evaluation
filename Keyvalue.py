@@ -15,4 +15,4 @@ class JsonKeys(Enum):
     CF_Version = 'cf_version'
     JAVA_VERSION = 'java_version'
     NOTE = 'note'
-    SKIP = 'skip'
+    INNER_CLASS = 'inner_class'

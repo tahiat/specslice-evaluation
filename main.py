@@ -1,7 +1,9 @@
 import json
 import os
 import subprocess
+import shutil
 from Keyvalue import JsonKeys
+from Result import Result
 
 
 issue_folder_dir = 'ISSUES'
@@ -9,6 +11,7 @@ specimin_input = 'input'
 specimin_output = 'output'
 specimin_project_name = 'specimin'
 specimin_source_url = 'https://github.com/kelloggm/specimin.git'
+TIMEOUT_DURATION = 300
 
 def read_json_from_file(file_path):
     '''
@@ -70,6 +73,8 @@ def create_issue_directory(issue_container_dir, issue_id):
     specimin_output_dir = os.path.join(issue_directory_name, specimin_output)
 
     os.makedirs(specimin_input_dir, exist_ok=True)
+    if os.path.exists(specimin_output):
+        shutil.rmtree(specimin_output)
     os.makedirs(specimin_output_dir, exist_ok=True)
     return specimin_input_dir
 
@@ -96,6 +101,7 @@ def clone_repository(url, directory):
     project_name = get_repository_name(url)
     if (os.path.exists(f"{directory}/{project_name}")):
         print(f"{project_name} repository already exists. Aborting cloning")
+        return
     subprocess.run(["git", "clone", url], cwd=directory)
 
 def change_branch(branch, directory):
@@ -205,7 +211,11 @@ def build_specimin_command(project_name: str,
             target_file_list.append(qualified_file_name)
 
         if method_name:
-            qualified_method_name = package_name + "." + os.path.splitext(file_name)[0]+ "#" + method_name
+            inner_class_name = ""
+            if JsonKeys.INNER_CLASS.value in target and target[JsonKeys.INNER_CLASS.value] :
+                inner_class_name = f".{target[JsonKeys.INNER_CLASS.value]}"
+            
+            qualified_method_name = package_name + "." + os.path.splitext(file_name)[0]+ inner_class_name + "#" + method_name
             target_method_list.append(qualified_method_name)
 
     output_dir_subcommand = "--outputDirectory" + " " + f"\"{output_dir}\""
@@ -224,7 +234,7 @@ def build_specimin_command(project_name: str,
     
     return command
 
-def run_specimin(command, directory):
+def run_specimin(issue_name, command, directory) -> Result:
     '''
     Execute SPECIMIN on a target project
 
@@ -235,14 +245,25 @@ def run_specimin(command, directory):
     Returns: 
         boolean: True/False based on successful execution of SPECIMIN
     '''
-    result = subprocess.run(command, cwd=directory, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True) # TODO:
-    if result.returncode == 0:
-        return True
-    else:
-        return False
+    try:
+        result = subprocess.run(command, cwd=directory, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, timeout=TIMEOUT_DURATION)
+        if result.returncode == 0:
+            return Result(issue_name, "PASS", "")
+        else:
+            error_msg_file = os.path.join(issue_folder_dir, issue_name, f"{issue_name}_error.txt")
+            if os.path.exists(error_msg_file):
+                os.remove(error_msg_file)
+            with open(error_msg_file, 'w') as file:
+                file.write(result.stderr.decode("utf-8"))
+            return Result(issue_name, "FAIL", f"Please check {error_msg_file}")
+    except subprocess.TimeoutExpired:
+        return Result(issue_name, "FAIL", "Timeout")
+    except Exception as e:
+        return Result(issue_name, "FAIL", f"Unhandled exception occurred: {e}")
+    
     
 
-def performEvaluation(issue_data):
+def performEvaluation(issue_data) -> Result:
     '''
     For each issue data, execute SPECIMIN on a target project. 
 
@@ -265,14 +286,11 @@ def performEvaluation(issue_data):
     if commit_hash:
         checkout_commit(commit_hash, f"{input_dir}/{repo_name}")
 
-    specimin_command = build_specimin_command(repo_name, os.path.join(issue_folder_dir, issue_id), os.path.join(issue_folder_dir, specimin_project_name), issue_data[JsonKeys.TARGETS.value])
+    specimin_command = build_specimin_command(repo_name, os.path.join(issue_folder_dir, issue_id), os.path.join(issue_folder_dir, specimin_project_name),issue_data[JsonKeys.ROOT_DIR.value], issue_data[JsonKeys.TARGETS.value])
 
-    success = run_specimin(specimin_command, os.path.join(issue_folder_dir, specimin_project_name))
-
-    if success:
-        print(f"Test {issue_id} successfully completed.")
-    else:
-        print(f"Test {issue_id} failed.")
+    result = run_specimin(issue_id ,specimin_command, os.path.join(issue_folder_dir, specimin_project_name))
+    print(f"{result.name} - {result.status}")
+    return result
 
 
 def main():
@@ -285,10 +303,18 @@ def main():
     json_file_path = 'resources/test_data.json'
     parsed_data = read_json_from_file(json_file_path)
 
+    evaluation_results = []
     if parsed_data:
         for issue in parsed_data:
-            performEvaluation(issue)
+            result = performEvaluation(issue)
+            evaluation_results.append(result)
 
-
+    print("\n\n\n\n")
+    print(f"issue_name    |    status    |    reason")
+    print("--------------------------------------------")
+    case = 1
+    for minimization_result in evaluation_results:
+        print(f"({case}){minimization_result.name}    |    {minimization_result.status}     |    {minimization_result.reason}")
+        case +=1
 if __name__ == "__main__":
     main()

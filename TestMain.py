@@ -92,8 +92,8 @@ class TestMain(unittest.TestCase):
 
         command = main.build_specimin_command(project_name, f"resources/{issue_name}", self.specimin_dir, self.json_data[JsonKeys.ROOT_DIR.value], self.json_data[JsonKeys.TARGETS.value])
         print(command)
-        result = main.run_specimin(command, self.specimin_dir)
-        self.assertTrue(result)
+        result = main.run_specimin(issue_name, command, self.specimin_dir)
+        self.assertEqual(result.status, "PASS")
  
     def test_run_specimin(self):
         proj_name = 'test_proj'
@@ -107,8 +107,8 @@ class TestMain(unittest.TestCase):
         target_dir = 'resources/onefilesimple'
 
         command = main.build_specimin_command(proj_name, target_dir, specimin_dir, root, targets)
-        result = main.run_specimin(command, 'resources/specimin')
-        self.assertTrue(result)
+        result = main.run_specimin(proj_name, command, 'resources/specimin')
+        self.assertEqual(result.status, "PASS")
 
 
 

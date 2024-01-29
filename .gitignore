@@ -8,3 +8,5 @@ __pycache__/
 
 #Ignore compiled class file
 *.class
+
+output
