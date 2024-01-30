@@ -266,5 +266,64 @@
         "cf_version": "3.0.1",
         "java_version": "Jdk-8",
         "note": ""
+    },
+    {
+        "issue_id" : "cf-3022",
+        "url": "https://github.com/tahiat/guava.git",
+        "branch": "cf-3022",
+        "commit_hash": "",
+        "project_name": "guava",
+        "build_command": "checker/bin/javac -processor org.checkerframework.checker.nullness.NullnessChecker Multimaps.java",
+        "root_dir": "guava/src/", 
+        "targets": [
+            {
+                "method": "wrapCollection(K, Collection<V>)",
+                "file": "Multimaps.java",
+                "package": "com.google.common.collect",
+                "inner_class": "CustomMultimap"
+            }
+        ],
+        "cf_version": "3.0.1",
+        "java_version": "Jdk-8",
+        "note": ""
+    },
+    {
+        "issue_id" : "cf-691",
+        "url": "https://github.com/tahiat/Issue691.git",
+        "branch": "",
+        "commit_hash": "",
+        "project_name": "Issue691",
+        "build_command": "java -jar $CHECKERFRAMEWORK/checker/dist/checker.jar -processor formatter -AprintErrorStack java/util/Collections.java",
+        "root_dir": "", 
+        "targets": [
+            {
+                "method": "sort(List<T>)",
+                "file": "Collections.java",
+                "package": "java.util"
+            }
+        ],
+        "cf_version": "1.9.13",
+        "java_version": "Jdk-8",
+        "note": "target method is not confirmed."
+    },
+    {
+        "issue_id" : "Issue689",
+        "url": "https://github.com/tahiat/Issue689.git",
+        "branch": "",
+        "commit_hash": "",
+        "project_name": "Issue689",
+        "build_command": "java -jar $CHECKERFRAMEWORK/checker/dist/checker.jar -processor guieffect -AprintErrorStack java/util/AbstractList.java",
+        "root_dir": "", 
+        "targets": [
+            {
+                "method": "listIterator(SubList<E>, int)",
+                "file": "AbstractList.java",
+                "package": "java.util",
+                "inner_class": "SubList"
+            }
+        ],
+        "cf_version": "1.9.13",
+        "java_version": "jdk-8",
+        "note": ""
     }
 ]
