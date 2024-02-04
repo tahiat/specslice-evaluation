@@ -48,7 +48,7 @@ class TableGenerator:
                 </tr>
             '''
         template = Template(self._getHTMLTemplate())
-        output_html = template.substitute(body=table_rows)
+        output_html = template.safe_substitute(body=table_rows)
         with open('ISSUES/output.html', 'w') as file:
             file.write(output_html)
         print("HTML generated successfully.")
