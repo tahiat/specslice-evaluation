@@ -4,7 +4,7 @@ import subprocess
 import shutil
 from Keyvalue import JsonKeys
 from Result import Result
-
+from report_builder import TableGenerator
 
 issue_folder_dir = 'ISSUES'
 specimin_input = 'input'
@@ -255,7 +255,7 @@ def run_specimin(issue_name, command, directory) -> Result:
                 os.remove(error_msg_file)
             with open(error_msg_file, 'w') as file:
                 file.write(result.stderr.decode("utf-8"))
-            return Result(issue_name, "FAIL", f"Please check {error_msg_file}")
+            return Result(issue_name, "FAIL", f"{error_msg_file}")
     except subprocess.TimeoutExpired:
         return Result(issue_name, "FAIL", "Timeout")
     except Exception as e:
@@ -309,6 +309,9 @@ def main():
             result = performEvaluation(issue)
             evaluation_results.append(result)
 
+
+    report_generator = TableGenerator(evaluation_results)
+    report_generator.generateTable()
     print("\n\n\n\n")
     print(f"issue_name    |    status    |    reason")
     print("--------------------------------------------")
@@ -316,5 +319,7 @@ def main():
     for minimization_result in evaluation_results:
         print(f"({case}){minimization_result.name}    |    {minimization_result.status}     |    {minimization_result.reason}")
         case +=1
+    
+
 if __name__ == "__main__":
     main()
