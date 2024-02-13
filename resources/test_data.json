@@ -325,5 +325,25 @@
         "cf_version": "1.9.13",
         "java_version": "jdk-8",
         "note": ""
+    },
+    {
+        "issue_id" : "cf-6388",
+        "url": "https://github.com/kennknowles/beam.git",
+        "branch": "checkerframework-StructuralEqualityComparer",
+        "commit_hash": "",
+        "project_name": "beam",
+        "build_command": "checkerframework-StructuralEqualityComparer",
+        "root_dir": "sdks/java/core/src/main/java/", 
+        "targets": [
+            {
+                "method": "via(Contextful<Fn<UserT, OutputT>>, Contextful<Fn<DestinationT, Sink<OutputT>>>)",
+                "file": "FileIO.java",
+                "package": "org.apache.beam.sdk.io",
+                "inner_class": ""
+            }
+        ],
+        "cf_version": "3.40.0",
+        "java_version": "jdk-17",
+        "note": ""
     }
 ]
