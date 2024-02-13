@@ -197,7 +197,7 @@
         "commit_hash": "",
         "project_name": "nomulus",
         "build_command": "javac -processor org.checkerframework.checker.units.UnitsChecker InvoicingPipeline.java",
-        "root_dir": "ore/src/main/java/", 
+        "root_dir": "core/src/main/java/", 
         "targets": [
             {
                 "method": "expand(PCollection<BillingEvent>)",
