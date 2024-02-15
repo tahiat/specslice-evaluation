@@ -12,6 +12,7 @@ specimin_output = 'output'
 specimin_project_name = 'specimin'
 specimin_source_url = 'https://github.com/kelloggm/specimin.git'
 TIMEOUT_DURATION = 300
+specimin_env_var = "SPECIMIN"
 
 def read_json_from_file(file_path):
     '''
@@ -34,6 +35,14 @@ def read_json_from_file(file_path):
         print(f"File not found: {file_path}")
         return None
 
+def get_specimin_env_var():
+    '''
+    Check and returns the path of the Specimin program if defined
+    Retruns:
+        Path of the local Specimin program
+    '''
+    specimin_env_value = os.environ.get(specimin_env_var)
+    return specimin_env_value
 
 def get_repository_name(github_ssh: str):
     '''
@@ -60,8 +69,8 @@ def create_issue_directory(issue_container_dir, issue_id):
     |    |--- output 
 
     Parameters: 
-        issue_container_dir (str): The directory where new directory is created
-        issue_id (str): Name of the directory to be created
+        issue_container_dir (str): Absolute path of the container directory containing all program directory.
+        issue_id (str): Name of the directory to be created inside container directory.
 
     Returns:
         specimin_input_dir (str): A target directory of SPECIMIN. (issue_container_dir/issue_id/input) 
@@ -99,7 +108,7 @@ def clone_repository(url, directory):
         directory (str): directory to clone in
     '''
     project_name = get_repository_name(url)
-    if (os.path.exists(f"{directory}/{project_name}")):
+    if (os.path.exists(os.path.join(directory, project_name))):
         print(f"{project_name} repository already exists. Aborting cloning")
         return
     subprocess.run(["git", "clone", url], cwd=directory)
@@ -189,10 +198,9 @@ def build_specimin_command(project_name: str,
         command (str): The gradle command of SPECIMIN for the issue.
     '''
 
-    relative_path_of_target_dir = os.path.relpath(issue_input_dir, specimin_dir)
 
-    output_dir = os.path.join(relative_path_of_target_dir, specimin_output)
-    root_dir = os.path.join(relative_path_of_target_dir, specimin_input, project_name, root_dir)
+    output_dir = os.path.join(issue_input_dir, specimin_output)
+    root_dir = os.path.join(issue_input_dir, specimin_input, project_name, root_dir)
     root_dir = root_dir.rstrip('/') + os.sep
 
     target_file_list = []
@@ -243,18 +251,25 @@ def run_specimin(issue_name, command, directory) -> Result:
         directory (str): The base directory of the specimin repository
     
     Returns: 
-        boolean: True/False based on successful execution of SPECIMIN
+        Result: execution result of Specimin
     '''
     try:
         result = subprocess.run(command, cwd=directory, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, timeout=TIMEOUT_DURATION)
         if result.returncode == 0:
             return Result(issue_name, "PASS", "")
         else:
-            error_msg_file = os.path.join(issue_folder_dir, issue_name, f"{issue_name}_error.txt")
-            if os.path.exists(error_msg_file):
-                os.remove(error_msg_file)
-            with open(error_msg_file, 'w') as file:
-                file.write(result.stderr.decode("utf-8"))
+            error_msg_file = os.path.join(issue_folder_dir, issue_name, f"{issue_name}_error.txt") # not abs path. ISSUES/cf-1291/cf-1291_error.txt
+            try:
+                stderr_str = result.stderr.decode("utf-8") # this can fail.
+                stderr_lines = stderr_str.split('\n')[:5]
+                first_five_lines_stderr = '\n'.join(stderr_lines)
+                print(first_five_lines_stderr)
+                if os.path.exists(error_msg_file):
+                    os.remove(error_msg_file)
+                with open(error_msg_file, 'w') as file:
+                    file.write(stderr_str)
+            except UnicodeDecodeError as e:
+                 print("Error decoding stderr:", e)
             return Result(issue_name, "FAIL", f"{error_msg_file}")
     except subprocess.TimeoutExpired:
         return Result(issue_name, "FAIL", "Timeout")
@@ -276,19 +291,27 @@ def performEvaluation(issue_data) -> Result:
     branch = issue_data[JsonKeys.BRANCH.value]
     commit_hash = issue_data[JsonKeys.COMMIT_HASH.value]
 
-    input_dir = create_issue_directory(issue_folder_dir, issue_id) # ../cf-12/input
-    clone_repository(url, input_dir)  # TODO: check if clonning is successful.
+    issue_folder_abs_dir = os.path.abspath(issue_folder_dir)
+    input_dir = create_issue_directory(issue_folder_abs_dir, issue_id)
+    clone_repository(url, input_dir) 
     repo_name = get_repository_name(url)
 
     if branch:
-        change_branch(branch, f"{input_dir}/{repo_name}")  
+        change_branch(branch, os.path.join(input_dir, repo_name))  
     
     if commit_hash:
-        checkout_commit(commit_hash, f"{input_dir}/{repo_name}")
+        checkout_commit(commit_hash, os.path.join(input_dir, repo_name))
 
-    specimin_command = build_specimin_command(repo_name, os.path.join(issue_folder_dir, issue_id), os.path.join(issue_folder_dir, specimin_project_name),issue_data[JsonKeys.ROOT_DIR.value], issue_data[JsonKeys.TARGETS.value])
-
-    result = run_specimin(issue_id ,specimin_command, os.path.join(issue_folder_dir, specimin_project_name))
+    specimin_command = ""
+    result: Result = None
+    specimin_path = get_specimin_env_var()
+    if specimin_path is not None:
+        specimin_command = build_specimin_command(repo_name, os.path.join(issue_folder_abs_dir, issue_id), specimin_path, issue_data[JsonKeys.ROOT_DIR.value], issue_data[JsonKeys.TARGETS.value])
+        result = run_specimin(issue_id ,specimin_command, specimin_path)
+    else:
+        specimin_command = build_specimin_command(repo_name, os.path.join(issue_folder_dir, issue_id), os.path.join(issue_folder_dir, specimin_project_name),issue_data[JsonKeys.ROOT_DIR.value], issue_data[JsonKeys.TARGETS.value])
+        result = run_specimin(issue_id ,specimin_command, os.path.join(issue_folder_dir, specimin_project_name))
+    
     print(f"{result.name} - {result.status}")
     return result
 
@@ -298,7 +321,10 @@ def main():
     Main method of the script. It iterates over the json data and perform minimization for each cases.   
     '''
     os.makedirs(issue_folder_dir, exist_ok=True)   # create the issue holder directory
-    clone_specimin(issue_folder_dir, specimin_source_url)
+    
+    specimin_path = get_specimin_env_var()
+    if specimin_path is None:
+        clone_specimin(issue_folder_dir, specimin_source_url) # if env variable not specified, clone specimin
 
     json_file_path = 'resources/test_data.json'
     parsed_data = read_json_from_file(json_file_path)
@@ -306,8 +332,12 @@ def main():
     evaluation_results = []
     if parsed_data:
         for issue in parsed_data:
+            print(f"{issue["issue_id"]} execution starts =========>")
+            if issue["issue_id"] != "cf-1291":  #TODO: test code, remove before commit
+               continue
             result = performEvaluation(issue)
             evaluation_results.append(result)
+            print((f"{issue["issue_id"]} <========= execution Ends."))
 
 
     report_generator = TableGenerator(evaluation_results)
