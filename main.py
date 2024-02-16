@@ -253,8 +253,10 @@ def run_specimin(issue_name, command, directory) -> Result:
     Returns: 
         Result: execution result of Specimin
     '''
+    print(f"{issue_name} executing...")
     try:
         result = subprocess.run(command, cwd=directory, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, timeout=TIMEOUT_DURATION)
+        print(f"{issue_name} execution ends.")
         if result.returncode == 0:
             return Result(issue_name, "PASS", "")
         else:
@@ -272,6 +274,7 @@ def run_specimin(issue_name, command, directory) -> Result:
                  print("Error decoding stderr:", e)
             return Result(issue_name, "FAIL", f"{error_msg_file}")
     except subprocess.TimeoutExpired:
+        print(f"{issue_name} execution ends. TIMEOUT")
         return Result(issue_name, "FAIL", "Timeout")
     except Exception as e:
         return Result(issue_name, "FAIL", f"Unhandled exception occurred: {e}")
@@ -332,12 +335,13 @@ def main():
     evaluation_results = []
     if parsed_data:
         for issue in parsed_data:
-            print(f"{issue["issue_id"]} execution starts =========>")
-            if issue["issue_id"] != "cf-1291":  #TODO: test code, remove before commit
-               continue
+            issue_id = issue["issue_id"]
+            print(f"{issue_id} execution starts =========>")
+            if issue_id != "cf-6060":
+                continue
             result = performEvaluation(issue)
             evaluation_results.append(result)
-            print((f"{issue["issue_id"]} <========= execution Ends."))
+            print((f"{issue_id} <========= execution Ends."))
 
 
     report_generator = TableGenerator(evaluation_results)
