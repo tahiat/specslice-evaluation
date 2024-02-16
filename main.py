@@ -137,9 +137,11 @@ def checkout_commit(commit_hash, directory):
     if not is_git_directory(directory):
         raise ValueError(f"{directory} is not a valid git directory")
     
-    command = ["git", "checkout", commit_hash]
-    result = subprocess.run(command, cwd=directory, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
+    if (commit_hash):
+        command = ["git", "checkout", commit_hash]
+        result = subprocess.run(command, cwd=directory, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    else: 
+        return True
     if result.returncode == 0:
         print(f"Successfully checked-out commit {commit_hash} in {directory}")
     else:
@@ -172,8 +174,7 @@ def clone_specimin(path_to_clone, url):
 
 
 def build_specimin_command(project_name: str,
-                           issue_input_dir: str,
-                           specimin_dir: str, 
+                           target_base_dir: str,
                            root_dir: str,  
                            targets: list):
     '''
@@ -189,8 +190,7 @@ def build_specimin_command(project_name: str,
     
     Parameters:
         project_name (str): Name of the target project. Example: daikon
-        issue_input_dir (str): path of the target project directory. Ex: ISSUES/cf-1291
-        specimin_dir (str): Specimin directory path
+        target_base_dir (str): path of the target project directory. Ex: ISSUES/cf-1291
         root_dir (str): A directory path relative to the project base directory where java package stored.
         targets ({'method': '', 'file': '', 'package': ''}) : target java file and method name data
     
@@ -199,8 +199,8 @@ def build_specimin_command(project_name: str,
     '''
 
 
-    output_dir = os.path.join(issue_input_dir, specimin_output)
-    root_dir = os.path.join(issue_input_dir, specimin_input, project_name, root_dir)
+    output_dir = os.path.join(target_base_dir, specimin_output)
+    root_dir = os.path.join(target_base_dir, specimin_input, project_name, root_dir)
     root_dir = root_dir.rstrip('/') + os.sep
 
     target_file_list = []
@@ -309,11 +309,11 @@ def performEvaluation(issue_data) -> Result:
     result: Result = None
     specimin_path = get_specimin_env_var()
     if specimin_path is not None:
-        specimin_command = build_specimin_command(repo_name, os.path.join(issue_folder_abs_dir, issue_id), specimin_path, issue_data[JsonKeys.ROOT_DIR.value], issue_data[JsonKeys.TARGETS.value])
+        specimin_command = build_specimin_command(repo_name, os.path.join(issue_folder_abs_dir, issue_id), issue_data[JsonKeys.ROOT_DIR.value], issue_data[JsonKeys.TARGETS.value])
         result = run_specimin(issue_id ,specimin_command, specimin_path)
     else:
-        specimin_command = build_specimin_command(repo_name, os.path.join(issue_folder_dir, issue_id), os.path.join(issue_folder_dir, specimin_project_name),issue_data[JsonKeys.ROOT_DIR.value], issue_data[JsonKeys.TARGETS.value])
-        result = run_specimin(issue_id ,specimin_command, os.path.join(issue_folder_dir, specimin_project_name))
+        specimin_command = build_specimin_command(repo_name, os.path.join(issue_folder_dir, issue_id),issue_data[JsonKeys.ROOT_DIR.value], issue_data[JsonKeys.TARGETS.value])
+        result = run_specimin(issue_id ,specimin_command, os.path.join(issue_folder_abs_dir, specimin_project_name))
     
     print(f"{result.name} - {result.status}")
     return result
@@ -337,8 +337,6 @@ def main():
         for issue in parsed_data:
             issue_id = issue["issue_id"]
             print(f"{issue_id} execution starts =========>")
-            if issue_id != "cf-6060":
-                continue
             result = performEvaluation(issue)
             evaluation_results.append(result)
             print((f"{issue_id} <========= execution Ends."))

@@ -10,8 +10,12 @@ class TestMain(unittest.TestCase):
     def setUpClass(cls):
         # cloning the specimin 
         main.clone_repository('https://github.com/kelloggm/specimin.git', 'resources')
-        cls.json_data = main.read_json_from_file('resources/test_data.json')[0]
-        cls.specimin_dir = "resources/specimin"
+        cls.json_data = main.read_json_from_file('resources/test_data.json')[6]
+        sp_env_var = main.get_specimin_env_var()
+        if (sp_env_var): 
+            cls.specimin_dir = "resources/specimin"
+        else:
+            cls.specimin_dir = os.path.abspath("resources/specimin")
 
     @classmethod
     def tearDownClass(cls):
@@ -58,7 +62,7 @@ class TestMain(unittest.TestCase):
                    }]
         specimin_dir = 'user/specimin'
         target_dir = 'user/ISSUES/cf-6077'
-        command = main.build_specimin_command(proj_name, target_dir, specimin_dir, root, targets)
+        command = main.build_specimin_command(proj_name, target_dir, root, targets)
         target_command = ''
         with open('resources/specimin_command_cf-6077.txt','r') as file:
             target_command = file.read()
@@ -73,7 +77,7 @@ class TestMain(unittest.TestCase):
                    }]
         specimin_dir = 'user/specimin'
         target_dir = 'user/ISSUES/cf-6019'
-        command = main.build_specimin_command(proj_name, target_dir, specimin_dir, root, targets)
+        command = main.build_specimin_command(proj_name, target_dir, root, targets)
         with open('resources/specimin_command_cf-6019.txt','r') as file:
             target_command = file.read()
         self.assertEqual(command, target_command)
@@ -81,16 +85,19 @@ class TestMain(unittest.TestCase):
 
         # make 
         issue_name = self.json_data[JsonKeys.ISSUE_ID.value]
-        main.create_issue_directory('resources', issue_name)
-        self.assertTrue(os.path.exists('resources/cf-1291/input'))
-        main.clone_repository(self.json_data[JsonKeys.URL.value], f"resources/{issue_name}/input")  
+        resource_abs_path = os.path.abspath("resources")
+        issue_input_dir = main.create_issue_directory(resource_abs_path, issue_name)
+
+
+        self.assertTrue(os.path.exists(issue_input_dir))
+        main.clone_repository(self.json_data[JsonKeys.URL.value], issue_input_dir)  
         
         project_name = main.get_repository_name(self.json_data[JsonKeys.URL.value])
 
-        self.assertTrue(main.checkout_commit(self.json_data[JsonKeys.COMMIT_HASH.value],f"resources/{issue_name}/input/{project_name}"))
-        self.assertTrue(main.is_git_directory(f"resources/{issue_name}/input/{project_name}")) 
+        self.assertTrue(main.checkout_commit(self.json_data[JsonKeys.COMMIT_HASH.value], os.path.join(issue_input_dir, proj_name)))
+        self.assertTrue(main.is_git_directory(os.path.join(issue_input_dir, proj_name))) 
 
-        command = main.build_specimin_command(project_name, f"resources/{issue_name}", self.specimin_dir, self.json_data[JsonKeys.ROOT_DIR.value], self.json_data[JsonKeys.TARGETS.value])
+        command = main.build_specimin_command(project_name, os.path.join(resource_abs_path, issue_name), self.json_data[JsonKeys.ROOT_DIR.value], self.json_data[JsonKeys.TARGETS.value])
         print(command)
         result = main.run_specimin(issue_name, command, self.specimin_dir)
         self.assertEqual(result.status, "PASS")
@@ -103,11 +110,10 @@ class TestMain(unittest.TestCase):
                     "file": "Simple.java",
                     "package": "com.example"
                    }]
-        specimin_dir = 'resources/specimin'
         target_dir = 'resources/onefilesimple'
 
-        command = main.build_specimin_command(proj_name, target_dir, specimin_dir, root, targets)
-        result = main.run_specimin(proj_name, command, 'resources/specimin')
+        command = main.build_specimin_command(proj_name, os.path.abspath(target_dir), root, targets)
+        result = main.run_specimin(proj_name, command, self.specimin_dir)
         self.assertEqual(result.status, "PASS")
 
 
