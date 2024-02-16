@@ -13,7 +13,7 @@ class TestMain(unittest.TestCase):
         cls.json_data = main.read_json_from_file('resources/test_data.json')[6]
         sp_env_var = main.get_specimin_env_var()
         if (sp_env_var): 
-            cls.specimin_dir = "resources/specimin"
+            cls.specimin_dir = sp_env_var
         else:
             cls.specimin_dir = os.path.abspath("resources/specimin")
 
