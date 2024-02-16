@@ -63,12 +63,12 @@
         "commit_hash": "",
         "project_name": "jOOQ",
         "build_command": "mvn -V -B -e clean compile -Dcheckerframework.checkers=org.checkerframework.checker.signedness.SignednessChecker -Dcheckerframework.suppress=\"type.anno.before\"",
-        "root_dir": "src/main/java",
+        "root_dir": "jOOQ/src/main/java",
         "targets": [
             {
                 "method": "spliterator()",
                 "file": "ResultQuery.java",
-                "package": "org.jood"
+                "package": "org.jooq"
             }
         ],
         "cf_version": "",
