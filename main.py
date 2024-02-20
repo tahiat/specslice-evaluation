@@ -310,11 +310,11 @@ def performEvaluation(issue_data) -> Result:
     specimin_command = ""
     result: Result = None
     specimin_path = get_specimin_env_var()
-    if specimin_path is not None:
+    if specimin_path is not None and os.path.exists(specimin_path):
         specimin_command = build_specimin_command(repo_name, os.path.join(issue_folder_abs_dir, issue_id), issue_data[JsonKeys.ROOT_DIR.value], issue_data[JsonKeys.TARGETS.value])
         result = run_specimin(issue_id ,specimin_command, specimin_path)
     else:
-        specimin_command = build_specimin_command(repo_name, os.path.join(issue_folder_dir, issue_id),issue_data[JsonKeys.ROOT_DIR.value], issue_data[JsonKeys.TARGETS.value])
+        specimin_command = build_specimin_command(repo_name, os.path.join(issue_folder_abs_dir, issue_id),issue_data[JsonKeys.ROOT_DIR.value], issue_data[JsonKeys.TARGETS.value])
         result = run_specimin(issue_id ,specimin_command, os.path.join(issue_folder_abs_dir, specimin_project_name))
     
     print(f"{result.name} - {result.status}")
@@ -328,8 +328,11 @@ def main():
     os.makedirs(issue_folder_dir, exist_ok=True)   # create the issue holder directory
     
     specimin_path = get_specimin_env_var()
-    if specimin_path is None:
-        clone_specimin(issue_folder_dir, specimin_source_url) # if env variable not specified, clone specimin
+    if specimin_path is not None and os.path.exists(specimin_path) and os.path.isdir(specimin_path):
+        print("Local Specimin copy is being used")
+    else:
+        print("Local Specimin not found. Cloning a Specimin copy")
+        clone_specimin(issue_folder_dir, specimin_source_url)
 
     json_file_path = 'resources/test_data.json'
     parsed_data = read_json_from_file(json_file_path)

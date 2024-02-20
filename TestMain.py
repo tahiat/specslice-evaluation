@@ -12,10 +12,11 @@ class TestMain(unittest.TestCase):
         #Currently using cf-6060 
         cls.json_data = main.read_json_from_file('resources/test_data.json')[3]
         sp_env_var = main.get_specimin_env_var()
-        if (sp_env_var): 
-            cls.specimin_dir = sp_env_var # using the local copy of Specimin from env var
+        if sp_env_var is not None and os.path.exists(sp_env_var) and os.path.isdir(sp_env_var):
+            print("Local Specimin copy is being used")
+            cls.specimin_dir = sp_env_var
         else:
-            # cloning the specimin. This will be deleted after all test execution finishes.
+            print("Local Specimin not found. Cloning a Specimin copy")
             main.clone_repository('https://github.com/kelloggm/specimin.git', 'resources')
             cls.specimin_dir = os.path.abspath("resources/specimin")
 
