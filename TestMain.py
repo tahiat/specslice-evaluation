@@ -10,6 +10,9 @@ class TestMain(unittest.TestCase):
     def setUpClass(cls):
         # cloning the specimin 
         main.clone_repository('https://github.com/kelloggm/specimin.git', 'resources')
+        #TODO: previously used cf-1291 (index 0) fails when absolute path of the target is used. Will investigate it later. 
+        #Currently uses cf-6019
+
         cls.json_data = main.read_json_from_file('resources/test_data.json')[6]
         sp_env_var = main.get_specimin_env_var()
         if (sp_env_var): 
