@@ -8,10 +8,17 @@ class TestMain(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        # cloning the specimin 
-        main.clone_repository('https://github.com/kelloggm/specimin.git', 'resources')
-        cls.json_data = main.read_json_from_file('resources/test_data.json')[0]
-        cls.specimin_dir = "resources/specimin"
+        #TODO: previously used cf-1291 (index 0) fails when absolute path of the target is used. Will investigate it later. 
+        #Currently using cf-6060 
+        cls.json_data = main.read_json_from_file('resources/test_data.json')[3]
+        sp_env_var = main.get_specimin_env_var()
+        if sp_env_var is not None and os.path.exists(sp_env_var) and os.path.isdir(sp_env_var):
+            print("Local Specimin copy is being used")
+            cls.specimin_dir = sp_env_var
+        else:
+            print("Local Specimin not found. Cloning a Specimin copy")
+            main.clone_repository('https://github.com/kelloggm/specimin.git', 'resources')
+            cls.specimin_dir = os.path.abspath("resources/specimin")
 
     @classmethod
     def tearDownClass(cls):
@@ -20,7 +27,7 @@ class TestMain(unittest.TestCase):
             shutil.rmtree('resources/specimin')
         except Exception as e:
             print(f"Error occurred {e}")
-        # removing any issue project cloned in resources
+        # removing any issue project cloned in resources   
         for root, dirs, files in os.walk('resources', topdown=False):
             for dir_name in dirs:
                 if 'cf-' in dir_name:
@@ -56,9 +63,9 @@ class TestMain(unittest.TestCase):
                     "file": "IndexMode.java",
                     "package": 'org.apache.cassandra.index.sasi.conf'
                    }]
-        specimin_dir = 'user/specimin'
-        target_dir = 'user/ISSUES/cf-6077'
-        command = main.build_specimin_command(proj_name, target_dir, specimin_dir, root, targets)
+ 
+        target_dir = '/user/ISSUES/cf-6077'
+        command = main.build_specimin_command(proj_name, target_dir, root, targets)
         target_command = ''
         with open('resources/specimin_command_cf-6077.txt','r') as file:
             target_command = file.read()
@@ -71,9 +78,9 @@ class TestMain(unittest.TestCase):
                     "file": "Avro2Confluent.java",
                     "package": 'com.fillmore_labs.kafka.sensors.serde.confluent.interop'
                    }]
-        specimin_dir = 'user/specimin'
-        target_dir = 'user/ISSUES/cf-6019'
-        command = main.build_specimin_command(proj_name, target_dir, specimin_dir, root, targets)
+
+        target_dir = '/user/ISSUES/cf-6019'
+        command = main.build_specimin_command(proj_name, target_dir, root, targets)
         with open('resources/specimin_command_cf-6019.txt','r') as file:
             target_command = file.read()
         self.assertEqual(command, target_command)
@@ -82,15 +89,16 @@ class TestMain(unittest.TestCase):
         # make 
         issue_name = self.json_data[JsonKeys.ISSUE_ID.value]
         main.create_issue_directory('resources', issue_name)
-        self.assertTrue(os.path.exists('resources/cf-1291/input'))
-        main.clone_repository(self.json_data[JsonKeys.URL.value], f"resources/{issue_name}/input")  
-        
-        project_name = main.get_repository_name(self.json_data[JsonKeys.URL.value])
+        self.assertTrue(os.path.exists(f'resources/{issue_name}/input'))
+        main.clone_repository(self.json_data[JsonKeys.URL.value], f"resources/{issue_name}/input") 
 
+        project_name = main.get_repository_name(self.json_data[JsonKeys.URL.value])
         self.assertTrue(main.checkout_commit(self.json_data[JsonKeys.COMMIT_HASH.value],f"resources/{issue_name}/input/{project_name}"))
         self.assertTrue(main.is_git_directory(f"resources/{issue_name}/input/{project_name}")) 
+        main.change_branch(self.json_data[JsonKeys.BRANCH.value], f"resources/{issue_name}/input/{project_name}")
 
-        command = main.build_specimin_command(project_name, f"resources/{issue_name}", self.specimin_dir, self.json_data[JsonKeys.ROOT_DIR.value], self.json_data[JsonKeys.TARGETS.value])
+        #build_specimin_command accept absolute path of the root directory.
+        command = main.build_specimin_command(project_name, os.path.abspath(f"resources/{issue_name}"), self.json_data[JsonKeys.ROOT_DIR.value], self.json_data[JsonKeys.TARGETS.value])
         print(command)
         result = main.run_specimin(issue_name, command, self.specimin_dir)
         self.assertEqual(result.status, "PASS")
@@ -103,11 +111,10 @@ class TestMain(unittest.TestCase):
                     "file": "Simple.java",
                     "package": "com.example"
                    }]
-        specimin_dir = 'resources/specimin'
         target_dir = 'resources/onefilesimple'
 
-        command = main.build_specimin_command(proj_name, target_dir, specimin_dir, root, targets)
-        result = main.run_specimin(proj_name, command, 'resources/specimin')
+        command = main.build_specimin_command(proj_name, os.path.abspath(target_dir), root, targets)
+        result = main.run_specimin(proj_name, command, self.specimin_dir)
         self.assertEqual(result.status, "PASS")
 
 
