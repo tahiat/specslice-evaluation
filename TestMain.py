@@ -8,16 +8,15 @@ class TestMain(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        # cloning the specimin 
-        main.clone_repository('https://github.com/kelloggm/specimin.git', 'resources')
-
         #TODO: previously used cf-1291 (index 0) fails when absolute path of the target is used. Will investigate it later. 
         #Currently using cf-6060 
         cls.json_data = main.read_json_from_file('resources/test_data.json')[3]
         sp_env_var = main.get_specimin_env_var()
         if (sp_env_var): 
-            cls.specimin_dir = sp_env_var
+            cls.specimin_dir = sp_env_var # using the local copy of Specimin from env var
         else:
+            # cloning the specimin. This will be deleted after all test execution finishes.
+            main.clone_repository('https://github.com/kelloggm/specimin.git', 'resources')
             cls.specimin_dir = os.path.abspath("resources/specimin")
 
     @classmethod
@@ -79,7 +78,6 @@ class TestMain(unittest.TestCase):
                     "package": 'com.fillmore_labs.kafka.sensors.serde.confluent.interop'
                    }]
 
-        #TODO: fix here before commit. 
         target_dir = '/user/ISSUES/cf-6019'
         command = main.build_specimin_command(proj_name, target_dir, root, targets)
         with open('resources/specimin_command_cf-6019.txt','r') as file:
