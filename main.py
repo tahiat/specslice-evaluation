@@ -174,7 +174,7 @@ def clone_specimin(path_to_clone, url):
 
 
 def build_specimin_command(project_name: str,
-                           target_base_dir: str,
+                           target_base_dir_path: str,
                            root_dir: str,  
                            targets: list):
     '''
@@ -197,10 +197,12 @@ def build_specimin_command(project_name: str,
     Retruns:
         command (str): The gradle command of SPECIMIN for the issue.
     '''
+    
+    if not os.path.isabs(target_base_dir_path):
+        raise ValueError("Invalid argument: target_base_dir_path must be an absolute path")
 
-
-    output_dir = os.path.join(target_base_dir, specimin_output)
-    root_dir = os.path.join(target_base_dir, specimin_input, project_name, root_dir)
+    output_dir = os.path.join(target_base_dir_path, specimin_output)
+    root_dir = os.path.join(target_base_dir_path, specimin_input, project_name, root_dir)
     root_dir = root_dir.rstrip('/') + os.sep
 
     target_file_list = []
