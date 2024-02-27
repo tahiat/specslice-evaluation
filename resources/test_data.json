@@ -345,5 +345,145 @@
         "cf_version": "3.40.0",
         "java_version": "jdk-17",
         "note": ""
+    },
+    {
+        "issue_id" : "sp-151",
+        "url": "https://github.com/typetools/checker-framework.git",
+        "branch": "",
+        "commit_hash": "",
+        "project_name": "checker-framework",
+        "build_command": "",
+        "root_dir": "dataflow/src/main/java/", 
+        "targets": [
+            {
+                "method": "getReturnStatementStores()",
+                "file": "ForwardAnalysisImpl.java",
+                "package": "org.checkerframework.dataflow.analysis",
+                "inner_class": ""
+            }
+        ],
+        "cf_version": "",
+        "java_version": "jdk-17",
+        "note": ""
+    },
+    {
+        "issue_id" : "sp-150",
+        "url": "https://github.com/typetools/checker-framework.git",
+        "branch": "",
+        "commit_hash": "",
+        "project_name": "checker-framework",
+        "build_command": "",
+        "root_dir": "dataflow/src/main/java/", 
+        "targets": [
+            {
+                "method": "performAnalysisBlock(Block)",
+                "file": "ForwardAnalysisImpl.java",
+                "package": "org.checkerframework.dataflow.analysis",
+                "inner_class": ""
+            }
+        ],
+        "cf_version": "",
+        "java_version": "jdk-17",
+        "note": ""
+    },
+    {
+        "issue_id" : "sp-149",
+        "url": "https://github.com/typetools/checker-framework.git",
+        "branch": "",
+        "commit_hash": "",
+        "project_name": "checker-framework",
+        "build_command": "",
+        "root_dir": "dataflow/src/main/java/", 
+        "targets": [
+            {
+                "method": "performAnalysis(ControlFlowGraph)",
+                "file": "ForwardAnalysisImpl.java",
+                "package": "org.checkerframework.dataflow.analysis",
+                "inner_class": ""
+            }
+        ],
+        "cf_version": "",
+        "java_version": "jdk-17",
+        "note": ""
+    },
+    {
+        "issue_id" : "sp-148",
+        "url": "https://github.com/typetools/checker-framework.git",
+        "branch": "",
+        "commit_hash": "",
+        "project_name": "checker-framework",
+        "build_command": "",
+        "root_dir": "dataflow/src/main/java/", 
+        "targets": [
+            {
+                "method": "getStoreAfter(Block)",
+                "file": "AnalysisResult.java",
+                "package": "org.checkerframework.dataflow.analysis",
+                "inner_class": ""
+            }
+        ],
+        "cf_version": "",
+        "java_version": "jdk-17",
+        "note": ""
+    },
+    {
+        "issue_id" : "sp-152",
+        "url": "https://github.com/typetools/checker-framework.git",
+        "branch": "",
+        "commit_hash": "",
+        "project_name": "checker-framework",
+        "build_command": "",
+        "root_dir": "dataflow/src/main/java/", 
+        "targets": [
+            {
+                "method": "getValue(Tree)",
+                "file": "AbstractAnalysis.java",
+                "package": "org.checkerframework.dataflow.analysis",
+                "inner_class": ""
+            }
+        ],
+        "cf_version": "",
+        "java_version": "jdk-17",
+        "note": ""
+    },
+    {
+        "issue_id" : "sp-153",
+        "url": "https://github.com/randoop/randoop.git",
+        "branch": "",
+        "commit_hash": "",
+        "project_name": "randoop",
+        "build_command": "",
+        "root_dir": "agent/replacecall/src/main/java/", 
+        "targets": [
+            {
+                "method": "toString()",
+                "file": "MethodSignature.java",
+                "package": "randoop.instrument",
+                "inner_class": ""
+            }
+        ],
+        "cf_version": "",
+        "java_version": "jdk-17",
+        "note": ""
+    },
+    {
+        "issue_id" : "sp-154",
+        "url": "https://github.com/randoop/randoop.git",
+        "branch": "",
+        "commit_hash": "",
+        "project_name": "randoop",
+        "build_command": "",
+        "root_dir": "agent/replacecall/src/main/java/", 
+        "targets": [
+            {
+                "method": "premain(String, Instrumentation)",
+                "file": "ReplaceCallAgent.java",
+                "package": "randoop.instrument",
+                "inner_class": ""
+            }
+        ],
+        "cf_version": "",
+        "java_version": "jdk-17",
+        "note": ""
     }
 ]
