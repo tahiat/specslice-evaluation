@@ -88,6 +88,16 @@ def create_issue_directory(issue_container_dir, issue_id):
     os.makedirs(specimin_output_dir, exist_ok=True)
     return specimin_input_dir
 
+def is_specimin_in_parent_dir():
+    '''
+    Checks if a copy of specimin exists in parent directory. 
+    '''
+    parent_dir: str = os.path.dirname(os.getcwd())
+    if is_git_directory(parent_dir):
+        remote_url = remote_url = subprocess.check_output(['git', 'config', '--get', 'remote.origin.url']).decode().strip()
+        return get_repository_name(remote_url) == specimin_project_name
+    else:
+        return False    
 
 def is_git_directory(dir):
     '''
@@ -158,6 +168,23 @@ def perform_git_pull (directory):
     '''
     command=["git", "pull", "origin", "--rebase"]
     subprocess.run(command, cwd=directory)
+
+def get_specimin_path():
+    '''
+    Three possible location for specimin
+    1. Local development copy of specimin
+    2. For CI/CD parent directory of evaluation script is specimin
+    3. If none of the above, cloned copy of specimin
+    '''
+    specimin_path = ""
+    specimin_env_path = get_specimin_env_var()
+    if specimin_env_path is not None and os.path.exists(specimin_env_path):
+        specimin_path = specimin_env_path
+    elif is_specimin_in_parent_dir():
+        specimin_path = os.path.dirname(os.getcwd())
+    else:
+        specimin_path = os.path.join(os.path.abspath(issue_folder_dir), specimin_project_name)
+    return specimin_path
 
 def clone_specimin(path_to_clone, url): 
     '''
@@ -308,16 +335,9 @@ def performEvaluation(issue_data) -> Result:
     if commit_hash:
         checkout_commit(commit_hash, os.path.join(input_dir, repo_name))
 
-    specimin_command = ""
-    result: Result = None
-    specimin_path = get_specimin_env_var()
-    if specimin_path is not None and os.path.exists(specimin_path):
-        specimin_command = build_specimin_command(repo_name, os.path.join(issue_folder_abs_dir, issue_id), issue_data[JsonKeys.ROOT_DIR.value], issue_data[JsonKeys.TARGETS.value])
-        result = run_specimin(issue_id ,specimin_command, specimin_path)
-    else:
-        specimin_command = build_specimin_command(repo_name, os.path.join(issue_folder_abs_dir, issue_id),issue_data[JsonKeys.ROOT_DIR.value], issue_data[JsonKeys.TARGETS.value])
-        result = run_specimin(issue_id ,specimin_command, os.path.join(issue_folder_abs_dir, specimin_project_name))
-    
+    specimin_command: str = build_specimin_command(repo_name, os.path.join(issue_folder_abs_dir, issue_id), issue_data[JsonKeys.ROOT_DIR.value], issue_data[JsonKeys.TARGETS.value])
+    specimin_path = get_specimin_path()
+    result: Result = run_specimin(issue_id ,specimin_command, specimin_path)
     print(f"{result.name} - {result.status}")
     return result
 
@@ -328,9 +348,13 @@ def main():
     '''
     os.makedirs(issue_folder_dir, exist_ok=True)   # create the issue holder directory
     
+    # Getting a copy of specimin to execute on targets
     specimin_path = get_specimin_env_var()
     if specimin_path is not None and os.path.exists(specimin_path) and os.path.isdir(specimin_path):
         print("Local Specimin copy is being used")
+    elif is_specimin_in_parent_dir():
+        # if evalution is runnin from specimin CI/CD than we need to used that copy of the specimin
+        print("Use the specimin from parent directory")
     else:
         print("Local Specimin not found. Cloning a Specimin copy")
         clone_specimin(issue_folder_dir, specimin_source_url)
