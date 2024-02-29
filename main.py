@@ -337,7 +337,7 @@ def performEvaluation(issue_data) -> Result:
         checkout_commit(commit_hash, os.path.join(input_dir, repo_name))
 
     specimin_command: str = build_specimin_command(repo_name, os.path.join(issue_folder_abs_dir, issue_id), issue_data[JsonKeys.ROOT_DIR.value], issue_data[JsonKeys.TARGETS.value])
-    result: Result = run_specimin(issue_id ,specimin_command, _specimin_path)
+    result: Result = run_specimin(issue_id , specimin_command, _specimin_path)
     print(f"{result.name} - {result.status}")
     return result
 
