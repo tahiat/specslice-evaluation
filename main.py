@@ -14,6 +14,7 @@ specimin_project_name = 'specimin'
 specimin_source_url = 'https://github.com/kelloggm/specimin.git'
 TIMEOUT_DURATION = 300
 specimin_env_var = "SPECIMIN"
+_specimin_path = "" # set on main method
 
 def read_json_from_file(file_path):
     '''
@@ -94,7 +95,7 @@ def is_specimin_in_parent_dir():
     '''
     parent_dir: str = os.path.dirname(os.getcwd())
     if is_git_directory(parent_dir):
-        remote_url = remote_url = subprocess.check_output(['git', 'config', '--get', 'remote.origin.url']).decode().strip()
+        remote_url = subprocess.check_output(['git', 'config', '--get', 'remote.origin.url'], cwd= parent_dir).decode().strip()
         return get_repository_name(remote_url) == specimin_project_name
     else:
         return False    
@@ -336,8 +337,7 @@ def performEvaluation(issue_data) -> Result:
         checkout_commit(commit_hash, os.path.join(input_dir, repo_name))
 
     specimin_command: str = build_specimin_command(repo_name, os.path.join(issue_folder_abs_dir, issue_id), issue_data[JsonKeys.ROOT_DIR.value], issue_data[JsonKeys.TARGETS.value])
-    specimin_path = get_specimin_path()
-    result: Result = run_specimin(issue_id ,specimin_command, specimin_path)
+    result: Result = run_specimin(issue_id ,specimin_command, _specimin_path)
     print(f"{result.name} - {result.status}")
     return result
 
@@ -369,7 +369,9 @@ def main():
         json_file_path = os.path.join("resources", "sp_issue.json")
     else:
         json_file_path = os.path.join("resources", "test_data.json")
-
+    
+    _specimin_path = get_specimin_path()
+    json_file_path = 'resources/test_data.json'
     parsed_data = read_json_from_file(json_file_path)
 
     evaluation_results = []
