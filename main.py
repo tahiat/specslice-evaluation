@@ -371,7 +371,6 @@ def main():
         json_file_path = os.path.join("resources", "test_data.json")
     
     _specimin_path = get_specimin_path()
-    json_file_path = 'resources/test_data.json'
     parsed_data = read_json_from_file(json_file_path)
 
     evaluation_results = []
