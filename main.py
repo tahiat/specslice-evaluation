@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 import subprocess
 import shutil
 from Keyvalue import JsonKeys
@@ -334,7 +335,17 @@ def main():
         print("Local Specimin not found. Cloning a Specimin copy")
         clone_specimin(issue_folder_dir, specimin_source_url)
 
-    json_file_path = 'resources/test_data.json'
+    args = sys.argv
+    specified_targets: str = ""
+    if (len(args) - 1) >= 1:
+        specified_targets = args[1]  # paper_target/bug_target
+
+    json_file_path: str
+    if specified_targets.lower() == "bugs":
+        json_file_path = os.path.join("resources", "sp_issue.json")
+    else:
+        json_file_path = os.path.join("resources", "test_data.json")
+
     parsed_data = read_json_from_file(json_file_path)
 
     evaluation_results = []
