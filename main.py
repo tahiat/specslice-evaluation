@@ -370,6 +370,7 @@ def main():
     else:
         json_file_path = os.path.join("resources", "test_data.json")
     
+    global _specimin_path 
     _specimin_path = get_specimin_path()
     parsed_data = read_json_from_file(json_file_path)
 
