@@ -328,8 +328,8 @@
     },
     {
         "issue_id" : "cf-6388",
-        "url": "https://github.com/kennknowles/beam.git",
-        "branch": "checkerframework-StructuralEqualityComparer",
+        "url": "https://github.com/tahiat/beam.git",
+        "branch": "cf-6388",
         "commit_hash": "",
         "project_name": "beam",
         "build_command": "checkerframework-StructuralEqualityComparer",
