@@ -3,7 +3,7 @@
         "issue_id" : "cf-1291",
         "url": "https://github.com/tahiat/daikon.git",
         "branch": "cf-1291",
-        "commit_hash": "15d7c2d84",
+        "commit_hash": "",
         "project_name": "daikon",
         "build_command": "this can be cf command or java",
         "root_dir": "java",
