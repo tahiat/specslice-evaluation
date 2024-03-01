@@ -1,8 +1,8 @@
 [
     {
         "issue_id" : "cf-1291",
-        "url": "https://github.com/codespecs/daikon.git",
-        "branch": "",
+        "url": "https://github.com/tahiat/daikon.git",
+        "branch": "cf-1291",
         "commit_hash": "15d7c2d84",
         "project_name": "daikon",
         "build_command": "this can be cf command or java",
@@ -39,9 +39,9 @@
     },
     {
         "issue_id" : "cf-6077",
-        "url": "https://github.com/jacek-lewandowski/cassandra.git",
-        "branch": "checker-framework-testing",
-        "commit_hash": "7b3c4ce8e5d6da41791492903ec367b8857cd57d",
+        "url": "https://github.com/tahiat/cassandra.git",
+        "branch": "cf-6077",
+        "commit_hash": "",
         "project_name": "cassandra",
         "build_command": "ant cf-only -Dcf.check.only=org/apache/cassandra/index/sasi/conf/IndexMode.java",
         "root_dir": "src/java",
