@@ -14,6 +14,7 @@ specimin_project_name = 'specimin'
 specimin_source_url = 'https://github.com/kelloggm/specimin.git'
 TIMEOUT_DURATION = 300
 specimin_env_var = "SPECIMIN"
+json_status_file_name = "target_status.json"
 
 def read_json_from_file(file_path):
     '''
@@ -348,18 +349,26 @@ def main():
 
     parsed_data = read_json_from_file(json_file_path)
 
-    evaluation_results = []
+    evaluation_results: list[Result] = []
+    json_status: dict[str, str] = {} # Contains PASS/FAIL status of targets to be printed as a json file 
     if parsed_data:
         for issue in parsed_data:
             issue_id = issue["issue_id"]
             print(f"{issue_id} execution starts =========>")
             result = performEvaluation(issue)
             evaluation_results.append(result)
+            json_status[issue_id] = result.status
             print((f"{issue_id} <========= execution Ends."))
 
 
-    report_generator = TableGenerator(evaluation_results)
+    report_generator: TableGenerator = TableGenerator(evaluation_results)
     report_generator.generateTable()
+
+    json_status_file = os.path.join(issue_folder_dir, json_status_file_name)
+    # Write JSON data in a file. This can be compared from specimin to verify that the successful # of targets do not get reduced in a PR
+    with open(json_status_file, "w") as json_file:
+        json.dump(json_status, json_file, indent= 2)
+
     print("\n\n\n\n")
     print(f"issue_name    |    status    |    reason")
     print("--------------------------------------------")
