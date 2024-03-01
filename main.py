@@ -101,6 +101,36 @@ def is_git_directory(dir):
     git_dir_path = os.path.join(dir, '.git')
     return os.path.exists(git_dir_path) and os.path.isdir(git_dir_path)
 
+def get_target_data(url, branch, commit, directory):
+    '''
+    Get target repository data 
+
+    Parameters:
+        url (str): repository url
+        branch(str): branch name
+        commit(str): commit #
+        directory (str): directory to clone in
+    '''
+    project_name = get_repository_name(url)
+    if (os.path.exists(os.path.join(directory, project_name))):
+        print(f"{project_name} repository already exists. Aborting cloning")
+        return
+
+    clone_command = ["git", "clone"]
+    if branch:
+        clone_command.extend(["-b", branch])
+    if not commit:
+        clone_command.extend(["--depth", "1"])
+        clone_command.append(url)
+        subprocess.run(clone_command, cwd=directory) # targetted clone is fast, no need to reuse existing one.
+    else:
+        clone_command.append(url)
+        subprocess.run(clone_command, cwd=directory)
+        checkout_commit(commit, os.path.join(directory, get_repository_name(url)))
+
+    cmd_str = ' '.join(clone_command)
+    print(f"get_target_data -> {cmd_str}")
+
 def clone_repository(url, directory):
     '''
     Clone a repository from 'url' in 'directory' 
@@ -172,7 +202,7 @@ def clone_specimin(path_to_clone, url):
     if (os.path.exists(spcimin_source_path)) and os.path.isdir(spcimin_source_path):
         perform_git_pull(spcimin_source_path)
     else:
-        clone_repository(url, path_to_clone)
+        get_target_data(url, "", "", path_to_clone)
 
 
 def build_specimin_command(project_name: str,
@@ -300,15 +330,10 @@ def performEvaluation(issue_data) -> Result:
 
     issue_folder_abs_dir = os.path.abspath(issue_folder_dir)
     input_dir = create_issue_directory(issue_folder_abs_dir, issue_id)
-    clone_repository(url, input_dir) 
-    repo_name = get_repository_name(url)
 
-    if branch:
-        change_branch(branch, os.path.join(input_dir, repo_name))  
+    get_target_data(url, branch, commit_hash, input_dir) 
     
-    if commit_hash:
-        checkout_commit(commit_hash, os.path.join(input_dir, repo_name))
-
+    repo_name = get_repository_name(url)
     specimin_command = ""
     result: Result = None
     specimin_path = get_specimin_env_var()
