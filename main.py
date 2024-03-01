@@ -201,7 +201,7 @@ def clone_specimin(path_to_clone, url):
     if (os.path.exists(spcimin_source_path)) and os.path.isdir(spcimin_source_path):
         perform_git_pull(spcimin_source_path)
     else:
-        clone_repository(url, path_to_clone)
+        get_target_data(url, "", "", path_to_clone)
 
 
 def build_specimin_command(project_name: str,
