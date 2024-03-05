@@ -260,7 +260,8 @@
             {
                 "method": "getBestValidator()",
                 "file": "FuturesGetChecked.java",
-                "package": "com.google.common.util.concurrent"
+                "package": "com.google.common.util.concurrent",
+                "inner_class": "GetCheckedTypeValidatorHolder"
             }
         ],
         "cf_version": "3.0.1",
