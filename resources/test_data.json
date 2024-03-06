@@ -317,7 +317,7 @@
         "root_dir": "", 
         "targets": [
             {
-                "method": "listIterator(SubList<E>, int)",
+                "method": "listIterator(int)",
                 "file": "AbstractList.java",
                 "package": "java.util",
                 "inner_class": "SubList"
