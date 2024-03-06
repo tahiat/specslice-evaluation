@@ -340,7 +340,7 @@
                 "method": "via(Contextful<Fn<UserT, OutputT>>, Contextful<Fn<DestinationT, Sink<OutputT>>>)",
                 "file": "FileIO.java",
                 "package": "org.apache.beam.sdk.io",
-                "inner_class": ""
+                "inner_class": "Write"
             }
         ],
         "cf_version": "3.40.0",
