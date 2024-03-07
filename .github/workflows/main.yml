@@ -22,5 +22,7 @@ jobs:
         uses: gradle/gradle-build-action@v2
       - name: Run tests
         run: python TestMain.py
+      - name: Run specimin on targets
+        run: python main.py
       - name: Compile output
         run: sh check_compilation.sh
