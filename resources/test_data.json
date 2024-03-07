@@ -161,7 +161,7 @@
         "root_dir": "core/src/main/java/", 
         "targets": [
             {
-                "method": "toPos(Iterable<? extends @PolyNull SqlNode>)",
+                "method": "toPos(Iterable<? extends SqlNode>)",
                 "file": "SqlParserPos.java",
                 "package": "org.apache.calcite.sql.parser"
             }
