@@ -26,11 +26,11 @@ for target in * ; do
         continue
     fi
 
-    echo "Running javac on ${target}/output"
     # javac relies on word splitting
     # shellcheck disable=SC2046
     javac -classpath "../../../resources/checker-qual-3.42.0.jar" $(find . -name "*.java") \
-      || { echo "Running javac on ${target}/expected issues one or more errors, which are printed above."; returnval=2; }
+    && { echo "Running javac on ${target}/output PASSES"; } \
+    || { echo "Running javac on ${target}/output FAILS"; returnval=2; }
     cd ../.. || exit 1
 done
 
