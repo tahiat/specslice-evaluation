@@ -8,7 +8,7 @@
 # should produce independently-compilable programs.
 
 returnval=0
-
+echo "Specimin path: $SPECIMIN"
 cd ISSUES || exit 1
 for target in * ; do
     echo "Target = ${target}"
@@ -30,7 +30,7 @@ for target in * ; do
     # shellcheck disable=SC2046
     javac -classpath "$SPECIMIN/main/src/test/resources/shared/checker-qual-3.42.0.jar" $(find . -name "*.java") \
     && { echo "Running javac on ${target}/output PASSES"; } \
-    || { echo "Running javac on ${target}/output FAILS"; returnval=2; }
+    || { echo "Running javac on ${target}/output FAILS. Please check logs above."; returnval=2; }
     cd ../.. || exit 1
 done
 
