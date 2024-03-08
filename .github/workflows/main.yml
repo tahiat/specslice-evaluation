@@ -24,5 +24,7 @@ jobs:
         run: python TestMain.py
       - name: Run specimin on targets
         run: python main.py
+      - name: Export Specimin path
+        run: echo "SPECIMIN=ISSUES/specimin" >> $GITHUB_ENV
       - name: Compile output
         run: sh check_compilation.sh

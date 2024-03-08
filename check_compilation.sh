@@ -28,7 +28,7 @@ for target in * ; do
 
     # javac relies on word splitting
     # shellcheck disable=SC2046
-    javac -classpath "../../../resources/checker-qual-3.42.0.jar" $(find . -name "*.java") \
+    javac -classpath "$SPECIMIN/main/src/test/resources/shared/checker-qual-3.42.0.jar" $(find . -name "*.java") \
     && { echo "Running javac on ${target}/output PASSES"; } \
     || { echo "Running javac on ${target}/output FAILS"; returnval=2; }
     cd ../.. || exit 1
