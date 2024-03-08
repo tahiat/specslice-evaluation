@@ -1,10 +1,10 @@
 #!/bin/sh
 
-# This script runs javac on all of the expected test outputs under src/test/resources.
-# It returns 2 if any of them fail to compile, 1 if there are any malformed test directories,
+# This script runs javac on all of the minimized outputs under ISSUES/ .
+# It returns 2 if any of them fail to compile, 1 if there are any malformed directories,
 # and 0 if all of them do compile.
 #
-# It is desirable that all of the expected test outputs compile, because Specimin
+# It is desirable that all of the expected Specimin's minimized program gets compiled, because Specimin
 # should produce independently-compilable programs.
 
 returnval=0
