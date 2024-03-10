@@ -256,8 +256,13 @@ def build_specimin_command(project_name: str,
             inner_class_name = ""
             if JsonKeys.INNER_CLASS.value in target and target[JsonKeys.INNER_CLASS.value] :
                 inner_class_name = f".{target[JsonKeys.INNER_CLASS.value]}"
-            
-            qualified_method_name = package_name + "." + os.path.splitext(file_name)[0]+ inner_class_name + "#" + method_name
+            #if non-primary class exists, file name will no be included in target-method
+            # Look for PR #177: https://github.com/kelloggm/specimin/pull/177
+
+            if JsonKeys.NON_PRIMARY_CLASS.value in target and target[JsonKeys.NON_PRIMARY_CLASS.value]:
+                qualified_method_name = package_name + "." + target[JsonKeys.NON_PRIMARY_CLASS.value] + inner_class_name + "#" + method_name
+            else:
+                qualified_method_name = package_name + "." + os.path.splitext(file_name)[0]+ inner_class_name + "#" + method_name
             target_method_list.append(qualified_method_name)
 
     output_dir_subcommand = "--outputDirectory" + " " + f"\"{output_dir}\""
