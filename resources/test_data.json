@@ -320,7 +320,8 @@
                 "method": "listIterator(int)",
                 "file": "AbstractList.java",
                 "package": "java.util",
-                "inner_class": "SubList"
+                "inner_class": "",
+                "non_primary_class": "SubList"
             }
         ],
         "cf_version": "1.9.13",

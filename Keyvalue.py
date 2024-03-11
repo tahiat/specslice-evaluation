@@ -16,3 +16,4 @@ class JsonKeys(Enum):
     JAVA_VERSION = 'java_version'
     NOTE = 'note'
     INNER_CLASS = 'inner_class'
+    NON_PRIMARY_CLASS = 'non_primary_class'
