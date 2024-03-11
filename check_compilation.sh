@@ -33,9 +33,16 @@ for target in * ; do
 
     # javac relies on word splitting
     # shellcheck disable=SC2046
-    javac -classpath "$SPECIMIN/main/src/test/resources/shared/checker-qual-3.42.0.jar" $(find . -name "*.java") \
-    && { echo "Running javac on ${target}/output PASSES"; compile_status_json="$compile_status_json\n  \"$target\": \"PASS\","; } \
-    || { echo "Running javac on ${target}/output FAILS. Please check logs above."; compile_status_json="$compile_status_json\n  \"$target\": \"FAIL\","; returnval=2; }
+    javac -classpath "$SPECIMIN/main/src/test/resources/shared/checker-qual-3.42.0.jar" $(find . -name "*.java")
+    javac_status=$?
+    if [ $javac_status -eq 0 ]; then 
+       echo "Running javac on ${target}/output PASSES"
+       compile_status_json="$compile_status_json\n  \"$target\": \"PASS\","
+    else
+        echo "Running javac on ${target}/output FAILS. Please check logs above."
+        compile_status_json="$compile_status_json\n  \"$target\": \"FAIL\","
+        returnval=2
+    fi
     
     cd ../.. || exit 1
 
