@@ -13,12 +13,13 @@
 returnval=0
 compile_status_json="{"
 echo "Specimin path: $SPECIMIN"
+
+#read all issue_idjson from json file
+issue_ids="$(jq -r '.[].issue_id' resources/test_data.json)"
 cd ISSUES || exit 1
-for target in * ; do
+
+for target in $issue_ids; do
     echo "Target = ${target}"
-    if [ "${target}" = "output.html" ] || [ "${target}" = "target_status.json" ] ||  [ "${target}" = "specimin" ] ||  [ "${target}" = "compile_status.json" ]; then 
-        continue; 
-    fi
 
     cd "${target}/output/" || exit 1
     # check if any directory exists inside output. If no directory there, specimin failed on the input target
