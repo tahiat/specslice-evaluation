@@ -142,6 +142,10 @@ def clone_repository(url, directory):
     project_name = get_repository_name(url)
     if (os.path.exists(os.path.join(directory, project_name))):
         print(f"{project_name} repository already exists. Aborting cloning")
+        # make sure the existing repo is clean
+        project_dir=str(os.path.join(directory, project_name))
+        subprocess.run(["git", "reset", "--hard"], cwd=project_dir)
+        subprocess.run(["git", "clean", "-f", "-d", "-x"], cwd=project_dir)
         return
     subprocess.run(["git", "clone", url], cwd=directory)
 
