@@ -34,7 +34,7 @@
             }
         ],
         "cf_version": "3.40.0",
-        "java_version": "",
+        "java_version": "jdk-17",
         "note": ""
     },
     {

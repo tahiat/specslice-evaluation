@@ -81,12 +81,12 @@ def create_issue_directory(issue_container_dir, issue_id):
     os.makedirs(issue_directory_name, exist_ok=True)
 
     specimin_input_dir = os.path.join(issue_directory_name, specimin_input)
-    specimin_output_dir = os.path.join(issue_directory_name, specimin_output)
+    #specimin_output_dir = os.path.join(issue_directory_name, specimin_output)
 
     os.makedirs(specimin_input_dir, exist_ok=True)
-    if os.path.exists(specimin_output):
-        shutil.rmtree(specimin_output)
-    os.makedirs(specimin_output_dir, exist_ok=True)
+    #if os.path.exists(specimin_output):
+    #     shutil.rmtree(specimin_output)
+    #os.makedirs(specimin_output_dir, exist_ok=True)
     return specimin_input_dir
 
 
@@ -237,7 +237,11 @@ def build_specimin_command(project_name: str,
     if not os.path.isabs(target_base_dir_path):
         raise ValueError("Invalid argument: target_base_dir_path must be an absolute path")
 
-    output_dir = os.path.join(target_base_dir_path, specimin_output)
+    output_dir = os.path.join(target_base_dir_path, specimin_output, project_name, "src", "main", "java")
+
+    if os.path.exists(output_dir):
+        shutil.rmtree(output_dir)
+
     root_dir = os.path.join(target_base_dir_path, specimin_input, project_name, root_dir)
     root_dir = root_dir.rstrip('/') + os.sep
 
@@ -350,10 +354,15 @@ def performEvaluation(issue_data) -> Result:
         specimin_command = build_specimin_command(repo_name, os.path.join(issue_folder_abs_dir, issue_id), issue_data[JsonKeys.ROOT_DIR.value], issue_data[JsonKeys.TARGETS.value])
         result = run_specimin(issue_id ,specimin_command, specimin_path)
     else:
-        specimin_command = build_specimin_command(repo_name, os.path.join(issue_folder_abs_dir, issue_id),issue_data[JsonKeys.ROOT_DIR.value], issue_data[JsonKeys.TARGETS.value])
+        specimin_command = build_specimin_command(repo_name, os.path.join(issue_folder_abs_dir, issue_id), issue_data[JsonKeys.ROOT_DIR.value], issue_data[JsonKeys.TARGETS.value])
         result = run_specimin(issue_id ,specimin_command, os.path.join(issue_folder_abs_dir, specimin_project_name))
     
     print(f"{result.name} - {result.status}")
+
+    copy_build_script = f"cp {issue_folder_dir}/{issue_id}/input/{repo_name}/specimin/pom.xml {issue_folder_dir}/{issue_id}/output/{repo_name}/"
+    subprocess.run(copy_build_script, shell=True)
+    subprocess.run("mvn clean install", cwd=f"{issue_folder_dir}/{issue_id}/output/{repo_name}", shell=True)
+
     return result
 
 
@@ -383,16 +392,25 @@ def main():
 
     parsed_data = read_json_from_file(json_file_path)
 
+    # test code. will remove later
+    issue_to_test = ["cf-6282"]
+
     evaluation_results: list[Result] = []
     json_status: dict[str, str] = {} # Contains PASS/FAIL status of targets to be printed as a json file 
     if parsed_data:
         for issue in parsed_data:
             issue_id = issue["issue_id"]
+            if issue_id not in issue_to_test: #test code
+                continue
             print(f"{issue_id} execution starts =========>")
             result = performEvaluation(issue)
             evaluation_results.append(result)
             json_status[issue_id] = result.status
             print((f"{issue_id} <========= execution Ends."))
+            # task of crash generation on minimized program. 
+            # copy the build script from the input target specimin directory
+            
+            
 
 
     report_generator: TableGenerator = TableGenerator(evaluation_results)
@@ -410,6 +428,9 @@ def main():
     for minimization_result in evaluation_results:
         print(f"({case}){minimization_result.name}    |    {minimization_result.status}     |    {minimization_result.reason}")
         case +=1
+
+    
+
     
 
 if __name__ == "__main__":
