@@ -363,6 +363,22 @@ def performEvaluation(issue_data) -> Result:
     subprocess.run(copy_build_script, shell=True)
     subprocess.run("mvn clean install", cwd=f"{issue_folder_dir}/{issue_id}/output/{repo_name}", shell=True)
 
+    #compare the output with the log file exist in the specimin directory of input program.
+    log_file = f"{issue_folder_dir}/{issue_id}/output/{repo_name}/mvn_log.txt"
+
+    # Open the log file in write mode
+    with open(log_file, "w") as log_file_obj:
+        # Run the Maven command and redirect the output to the log file
+        mvn_res = subprocess.run("mvn clean install", cwd=f"{issue_folder_dir}/{issue_id}/output/{repo_name}", shell=True, stdout=log_file_obj)
+        if mvn_res.returncode != 0:
+            print(f"Error in building the minimized program {issue_id}")
+        else:
+            print(f"Minimized program {issue_id} built successfully")
+
+    # need a comparator to compare two log file.
+    # how to process the generated log, which portion to take?? how to ignore the non relevant portion of the log lines
+    #         
+
     return result
 
 
