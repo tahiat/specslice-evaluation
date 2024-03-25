@@ -24,7 +24,11 @@
         "branch": "",
         "commit_hash": "",
         "project_name": "Chronicle-Core",
-        "build_command": "mvn -X compile",
+        "input_build_command": "mvn -X compile",
+        "output_build":{
+            "tool": "gradle",
+            "command": "compileJava"
+        },
         "root_dir": "src/main/java",
         "targets": [
             {
@@ -77,7 +81,7 @@
     },
     {
         "issue_id" : "cf-6030",
-        "url": "https://github.com/jacek-lewandowski/cassandra.git",
+        "url": "https://github.com/tahiat/cassandra.git",
         "branch": "cf-testing",
         "commit_hash": "",
         "project_name": "cassandra",
@@ -96,7 +100,7 @@
     },
     {
         "issue_id" : "cf-6030b",
-        "url": "https://github.com/jacek-lewandowski/cassandra.git",
+        "url": "https://github.com/tahiat/cassandra.git",
         "branch": "cf-testing",
         "commit_hash": "",
         "project_name": "cassandra",
@@ -116,7 +120,7 @@
     {
         "issue_id" : "cf-6019",
         "url": "https://github.com/tahiat/kafka-sensors.git",
-        "branch": "specimin-test",
+        "branch": "cf-6019",
         "commit_hash": "",
         "project_name": "kafka-sensors",
         "build_command": "bazel test //src/test/...",

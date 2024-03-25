@@ -15,6 +15,7 @@ specimin_source_url = 'https://github.com/kelloggm/specimin.git'
 TIMEOUT_DURATION = 300
 specimin_env_var = "SPECIMIN"
 json_status_file_name = "target_status.json"
+minimized_program_build_log_file = "build_log.txt"
 
 def read_json_from_file(file_path):
     '''
@@ -359,25 +360,36 @@ def performEvaluation(issue_data) -> Result:
     
     print(f"{result.name} - {result.status}")
 
-    copy_build_script = f"cp {issue_folder_dir}/{issue_id}/input/{repo_name}/specimin/pom.xml {issue_folder_dir}/{issue_id}/output/{repo_name}/"
+    test_targets = ["cf6282", "cf-6077", "cf-6019", "cf-4614"]
+
+    if issue_id not in test_targets: # because we are not building the minimized program for other than test targets yet
+        return result
+
+
+    # build script is shipped with input program. It exists in the "specimin" directory of the input program's root directory.
+    # Coping the build script to the output directory of the minimized program.
+    build_script_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "build.gradle")
+    build_script_destination_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name, "build.gradle")
+
+    copy_build_script = f"cp {build_script_path} {build_script_destination_path}"
     subprocess.run(copy_build_script, shell=True)
-    subprocess.run("mvn clean install", cwd=f"{issue_folder_dir}/{issue_id}/output/{repo_name}", shell=True)
-
+    
     #compare the output with the log file exist in the specimin directory of input program.
-    log_file = f"{issue_folder_dir}/{issue_id}/output/{repo_name}/mvn_log.txt"
+    log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name, minimized_program_build_log_file)
 
+    # A gradle wrapper is shipped with the specimin-evaluation program. It exists in the "resources" directory.
     # Open the log file in write mode
     with open(log_file, "w") as log_file_obj:
-        # Run the Maven command and redirect the output to the log file
-        mvn_res = subprocess.run("mvn clean install", cwd=f"{issue_folder_dir}/{issue_id}/output/{repo_name}", shell=True, stdout=log_file_obj)
-        if mvn_res.returncode != 0:
+        build_status = subprocess.run(f"./gradlew -b  {build_script_destination_path} compileJava", cwd = os.path.abspath("resources"), shell=True, stderr=log_file_obj)
+        
+        if build_status.returncode != 0:
             print(f"Error in building the minimized program {issue_id}")
         else:
             print(f"Minimized program {issue_id} built successfully")
 
     # need a comparator to compare two log file.
     # how to process the generated log, which portion to take?? how to ignore the non relevant portion of the log lines
-    #         
+    
 
     return result
 
@@ -408,16 +420,11 @@ def main():
 
     parsed_data = read_json_from_file(json_file_path)
 
-    # test code. will remove later
-    issue_to_test = ["cf-6282"]
-
     evaluation_results: list[Result] = []
     json_status: dict[str, str] = {} # Contains PASS/FAIL status of targets to be printed as a json file 
     if parsed_data:
         for issue in parsed_data:
             issue_id = issue["issue_id"]
-            if issue_id not in issue_to_test: #test code
-                continue
             print(f"{issue_id} execution starts =========>")
             result = performEvaluation(issue)
             evaluation_results.append(result)
