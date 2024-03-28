@@ -24,11 +24,7 @@
         "branch": "",
         "commit_hash": "",
         "project_name": "Chronicle-Core",
-        "input_build_command": "mvn -X compile",
-        "output_build":{
-            "tool": "gradle",
-            "command": "compileJava"
-        },
+        "build_command": "mvn -X compile",
         "root_dir": "src/main/java",
         "targets": [
             {
@@ -39,7 +35,8 @@
         ],
         "cf_version": "3.40.0",
         "java_version": "jdk-17",
-        "note": ""
+        "note": "",
+        "bug_type": "crash"
     },
     {
         "issue_id" : "cf-6077",
@@ -58,7 +55,8 @@
         ],
         "cf_version": "3.36.0",
         "java_version": "",
-        "note": ""
+        "note": "",
+        "bug_type": "error"
     },
     {
         "issue_id" : "cf-6060",
@@ -134,7 +132,8 @@
         ],
         "cf_version": "3.35.0",
         "java_version": "jdk-17",
-        "note": ""
+        "note": "",
+        "bug_type": "crash"
     },
     {
         "issue_id" : "cf-4614",
@@ -172,7 +171,8 @@
         ],
         "cf_version": "3.7.1",
         "java_version": "",
-        "note": "Condsider adding Util.transform method in target method."
+        "note": "Condsider adding Util.transform method in target method.",
+        "bug_type": "crash"
     },
     {
         "issue_id" : "cf-577",

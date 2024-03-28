@@ -360,9 +360,8 @@ def performEvaluation(issue_data) -> Result:
     
     print(f"{result.name} - {result.status}")
 
-    test_targets = ["cf6282", "cf-6077", "cf-6019", "cf-4614"]
-
-    if issue_id not in test_targets: # because we are not building the minimized program for other than test targets yet
+    test_targets = ["cf-6282", "cf-6077", "cf-6019", "cf-4614"] #only running on these targets. 
+    if issue_id not in test_targets:
         return result
 
 
@@ -374,24 +373,104 @@ def performEvaluation(issue_data) -> Result:
     copy_build_script = f"cp {build_script_path} {build_script_destination_path}"
     subprocess.run(copy_build_script, shell=True)
     
-    #compare the output with the log file exist in the specimin directory of input program.
+    #../ISSUES/cf-xx/output/projectname/build_log.txt
     log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name, minimized_program_build_log_file)
 
-    # A gradle wrapper is shipped with the specimin-evaluation program. It exists in the "resources" directory.
+    if os.path.exists(log_file):
+        os.remove(log_file)
+
     # Open the log file in write mode
     with open(log_file, "w") as log_file_obj:
         build_status = subprocess.run(f"./gradlew -b  {build_script_destination_path} compileJava", cwd = os.path.abspath("resources"), shell=True, stderr=log_file_obj)
-        
-        if build_status.returncode != 0:
-            print(f"Error in building the minimized program {issue_id}")
-        else:
-            print(f"Minimized program {issue_id} built successfully")
+        print(f"{issue_id} Minimized program gradle build status = {build_status}")
 
-    # need a comparator to compare two log file.
-    # how to process the generated log, which portion to take?? how to ignore the non relevant portion of the log lines
-    
+    expected_log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "expected_log.txt")
+    if (issue_data[JsonKeys.BUG_TYPE.value] == "crash"):
+        compare_crash_log(expected_log_file, log_file)
 
     return result
+
+
+
+def compare_crash_log(expected_log_path, actual_log_path):
+    with open(expected_log_path, "r") as file:
+        expected_content = file.read()
+
+    with open(actual_log_path, "r") as file:
+        actual_content = file.read()
+    
+    expected_lines = expected_content.split('\n')
+    actual_lines = actual_content.split('\n')
+
+    ## get line # of "; The Checker Framework crashed."
+    expected_cf_crash_line = next(line_no for line_no, line in enumerate(expected_lines) if line.lstrip().startswith('; The Checker Framework crashed.'))
+    expected_crashed_class_name_line = -1
+    for i in range(expected_cf_crash_line, expected_cf_crash_line + 5): # should be immediate next line of crash line
+        if expected_lines[i].lstrip().startswith("Compilation unit:"):
+            expected_crashed_class_name_line = i
+            break
+
+    expected_class_name_abs_path = expected_lines[expected_crashed_class_name_line].split(" ")[-1]
+    expected_crashed_class_name = os.path.basename(expected_class_name_abs_path)
+
+    exception_line = -1
+    for i in range(expected_crashed_class_name_line, expected_crashed_class_name_line + 5): # should be immediate next line of crash line
+        if expected_lines[i].lstrip().startswith("Exception:"):
+            exception_line = i
+            break
+    
+    exception_stack = [] #compare it with actual stack trace
+    expected_exception_cause = (expected_lines[exception_line].split(":")[-1]).strip()
+    for i in range(exception_line + 1, exception_line + 6):
+        if expected_lines[i].lstrip().startswith("at"):
+            exception_stack.append(expected_lines[i].split("at")[-1].strip())
+
+
+    actual_cf_crash_line = [line_no for line_no, line in enumerate(actual_lines) if line.lstrip().startswith('; The Checker Framework crashed.')]
+    if len(actual_cf_crash_line) == 0:
+        print("The Checker Framework did not crash in the minimized program")
+        return False
+    
+    for line_no in actual_cf_crash_line: # if multiple crash location found, one shoud match exactly with the expected crash information
+        actual_crashed_class_name_line = -1
+        for i in range(line_no, line_no + 5): # should be immediate next line of crash line
+            if actual_lines[i].strip().startswith("Compilation unit:"):
+                actual_crashed_class_name_line = i
+                break
+        if actual_crashed_class_name_line == -1:
+            continue  # start looking for next crash location
+        actual_class_name_abs_path = actual_lines[actual_crashed_class_name_line].split(" ")[-1]
+        actual_crashed_class_name = os.path.basename(actual_class_name_abs_path)
+
+        actual_exception_line = -1
+        for i in range(actual_crashed_class_name_line, actual_crashed_class_name_line + 5): # should be immediate next line of crash line
+            if actual_lines[i].strip().startswith("Exception:"):
+                actual_exception_line = i
+                break
+        actual_exception_stack = [] #compare it with actual stack trace
+        actual_exception_cause = (actual_lines[actual_exception_line].split(":")[-1]).strip()
+        for i in range(actual_exception_line + 1, actual_exception_line + 6):
+            if actual_lines[i].lstrip().startswith("at"):
+                actual_exception_stack.append(actual_lines[i].split("at")[-1].strip())
+        
+        log_match = True
+        if expected_crashed_class_name != actual_crashed_class_name:
+            log_match = False
+        if expected_exception_cause != actual_exception_cause:
+            log_match = False
+        
+        if len(exception_stack) != len(actual_exception_stack):
+            log_match = False
+        
+        for i in range(len(exception_stack)):
+            if exception_stack[i] != actual_exception_stack[i]:
+                log_match = False
+        
+        
+        
+    # match the class name of the crash
+
+
 
 
 def main():
