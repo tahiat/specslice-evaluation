@@ -390,7 +390,7 @@ def performEvaluation(issue_data) -> Result:
     return result
 
 
-def get_exception_data(log_file_data_list: list[str]):
+def get_exception_data(log_file_data_list: list):
     '''
     Parse the exception data from the log file
 
