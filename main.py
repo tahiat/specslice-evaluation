@@ -286,7 +286,7 @@ def build_specimin_command(project_name: str,
     for method in target_method_list:
         target_method_subcommand += "--targetMethod" + " " + f"\"{method}\""
 
-    command_args = root_dir_subcommand + " " + output_dir_subcommand + " " + target_file_subcommand + " " + target_method_subcommand
+    command_args = "--jarPath \"/Users/tahiatul/Documents/SPECIMEN/checker-frameworks/checker-framework-3.7.1/checker/dist\" " + root_dir_subcommand + " " + output_dir_subcommand + " " + target_file_subcommand + " " + target_method_subcommand
     command = "./gradlew" + " " + "run" + " " + "--args=" + f"\'{command_args}\'"
     
     return command
@@ -361,14 +361,11 @@ def performEvaluation(issue_data) -> Result:
     
     print(f"{result.name} - {result.status}")
 
-    test_targets = ["cf-6282", "cf-6077", "cf-6019", "cf-4614"] #only running on these targets. 
-    if issue_id not in test_targets:
-        return result
     # build script is shipped with input program. It exists in the "specimin" directory of the input program's root directory.
     # Coping the build script to the output directory of the minimized program.
     build_script_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "build.gradle")
 
-    if os.path.exists(build_script_path) == False:
+    if not os.path.exists(build_script_path):
         return result
     build_script_destination_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name, "build.gradle")
 
@@ -495,13 +492,11 @@ def main():
 
     parsed_data = read_json_from_file(json_file_path)
 
-    evaluation_results: list[Result] = []
+    evaluation_results = []
     json_status: dict[str, str] = {} # Contains PASS/FAIL status of targets to be printed as a json file 
     if parsed_data:
         for issue in parsed_data:
             issue_id = issue["issue_id"]
-            if issue_id != "cf-6019":
-                continue
             print(f"{issue_id} execution starts =========>")
             result = performEvaluation(issue)
             evaluation_results.append(result)
