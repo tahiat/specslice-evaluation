@@ -152,7 +152,8 @@
         ],
         "cf_version": "3.12.0",
         "java_version": "jdk-11",
-        "note": ""
+        "note": "",
+        "bug_type": ""
     },
     {
         "issue_id" : "cf-3850",

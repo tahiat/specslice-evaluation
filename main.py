@@ -6,6 +6,7 @@ import shutil
 from Keyvalue import JsonKeys
 from Result import Result
 from report_builder import TableGenerator
+from exception_data import ExceptionData
 
 issue_folder_dir = 'ISSUES'
 specimin_input = 'input'
@@ -364,7 +365,6 @@ def performEvaluation(issue_data) -> Result:
     if issue_id not in test_targets:
         return result
 
-
     # build script is shipped with input program. It exists in the "specimin" directory of the input program's root directory.
     # Coping the build script to the output directory of the minimized program.
     build_script_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "build.gradle")
@@ -385,14 +385,58 @@ def performEvaluation(issue_data) -> Result:
         print(f"{issue_id} Minimized program gradle build status = {build_status}")
 
     expected_log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "expected_log.txt")
-    if (issue_data[JsonKeys.BUG_TYPE.value] == "crash"):
-        compare_crash_log(expected_log_file, log_file)
-
+    if (JsonKeys.BUG_TYPE.value in issue_data and issue_data[JsonKeys.BUG_TYPE.value] == "crash"):
+        status = compare_crash_log(expected_log_file, log_file)
+        result.set_preservation_status(status)
     return result
 
 
+def get_exception_data(log_file_data_list: list[str]):
+    '''
+    Parse the exception data from the log file
+
+    Returns:
+        exception_data (ExceptionData): exception data
+    '''
+
+    return_data = []
+    cf_crash_line = [line_no for line_no, line in enumerate(log_file_data_list) if line.lstrip().startswith('; The Checker Framework crashed.')]
+    if len(cf_crash_line) == 0:
+        return None
+
+    for line_no in cf_crash_line: # if multiple crash location found, one shoud match exactly with the expected crash information
+        crashed_class_name_line = -1
+        for i in range(line_no, line_no + 5): # should be immediate next line of crash line
+            if log_file_data_list[i].strip().startswith("Compilation unit:"):
+                crashed_class_name_line = i
+                break
+        if crashed_class_name_line == -1:
+            continue  # start looking for next crash location
+        class_name_abs_path = log_file_data_list[crashed_class_name_line].split(" ")[-1]
+        crashed_class_name = os.path.basename(class_name_abs_path)
+
+        exception_line = -1
+        for i in range(crashed_class_name_line, crashed_class_name_line + 5): # should be immediate next line of crash line
+            if log_file_data_list[i].strip().startswith("Exception:"):
+                exception_line = i
+                break
+        exception_stack = [] #compare it with actual stack trace
+        exception_cause = (log_file_data_list[exception_line].split(":")[-1]).strip()
+        for i in range(exception_line + 1, exception_line + 6):
+            if log_file_data_list[i].lstrip().startswith("at"):
+                exception_stack.append(log_file_data_list[i].split("at")[-1].strip())
+        
+        if crashed_class_name != None and exception_cause != None and len(exception_stack) > 0:
+            exception_data = ExceptionData(crashed_class_name, exception_cause, exception_stack)
+            return_data.append(exception_data)
+
+    return return_data
 
 def compare_crash_log(expected_log_path, actual_log_path):
+    '''
+    Compare the crash log of the minimized program with the expected crash log
+    '''
+
     with open(expected_log_path, "r") as file:
         expected_content = file.read()
 
@@ -402,75 +446,25 @@ def compare_crash_log(expected_log_path, actual_log_path):
     expected_lines = expected_content.split('\n')
     actual_lines = actual_content.split('\n')
 
-    ## get line # of "; The Checker Framework crashed."
-    expected_cf_crash_line = next(line_no for line_no, line in enumerate(expected_lines) if line.lstrip().startswith('; The Checker Framework crashed.'))
-    expected_crashed_class_name_line = -1
-    for i in range(expected_cf_crash_line, expected_cf_crash_line + 5): # should be immediate next line of crash line
-        if expected_lines[i].lstrip().startswith("Compilation unit:"):
-            expected_crashed_class_name_line = i
-            break
+    expected_crash_datas = get_exception_data(expected_lines) # there should be 1 crash data
+    actual_crash_data = get_exception_data(actual_lines)
 
-    expected_class_name_abs_path = expected_lines[expected_crashed_class_name_line].split(" ")[-1]
-    expected_crashed_class_name = os.path.basename(expected_class_name_abs_path)
+    if expected_crash_datas != None or len(expected_crash_datas) != 0:
+        expected_crash_data = expected_crash_datas[0]
+    else:
+        return False # no crash data found in the expected log file
 
-    exception_line = -1
-    for i in range(expected_crashed_class_name_line, expected_crashed_class_name_line + 5): # should be immediate next line of crash line
-        if expected_lines[i].lstrip().startswith("Exception:"):
-            exception_line = i
-            break
-    
-    exception_stack = [] #compare it with actual stack trace
-    expected_exception_cause = (expected_lines[exception_line].split(":")[-1]).strip()
-    for i in range(exception_line + 1, exception_line + 6):
-        if expected_lines[i].lstrip().startswith("at"):
-            exception_stack.append(expected_lines[i].split("at")[-1].strip())
+    is_crash_matched = True
+    for data in actual_crash_data:
+        is_crash_matched = True
+        if expected_crash_data.exception != data.exception or expected_crash_data.exception_class != data.exception_class:
+            is_crash_matched = False
+            continue
+        if expected_crash_data.stack_trace != data.stack_trace:
+            is_crash_matched = False
+            continue
 
-
-    actual_cf_crash_line = [line_no for line_no, line in enumerate(actual_lines) if line.lstrip().startswith('; The Checker Framework crashed.')]
-    if len(actual_cf_crash_line) == 0:
-        print("The Checker Framework did not crash in the minimized program")
-        return False
-    
-    for line_no in actual_cf_crash_line: # if multiple crash location found, one shoud match exactly with the expected crash information
-        actual_crashed_class_name_line = -1
-        for i in range(line_no, line_no + 5): # should be immediate next line of crash line
-            if actual_lines[i].strip().startswith("Compilation unit:"):
-                actual_crashed_class_name_line = i
-                break
-        if actual_crashed_class_name_line == -1:
-            continue  # start looking for next crash location
-        actual_class_name_abs_path = actual_lines[actual_crashed_class_name_line].split(" ")[-1]
-        actual_crashed_class_name = os.path.basename(actual_class_name_abs_path)
-
-        actual_exception_line = -1
-        for i in range(actual_crashed_class_name_line, actual_crashed_class_name_line + 5): # should be immediate next line of crash line
-            if actual_lines[i].strip().startswith("Exception:"):
-                actual_exception_line = i
-                break
-        actual_exception_stack = [] #compare it with actual stack trace
-        actual_exception_cause = (actual_lines[actual_exception_line].split(":")[-1]).strip()
-        for i in range(actual_exception_line + 1, actual_exception_line + 6):
-            if actual_lines[i].lstrip().startswith("at"):
-                actual_exception_stack.append(actual_lines[i].split("at")[-1].strip())
-        
-        log_match = True
-        if expected_crashed_class_name != actual_crashed_class_name:
-            log_match = False
-        if expected_exception_cause != actual_exception_cause:
-            log_match = False
-        
-        if len(exception_stack) != len(actual_exception_stack):
-            log_match = False
-        
-        for i in range(len(exception_stack)):
-            if exception_stack[i] != actual_exception_stack[i]:
-                log_match = False
-        
-        
-        
-    # match the class name of the crash
-
-
+    return is_crash_matched
 
 
 def main():
@@ -524,11 +518,11 @@ def main():
         json.dump(json_status, json_file, indent= 2)
 
     print("\n\n\n\n")
-    print(f"issue_name    |    status    |    reason")
+    print(f"issue_name    |    status    |    reason  | preservation_status")
     print("--------------------------------------------")
     case = 1
     for minimization_result in evaluation_results:
-        print(f"({case}){minimization_result.name}    |    {minimization_result.status}     |    {minimization_result.reason}")
+        print(f"({case}){minimization_result.name}    |    {minimization_result.status}     |    {minimization_result.reason}  | {minimization_result.preservation_status}")
         case +=1
 
     
