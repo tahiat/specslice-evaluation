@@ -286,7 +286,7 @@ def build_specimin_command(project_name: str,
     for method in target_method_list:
         target_method_subcommand += "--targetMethod" + " " + f"\"{method}\""
 
-    command_args = "--jarPath \"/Users/tahiatul/Documents/SPECIMEN/checker-frameworks/checker-framework-3.7.1/checker/dist\" " + root_dir_subcommand + " " + output_dir_subcommand + " " + target_file_subcommand + " " + target_method_subcommand
+    command_args = root_dir_subcommand + " " + output_dir_subcommand + " " + target_file_subcommand + " " + target_method_subcommand
     command = "./gradlew" + " " + "run" + " " + "--args=" + f"\'{command_args}\'"
     
     return command
