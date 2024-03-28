@@ -1,5 +1,7 @@
+from typing import List
+
 class ExceptionData:
-    def __init__(self, exception_class: str, exception: str, stack_trace: list[str]):
+    def __init__(self, exception_class: str, exception: str, stack_trace: List[str]):
         '''
         Constructor of the class
         Parameters:

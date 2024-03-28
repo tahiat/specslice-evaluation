@@ -367,6 +367,9 @@ def performEvaluation(issue_data) -> Result:
     # build script is shipped with input program. It exists in the "specimin" directory of the input program's root directory.
     # Coping the build script to the output directory of the minimized program.
     build_script_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "build.gradle")
+
+    if os.path.exists(build_script_path) == False:
+        return result
     build_script_destination_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name, "build.gradle")
 
     copy_build_script = f"cp {build_script_path} {build_script_destination_path}"
@@ -423,7 +426,7 @@ def get_exception_data(log_file_data_list: list[str]):
         exception_cause = (log_file_data_list[exception_line].split(":")[-1]).strip()
         for i in range(exception_line + 1, exception_line + 6):
             if log_file_data_list[i].lstrip().startswith("at"):
-                exception_stack.append(log_file_data_list[i].split("at")[-1].strip())
+                exception_stack.append(log_file_data_list[i].split()[-1].strip())
         
         if crashed_class_name != None and exception_cause != None and len(exception_stack) > 0:
             exception_data = ExceptionData(crashed_class_name, exception_cause, exception_stack)
@@ -497,6 +500,8 @@ def main():
     if parsed_data:
         for issue in parsed_data:
             issue_id = issue["issue_id"]
+            if issue_id != "cf-6019":
+                continue
             print(f"{issue_id} execution starts =========>")
             result = performEvaluation(issue)
             evaluation_results.append(result)
@@ -517,11 +522,11 @@ def main():
         json.dump(json_status, json_file, indent= 2)
 
     print("\n\n\n\n")
-    print(f"issue_name    |    status    |    reason  | preservation_status")
+    print(f"issue_name    |    status    |  Fail reason  | preservation_status")
     print("--------------------------------------------")
     case = 1
     for minimization_result in evaluation_results:
-        print(f"({case}){minimization_result.name}    |    {minimization_result.status}     |    {minimization_result.reason}  | {minimization_result.preservation_status}")
+        print(f"({case}){minimization_result.name}    |    {minimization_result.status}     |    {minimization_result.reason}      | {minimization_result.preservation_status}")
         case +=1
 
     
