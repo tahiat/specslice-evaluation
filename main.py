@@ -364,7 +364,6 @@ def performEvaluation(issue_data) -> Result:
     test_targets = ["cf-6282", "cf-6077", "cf-6019", "cf-4614"] #only running on these targets. 
     if issue_id not in test_targets:
         return result
-
     # build script is shipped with input program. It exists in the "specimin" directory of the input program's root directory.
     # Coping the build script to the output directory of the minimized program.
     build_script_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "build.gradle")

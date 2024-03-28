@@ -10,10 +10,10 @@ class Result:
         self.name = name
         self.status = status
         self.reason = reason
-        self.status = False
+        self.preservation_status = False
 
     def set_preservation_status(self, status):
         '''
         status True if the minimized program preserve the target behavior
         '''
-        self.status = status
+        self.preservation_status = status
