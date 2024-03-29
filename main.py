@@ -214,7 +214,8 @@ def clone_specimin(path_to_clone, url):
 def build_specimin_command(project_name: str,
                            target_base_dir_path: str,
                            root_dir: str,  
-                           targets: list):
+                           targets: list,
+                           jar_path: str = ""):
     '''
     Build the gradle command to execute Specimin on target project
 
@@ -277,7 +278,6 @@ def build_specimin_command(project_name: str,
 
     output_dir_subcommand = "--outputDirectory" + " " + f"\"{output_dir}\""
     root_dir_subcommand = "--root" + " " + f"\"{root_dir}\""
-
     target_file_subcommand = ""
     for file in target_file_list:
         target_file_subcommand += "--targetFile" + " " + f"\"{file}\""
@@ -285,8 +285,12 @@ def build_specimin_command(project_name: str,
     target_method_subcommand = ""
     for method in target_method_list:
         target_method_subcommand += "--targetMethod" + " " + f"\"{method}\""
+    
+    jar_path_subcommand = ""
+    if jar_path:
+        jar_path_subcommand = " --jarPath" + " " + f"\"{jar_path}\""
 
-    command_args = root_dir_subcommand + " " + output_dir_subcommand + " " + target_file_subcommand + " " + target_method_subcommand
+    command_args = root_dir_subcommand + " " + output_dir_subcommand + " " + target_file_subcommand + " " + target_method_subcommand + jar_path_subcommand
     command = "./gradlew" + " " + "run" + " " + "--args=" + f"\'{command_args}\'"
     
     return command
@@ -342,6 +346,8 @@ def performEvaluation(issue_data) -> Result:
     url = issue_data[JsonKeys.URL.value]
     branch = issue_data[JsonKeys.BRANCH.value]
     commit_hash = issue_data[JsonKeys.COMMIT_HASH.value]
+    qual_jar_required = issue_data[JsonKeys.CHECKER_QUAL_REQURIED.value]
+    qual_jar_dir = ""
 
     issue_folder_abs_dir = os.path.abspath(issue_folder_dir)
     input_dir = create_issue_directory(issue_folder_abs_dir, issue_id)
@@ -349,14 +355,16 @@ def performEvaluation(issue_data) -> Result:
     get_target_data(url, branch, commit_hash, input_dir) 
     
     repo_name = get_repository_name(url)
+    if qual_jar_required:
+        qual_jar_dir = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name)
     specimin_command = ""
     result: Result = None
     specimin_path = get_specimin_env_var()
+    specimin_command = build_specimin_command(repo_name, os.path.join(issue_folder_abs_dir, issue_id), issue_data[JsonKeys.ROOT_DIR.value], issue_data[JsonKeys.TARGETS.value], qual_jar_dir if os.path.exists(qual_jar_dir) else "")
+    
     if specimin_path is not None and os.path.exists(specimin_path):
-        specimin_command = build_specimin_command(repo_name, os.path.join(issue_folder_abs_dir, issue_id), issue_data[JsonKeys.ROOT_DIR.value], issue_data[JsonKeys.TARGETS.value])
         result = run_specimin(issue_id ,specimin_command, specimin_path)
     else:
-        specimin_command = build_specimin_command(repo_name, os.path.join(issue_folder_abs_dir, issue_id), issue_data[JsonKeys.ROOT_DIR.value], issue_data[JsonKeys.TARGETS.value])
         result = run_specimin(issue_id ,specimin_command, os.path.join(issue_folder_abs_dir, specimin_project_name))
     
     print(f"{result.name} - {result.status}")
