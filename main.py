@@ -1,4 +1,5 @@
 import json
+import re
 import os
 import sys
 import subprocess
@@ -387,15 +388,47 @@ def performEvaluation(issue_data) -> Result:
         os.remove(log_file)
 
     # Open the log file in write mode
+    min_prgrm_build_status = None
     with open(log_file, "w") as log_file_obj:
-        build_status = subprocess.run(f"./gradlew -b  {build_script_destination_path} compileJava", cwd = os.path.abspath("resources"), shell=True, stderr=log_file_obj)
-        print(f"{issue_id} Minimized program gradle build status = {build_status}")
+        min_prgrm_build_status = subprocess.run(f"./gradlew -b  {build_script_destination_path} compileJava", cwd = os.path.abspath("resources"), shell=True, stderr=log_file_obj)
+        print(f"{issue_id} Minimized program gradle build status = {min_prgrm_build_status}")
 
     expected_log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "expected_log.txt")
-    if (JsonKeys.BUG_TYPE.value in issue_data and issue_data[JsonKeys.BUG_TYPE.value] == "crash"):
+    if (JsonKeys.BUG_TYPE.value in issue_data and issue_data[JsonKeys.BUG_TYPE.value] == "crash" and min_prgrm_build_status.returncode != 0):
         status = compare_crash_log(expected_log_file, log_file)
         result.set_preservation_status(status)
+    elif (JsonKeys.BUG_TYPE.value in issue_data and issue_data[JsonKeys.BUG_TYPE.value] == "error"):
+        status = compare_error_log(expected_log_file, log_file, issue_data[JsonKeys.BUG_PATTERN.value])
+        result.set_preservation_status(status)
     return result
+
+
+def compare_error_log(expected_log_path, actual_log_path, bug_pattern_data):
+    '''
+    Compare the error log of the minimized program with the expected error log
+    '''
+    with open(expected_log_path, "r") as file:
+        expected_content = file.read()
+
+    with open(actual_log_path, "r") as file:
+        actual_content = file.read()
+    
+   # bug_pattern_data = json.loads(bug_pattern_data)
+
+    file_pattern = bug_pattern_data["file_pattern"]
+    error_pattern = bug_pattern_data["error_pattern"]
+    source_pattern = bug_pattern_data["source_pattern"]
+    reason_pattern = bug_pattern_data["reason_pattern"]
+
+    error_file = re.search(file_pattern, expected_content).group(1)
+    error_message = re.search(error_pattern, expected_content).group(1)
+    error_source = re.search(source_pattern, expected_content).group(1)
+    error_reason = re.search(reason_pattern, expected_content).group(1)
+
+    if error_file in actual_content and error_message in actual_content and error_source in actual_content and error_reason in actual_content:
+        return True
+    else:
+        return False
 
 
 def get_exception_data(log_file_data_list: list):
@@ -428,7 +461,9 @@ def get_exception_data(log_file_data_list: list):
                 exception_line = i
                 break
         exception_stack = [] #compare it with actual stack trace
-        exception_cause = (log_file_data_list[exception_line].split(":")[-1]).strip()
+        exception_line_str = log_file_data_list[exception_line] #Exception: java.lang.NullPointerException; java.lang.NullPointerException
+        exception_line_sub_str = (exception_line_str[exception_line_str.index("Exception:") + 10:]).split()[0] # java.lang.NullPointerException; java.lang.NullPointerException
+        exception_cause = re.sub(r'^[^a-zA-Z]+|[^a-zA-Z]+$', '', exception_line_sub_str) # java.lang.NullPointerException
         for i in range(exception_line + 1, exception_line + 6):
             if log_file_data_list[i].lstrip().startswith("at"):
                 exception_stack.append(log_file_data_list[i].split()[-1].strip())

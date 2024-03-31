@@ -60,6 +60,12 @@
         "java_version": "",
         "note": "",
         "bug_type": "error",
+        "bug_pattern": {
+            "file_pattern": "(\\w+\\.java)",
+            "error_pattern": "error: \\[(.+?)\\]",
+            "source_pattern": "The type of object is: (.+)",
+            "reason_pattern": "Reason for going out of scope: (.+)"
+        },
         "checker_qual_required": false
     },
     {
@@ -80,13 +86,13 @@
         "cf_version": "",
         "java_version": "",
         "note": "",
-        "bug_type": "",
+        "bug_type": "crash",
         "checker_qual_required": false
     },
     {
         "issue_id" : "cf-6030",
         "url": "https://github.com/tahiat/cassandra.git",
-        "branch": "cf-testing",
+        "branch": "cf-6030",
         "commit_hash": "",
         "project_name": "cassandra",
         "build_command": "ant cf-only -Dcf.check.only=org/apache/cassandra/service/reads/DataResolver.java",
@@ -98,16 +104,16 @@
                 "package": "org.apache.cassandra.service.reads"
             }
         ],
-        "cf_version": "3.39.0",
+        "cf_version": "3.35.0",
         "java_version": "jdk-11",
         "note": "This issue describes multiple bugs. the second one is \"ant cf-only -Dcf.check.only=org/apache/cassandra/io/sstable/format/SSTableScanner.java\"",
-        "bug_type": "",
-        "checker_qual_required": false
+        "bug_type": "crash",
+        "checker_qual_required": true
     },
     {
         "issue_id" : "cf-6030b",
         "url": "https://github.com/tahiat/cassandra.git",
-        "branch": "cf-testing",
+        "branch": "cf-6030b",
         "commit_hash": "",
         "project_name": "cassandra",
         "build_command": "ant cf-only -Dcf.check.only=org/apache/cassandra/io/sstable/format/SSTableScanner.java",
@@ -119,11 +125,11 @@
                 "package": "org.apache.cassandra.io.sstable.format"
             }
         ],
-        "cf_version": "3.39.0",
+        "cf_version": "3.35.0",
         "java_version": "jdk-11",
         "note": "",
-        "bug_type": "",
-        "checker_qual_required": false
+        "bug_type": "crash",
+        "checker_qual_required": true
     },
     {
         "issue_id" : "cf-6019",
