@@ -400,7 +400,36 @@ def performEvaluation(issue_data) -> Result:
     elif (JsonKeys.BUG_TYPE.value in issue_data and issue_data[JsonKeys.BUG_TYPE.value] == "error"):
         status = compare_error_log(expected_log_file, log_file, issue_data[JsonKeys.BUG_PATTERN.value])
         result.set_preservation_status(status)
+    elif (JsonKeys.BUG_TYPE.value in issue_data and issue_data[JsonKeys.BUG_TYPE.value] == "false_positive"):
+        status = compare_false_positive_log(expected_log_file, log_file, issue_data[JsonKeys.BUG_PATTERN.value])
+        result.set_preservation_status(status)
     return result
+
+
+
+def compare_false_positive_log(expected_log_path, actual_log_path,  bug_pattern_data):
+    with open(expected_log_path, "r") as file:
+        expected_content = file.read()
+
+    with open(actual_log_path, "r") as file:
+        actual_content = file.read()
+    
+    file_pattern = bug_pattern_data["file_pattern"]
+    error_pattern = bug_pattern_data["error_pattern"]
+    source_pattern = bug_pattern_data["source_pattern"]
+    found_pattern = bug_pattern_data["found_pattern"]
+    required_pattern = bug_pattern_data["required_pattern"]
+
+    java_file = re.search(file_pattern, expected_content).group(1)
+    error_message = re.search(error_pattern, expected_content).group(1)
+    code_triggered_bug = re.search(source_pattern, expected_content).group(1)
+    found_type = re.search(found_pattern, expected_content).group(1)
+    required_type = re.search(required_pattern, expected_content).group(1)
+
+    if java_file in actual_content and error_message in actual_content and code_triggered_bug in actual_content and found_type in actual_content and required_type in actual_content:
+        return True
+    else:
+        return False
 
 
 def compare_error_log(expected_log_path, actual_log_path, bug_pattern_data):
