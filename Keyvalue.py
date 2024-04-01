@@ -17,3 +17,6 @@ class JsonKeys(Enum):
     NOTE = 'note'
     INNER_CLASS = 'inner_class'
     NON_PRIMARY_CLASS = 'non_primary_class'
+    BUG_TYPE = 'bug_type'
+    CHECKER_QUAL_REQURIED = 'checker_qual_required'
+    BUG_PATTERN = 'bug_pattern'

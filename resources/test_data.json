@@ -16,7 +16,9 @@
         ],
         "cf_version": "2.1.10",
         "java_version": "",
-        "note": ""
+        "note": "",
+        "bug_type": "",
+        "checker_qual_required": false
     },
     {
         "issue_id" : "cf-6282",
@@ -34,8 +36,10 @@
             }
         ],
         "cf_version": "3.40.0",
-        "java_version": "",
-        "note": ""
+        "java_version": "jdk-17",
+        "note": "",
+        "bug_type": "crash",
+        "checker_qual_required": false
     },
     {
         "issue_id" : "cf-6077",
@@ -54,7 +58,15 @@
         ],
         "cf_version": "3.36.0",
         "java_version": "",
-        "note": ""
+        "note": "",
+        "bug_type": "error",
+        "bug_pattern": {
+            "file_pattern": "(\\w+\\.java)",
+            "error_pattern": "error: \\[(.+?)\\]",
+            "source_pattern": "The type of object is: (.+)",
+            "reason_pattern": "Reason for going out of scope: (.+)"
+        },
+        "checker_qual_required": false
     },
     {
         "issue_id" : "cf-6060",
@@ -73,12 +85,14 @@
         ],
         "cf_version": "",
         "java_version": "",
-        "note": ""
+        "note": "",
+        "bug_type": "crash",
+        "checker_qual_required": false
     },
     {
         "issue_id" : "cf-6030",
-        "url": "https://github.com/jacek-lewandowski/cassandra.git",
-        "branch": "cf-testing",
+        "url": "https://github.com/tahiat/cassandra.git",
+        "branch": "cf-6030",
         "commit_hash": "",
         "project_name": "cassandra",
         "build_command": "ant cf-only -Dcf.check.only=org/apache/cassandra/service/reads/DataResolver.java",
@@ -90,14 +104,16 @@
                 "package": "org.apache.cassandra.service.reads"
             }
         ],
-        "cf_version": "3.39.0",
+        "cf_version": "3.35.0",
         "java_version": "jdk-11",
-        "note": "This issue describes multiple bugs. the second one is \"ant cf-only -Dcf.check.only=org/apache/cassandra/io/sstable/format/SSTableScanner.java\""
+        "note": "This issue describes multiple bugs. the second one is \"ant cf-only -Dcf.check.only=org/apache/cassandra/io/sstable/format/SSTableScanner.java\"",
+        "bug_type": "crash",
+        "checker_qual_required": true
     },
     {
         "issue_id" : "cf-6030b",
-        "url": "https://github.com/jacek-lewandowski/cassandra.git",
-        "branch": "cf-testing",
+        "url": "https://github.com/tahiat/cassandra.git",
+        "branch": "cf-6030b",
         "commit_hash": "",
         "project_name": "cassandra",
         "build_command": "ant cf-only -Dcf.check.only=org/apache/cassandra/io/sstable/format/SSTableScanner.java",
@@ -109,14 +125,16 @@
                 "package": "org.apache.cassandra.io.sstable.format"
             }
         ],
-        "cf_version": "3.39.0",
+        "cf_version": "3.35.0",
         "java_version": "jdk-11",
-        "note": ""
+        "note": "",
+        "bug_type": "crash",
+        "checker_qual_required": true
     },
     {
         "issue_id" : "cf-6019",
         "url": "https://github.com/tahiat/kafka-sensors.git",
-        "branch": "specimin-test",
+        "branch": "cf-6019",
         "commit_hash": "",
         "project_name": "kafka-sensors",
         "build_command": "bazel test //src/test/...",
@@ -130,7 +148,9 @@
         ],
         "cf_version": "3.35.0",
         "java_version": "jdk-17",
-        "note": ""
+        "note": "",
+        "bug_type": "crash",
+        "checker_qual_required": false
     },
     {
         "issue_id" : "cf-4614",
@@ -149,12 +169,21 @@
         ],
         "cf_version": "3.12.0",
         "java_version": "jdk-11",
-        "note": ""
+        "note": "",
+        "bug_type": "false_positive",
+        "bug_pattern": {
+            "file_pattern": "(\\w+\\.java)",
+            "error_pattern": "error: \\[(.+?)\\]",
+            "source_pattern": "map(.+?)",
+            "found_pattern": "found   : (.*)",
+            "required_pattern": "required: (.*)"
+        },
+        "checker_qual_required": false
     },
     {
         "issue_id" : "cf-3850",
         "url": "https://github.com/tahiat/calcite.git",
-        "branch": "cf-test",
+        "branch": "cf-3850",
         "commit_hash": "",
         "project_name": "calcite",
         "build_command": "",
@@ -168,7 +197,9 @@
         ],
         "cf_version": "3.7.1",
         "java_version": "",
-        "note": "Condsider adding Util.transform method in target method."
+        "note": "Condsider adding Util.transform method in target method.",
+        "bug_type": "crash",
+        "checker_qual_required": true
     },
     {
         "issue_id" : "cf-577",
@@ -188,7 +219,9 @@
         ],
         "cf_version": "1.9.11",
         "java_version": "Jdk-8",
-        "note": "java.util.stream -> com.example.stream"
+        "note": "java.util.stream -> com.example.stream",
+        "bug_type": "",
+        "checker_qual_required": false
     },
     {
         "issue_id" : "cf-3032",
@@ -208,7 +241,9 @@
         ],
         "cf_version": "3.1.0",
         "java_version": "jdk-11",
-        "note": ""
+        "note": "",
+        "bug_type": "",
+        "checker_qual_required": false
     },
     {
         "issue_id" : "cf-3619",
@@ -227,7 +262,9 @@
         ],
         "cf_version": "3.6.0",
         "java_version": "jdk-11",
-        "note": "Project build: ./gradlew build. Error should occur on nullness checker"
+        "note": "Project build: ./gradlew build. Error should occur on nullness checker",
+        "bug_type": "",
+        "checker_qual_required": false
     },
     {
         "issue_id" : "cf-3021",
@@ -246,7 +283,17 @@
         ],
         "cf_version": "3.0.1",
         "java_version": "Jdk-8",
-        "note": ""
+        "note": "",
+        "bug_type": "semi_crash",
+        "bug_pattern": {
+            "file_pattern": "Compilation unit: (\\w+\\.java)",
+            "error_pattern": "error: (.+?):",
+            "target_pattern": "Targeted annotations: (.*)",
+            "valid_pattern": "Valid annotations: (.*)",
+            "exception_pattern": "Exception: (.+);",
+            "stack_trace_pattern": "Stack trace: (.+)"
+        },
+        "checker_qual_required": true
     },
     {
         "issue_id" : "cf-3020",
@@ -266,7 +313,9 @@
         ],
         "cf_version": "3.0.1",
         "java_version": "Jdk-8",
-        "note": ""
+        "note": "",
+        "bug_type": "",
+        "checker_qual_required": false
     },
     {
         "issue_id" : "cf-3022",
@@ -286,7 +335,9 @@
         ],
         "cf_version": "3.0.1",
         "java_version": "Jdk-8",
-        "note": ""
+        "note": "",
+        "bug_type": "",
+        "checker_qual_required": false
     },
     {
         "issue_id" : "cf-691",
@@ -305,7 +356,9 @@
         ],
         "cf_version": "1.9.13",
         "java_version": "Jdk-8",
-        "note": "target method is not confirmed. package name changed."
+        "note": "target method is not confirmed. package name changed.",
+        "bug_type": "",
+        "checker_qual_required": false
     },
     {
         "issue_id" : "Issue689",
@@ -326,7 +379,9 @@
         ],
         "cf_version": "1.9.13",
         "java_version": "jdk-8",
-        "note": "package java.util changed to com.example"
+        "note": "package java.util changed to com.example",
+        "bug_type": "",
+        "checker_qual_required": false
     },
     {
         "issue_id" : "cf-6388",
@@ -346,6 +401,8 @@
         ],
         "cf_version": "3.40.0",
         "java_version": "jdk-17",
-        "note": ""
+        "note": "",
+        "bug_type": "",
+        "checker_qual_required": false
     }
 ]
