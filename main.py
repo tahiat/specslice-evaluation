@@ -370,7 +370,7 @@ def performEvaluation(issue_data) -> Result:
     # Coping the build script to the output directory of the minimized program.
     build_script_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "build.gradle")
 
-    if not os.path.exists(build_script_path):
+    if not os.path.exists(build_script_path): #TODO: when finish adding build script, raise exception to indicate missing build script
         return result
     build_script_destination_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name, "build.gradle")
 
