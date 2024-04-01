@@ -284,8 +284,16 @@
         "cf_version": "3.0.1",
         "java_version": "Jdk-8",
         "note": "",
-        "bug_type": "",
-        "checker_qual_required": false
+        "bug_type": "semi_crash",
+        "bug_pattern": {
+            "file_pattern": "Compilation unit: (\\w+\\.java)",
+            "error_pattern": "error: (.+?):",
+            "target_pattern": "Targeted annotations: (.*)",
+            "valid_pattern": "Valid annotations: (.*)",
+            "exception_pattern": "Exception: (.+);",
+            "stack_trace_pattern": "Stack trace: (.+)"
+        },
+        "checker_qual_required": true
     },
     {
         "issue_id" : "cf-3020",

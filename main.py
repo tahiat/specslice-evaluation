@@ -84,12 +84,8 @@ def create_issue_directory(issue_container_dir, issue_id):
     os.makedirs(issue_directory_name, exist_ok=True)
 
     specimin_input_dir = os.path.join(issue_directory_name, specimin_input)
-    #specimin_output_dir = os.path.join(issue_directory_name, specimin_output)
-
     os.makedirs(specimin_input_dir, exist_ok=True)
-    #if os.path.exists(specimin_output):
-    #     shutil.rmtree(specimin_output)
-    #os.makedirs(specimin_output_dir, exist_ok=True)
+
     return specimin_input_dir
 
 
@@ -403,8 +399,26 @@ def performEvaluation(issue_data) -> Result:
     elif (JsonKeys.BUG_TYPE.value in issue_data and issue_data[JsonKeys.BUG_TYPE.value] == "false_positive"):
         status = compare_false_positive_log(expected_log_file, log_file, issue_data[JsonKeys.BUG_PATTERN.value])
         result.set_preservation_status(status)
+    elif (JsonKeys.BUG_TYPE.value in issue_data and issue_data[JsonKeys.BUG_TYPE.value] == "semi_crash"):
+        status = compare_semi_crash(expected_log_file, log_file, issue_data[JsonKeys.BUG_PATTERN.value])
+        result.set_preservation_status(status)
     return result
 
+
+def compare_semi_crash(expected_log_path, actual_log_path, bug_pattern_data):
+    with open(expected_log_path, "r") as file:
+        expected_content = file.read()
+
+    with open(actual_log_path, "r") as file:
+        actual_content = file.read()
+
+    logs_to_match = []
+
+    for key in bug_pattern_data:
+        pattern = bug_pattern_data[key]
+        content = re.search(pattern, expected_content).group(1)
+        logs_to_match.append(content)
+    return all(string in actual_content for string in logs_to_match)
 
 
 def compare_false_positive_log(expected_log_path, actual_log_path,  bug_pattern_data):
@@ -426,10 +440,7 @@ def compare_false_positive_log(expected_log_path, actual_log_path,  bug_pattern_
     found_type = re.search(found_pattern, expected_content).group(1)
     required_type = re.search(required_pattern, expected_content).group(1)
 
-    if java_file in actual_content and error_message in actual_content and code_triggered_bug in actual_content and found_type in actual_content and required_type in actual_content:
-        return True
-    else:
-        return False
+    return java_file in actual_content and error_message in actual_content and code_triggered_bug in actual_content and found_type in actual_content and required_type in actual_content
 
 
 def compare_error_log(expected_log_path, actual_log_path, bug_pattern_data):
@@ -442,8 +453,6 @@ def compare_error_log(expected_log_path, actual_log_path, bug_pattern_data):
     with open(actual_log_path, "r") as file:
         actual_content = file.read()
     
-   # bug_pattern_data = json.loads(bug_pattern_data)
-
     file_pattern = bug_pattern_data["file_pattern"]
     error_pattern = bug_pattern_data["error_pattern"]
     source_pattern = bug_pattern_data["source_pattern"]
@@ -454,10 +463,7 @@ def compare_error_log(expected_log_path, actual_log_path, bug_pattern_data):
     error_source = re.search(source_pattern, expected_content).group(1)
     error_reason = re.search(reason_pattern, expected_content).group(1)
 
-    if error_file in actual_content and error_message in actual_content and error_source in actual_content and error_reason in actual_content:
-        return True
-    else:
-        return False
+    return error_file in actual_content and error_message in actual_content and error_source in actual_content and error_reason in actual_content
 
 
 def get_exception_data(log_file_data_list: list):
@@ -573,12 +579,7 @@ def main():
             result = performEvaluation(issue)
             evaluation_results.append(result)
             json_status[issue_id] = result.status
-            print((f"{issue_id} <========= execution Ends."))
-            # task of crash generation on minimized program. 
-            # copy the build script from the input target specimin directory
-            
-            
-
+            print((f"{issue_id} <========= execution Ends."))            
 
     report_generator: TableGenerator = TableGenerator(evaluation_results)
     report_generator.generateTable()
