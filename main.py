@@ -476,11 +476,14 @@ def get_exception_data(log_file_data_list: list):
         exception_data (ExceptionData): exception data
     '''
 
+
+    if len(cf_crash_line) == 0:
+        print("#lines in log file = 0")
+        return []
+    
     return_data = []
     cf_crash_line = [line_no for line_no, line in enumerate(log_file_data_list) if line.lstrip().startswith('; The Checker Framework crashed.')]
-    if len(cf_crash_line) == 0:
-        return None
-
+    
     for line_no in cf_crash_line: # if multiple crash location found, one shoud match exactly with the expected crash information
         crashed_class_name_line = -1
         for i in range(line_no, line_no + 5): # should be immediate next line of crash line
@@ -508,7 +511,7 @@ def get_exception_data(log_file_data_list: list):
         if crashed_class_name != None and exception_cause != None and len(exception_stack) > 0:
             exception_data = ExceptionData(crashed_class_name, exception_cause, exception_stack)
             return_data.append(exception_data)
-
+    print(f"Exception data : {return_data}")
     return return_data
 
 def compare_crash_log(expected_log_path, actual_log_path):
@@ -523,7 +526,9 @@ def compare_crash_log(expected_log_path, actual_log_path):
         actual_content = file.read()
     
     expected_lines = expected_content.split('\n')
+    print(f"# of lines in {expected_log_path} = {len(expected_lines)}")
     actual_lines = actual_content.split('\n')
+    print(f"# of lines in {actual_log_path} = {len(actual_lines)}")
 
     expected_crash_datas = get_exception_data(expected_lines) # there should be 1 crash data
     actual_crash_data = get_exception_data(actual_lines)
@@ -531,7 +536,8 @@ def compare_crash_log(expected_log_path, actual_log_path):
     if expected_crash_datas != None or len(expected_crash_datas) != 0:
         expected_crash_data = expected_crash_datas[0]
     else:
-        return False # no crash data found in the expected log file
+        print("No crash data found in the expected log file")
+        return False
 
     is_crash_matched = True
     for data in actual_crash_data:
