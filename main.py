@@ -375,12 +375,14 @@ def performEvaluation(issue_data) -> Result:
     build_script_destination_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name, "build.gradle")
 
     copy_build_script = f"cp {build_script_path} {build_script_destination_path}"
-    subprocess.run(copy_build_script, shell=True)
+    cp_result = subprocess.run(copy_build_script, shell=True)
+    print(f"cp {build_script_path} -> {build_script_destination_path} = {cp_result.returncode}")
     
     #../ISSUES/cf-xx/output/projectname/build_log.txt
     log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name, minimized_program_build_log_file)
 
     if os.path.exists(log_file):
+        print(f"Removing existing build log file: {log_file}")
         os.remove(log_file)
 
     # Open the log file in write mode
