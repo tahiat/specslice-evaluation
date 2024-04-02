@@ -369,14 +369,16 @@ def performEvaluation(issue_data) -> Result:
     # build script is shipped with input program. It exists in the "specimin" directory of the input program's root directory.
     # Coping the build script to the output directory of the minimized program.
     build_script_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "build.gradle")
-
+    gradle_settings_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "settings.gradle")
     if not os.path.exists(build_script_path): #TODO: when finish adding build script, raise exception to indicate missing build script
         return result
     build_script_destination_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name, "build.gradle")
-
+    gradle_settings_path_destination = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name, "settings.gradle")
+    
     copy_build_script = f"cp {build_script_path} {build_script_destination_path}"
-    cp_result = subprocess.run(copy_build_script, shell=True)
-    print(f"cp {build_script_path} -> {build_script_destination_path} = {cp_result.returncode}")
+    copy_gradle_setting = f"cp {gradle_settings_path} {gradle_settings_path_destination}"
+    subprocess.run(copy_build_script, shell=True)
+    subprocess.run(copy_gradle_setting, shell=True)
     
     #../ISSUES/cf-xx/output/projectname/build_log.txt
     log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name, minimized_program_build_log_file)
@@ -513,7 +515,6 @@ def get_exception_data(log_file_data_list: list):
         if crashed_class_name and exception_cause and len(exception_stack) > 0:
             exception_data = ExceptionData(crashed_class_name, exception_cause, exception_stack)
             return_data.append(exception_data)
-    print(f"Exception data : {return_data}")
     return return_data
 
 def compare_crash_log(expected_log_path, actual_log_path):
