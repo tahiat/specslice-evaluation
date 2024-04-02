@@ -534,7 +534,7 @@ def compare_crash_log(expected_log_path, actual_log_path):
     actual_lines = actual_content.split('\n')
     print(f"# of lines in {actual_log_path} = {len(actual_lines)}")
     if actual_lines:
-        print(actual_lines[:5])
+        print(actual_lines[:10])
 
     expected_crash_datas = get_exception_data(expected_lines) # there should be 1 crash data
     actual_crash_data = get_exception_data(actual_lines)
