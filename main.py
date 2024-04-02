@@ -389,7 +389,7 @@ def performEvaluation(issue_data) -> Result:
     min_prgrm_build_status = None
     with open(log_file, "w") as log_file_obj:
         min_prgrm_build_status = subprocess.run(f"./gradlew -b  {build_script_destination_path} compileJava", cwd = os.path.abspath("resources"), shell=True, stderr=log_file_obj)
-        print(f"{issue_id} Minimized program gradle build status = {min_prgrm_build_status}")
+        print(f"{issue_id} Minimized program gradle build status = {min_prgrm_build_status.returncode}")
 
     expected_log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "expected_log.txt")
     if (JsonKeys.BUG_TYPE.value in issue_data and issue_data[JsonKeys.BUG_TYPE.value] == "crash" and min_prgrm_build_status.returncode != 0):
@@ -570,13 +570,15 @@ def main():
     else:
         json_file_path = os.path.join("resources", "test_data.json")
 
-    parsed_data = read_json_from_file(json_file_path)
+    parsed_data = read_json_from_file(json_file_path) 
 
     evaluation_results = []
     json_status: dict[str, str] = {} # Contains PASS/FAIL status of targets to be printed as a json file 
     if parsed_data:
         for issue in parsed_data:
             issue_id = issue["issue_id"]
+            if issue_id != "cf-6282":
+                continue
             print(f"{issue_id} execution starts =========>")
             result = performEvaluation(issue)
             evaluation_results.append(result)
