@@ -366,7 +366,7 @@ def performEvaluation(issue_data) -> Result:
     
     print(f"{result.name} - {result.status}")
 
-    return result  #TODO: will remove this line once preservation checking steps pass the CI pipeline
+    return result  #TODO: will remove this line once preservation checking steps pass the CI pipeline from specimin
     # build script is shipped with input program. It exists in the "specimin" directory of the input program's root directory.
     # Coping the build script to the output directory of the minimized program.
     build_script_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "build.gradle")
