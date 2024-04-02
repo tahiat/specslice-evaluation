@@ -21,7 +21,11 @@ cd ISSUES || exit 1
 for target in $issue_ids; do
     echo "Target = ${target}"
 
-    cd "${target}/output/" || exit 1
+    cd "${target}/output/"
+    if [ $? -eq 1 ]; then
+      compile_status_json="$compile_status_json\n  \"$target\": \"FAIL\","
+      continue
+    fi
     # check if any directory exists inside output. If no directory there, specimin failed on the input target
     # in that case, ignoring it.
     directory_count="$(find ./ -mindepth 1 -type d | wc -l)"
