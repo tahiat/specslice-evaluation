@@ -481,7 +481,7 @@ def get_exception_data(log_file_data_list: list):
         return []
     
     return_data = []
-    cf_crash_line = [line_no for line_no, line in enumerate(log_file_data_list) if line.lstrip().startswith('; The Checker Framework crashed.')]
+    cf_crash_line = [line_no for line_no, line in enumerate(log_file_data_list) if line.strip().startswith('; The Checker Framework crashed.')]
     if len(cf_crash_line) == 0:
         print("; The Checker Framework crashed not found")
         return []
@@ -510,7 +510,7 @@ def get_exception_data(log_file_data_list: list):
             if log_file_data_list[i].lstrip().startswith("at"):
                 exception_stack.append(log_file_data_list[i].split()[-1].strip())
         
-        if crashed_class_name != None and exception_cause != None and len(exception_stack) > 0:
+        if crashed_class_name and exception_cause and len(exception_stack) > 0:
             exception_data = ExceptionData(crashed_class_name, exception_cause, exception_stack)
             return_data.append(exception_data)
     print(f"Exception data : {return_data}")
@@ -529,8 +529,12 @@ def compare_crash_log(expected_log_path, actual_log_path):
     
     expected_lines = expected_content.split('\n')
     print(f"# of lines in {expected_log_path} = {len(expected_lines)}")
+    if expected_lines:
+        print(expected_lines[:5])
     actual_lines = actual_content.split('\n')
     print(f"# of lines in {actual_log_path} = {len(actual_lines)}")
+    if actual_lines:
+        print(actual_lines[:5])
 
     expected_crash_datas = get_exception_data(expected_lines) # there should be 1 crash data
     actual_crash_data = get_exception_data(actual_lines)
