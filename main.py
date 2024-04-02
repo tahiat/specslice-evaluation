@@ -477,13 +477,15 @@ def get_exception_data(log_file_data_list: list):
     '''
 
 
-    if len(cf_crash_line) == 0:
-        print("#lines in log file = 0")
+    if len(log_file_data_list) == 0:
         return []
     
     return_data = []
     cf_crash_line = [line_no for line_no, line in enumerate(log_file_data_list) if line.lstrip().startswith('; The Checker Framework crashed.')]
-    
+    if len(cf_crash_line) == 0:
+        print("; The Checker Framework crashed not found")
+        return []
+
     for line_no in cf_crash_line: # if multiple crash location found, one shoud match exactly with the expected crash information
         crashed_class_name_line = -1
         for i in range(line_no, line_no + 5): # should be immediate next line of crash line
@@ -533,19 +535,16 @@ def compare_crash_log(expected_log_path, actual_log_path):
     expected_crash_datas = get_exception_data(expected_lines) # there should be 1 crash data
     actual_crash_data = get_exception_data(actual_lines)
 
-    if expected_crash_datas != None or len(expected_crash_datas) != 0:
+    if expected_crash_datas != None and len(expected_crash_datas) > 0:
         expected_crash_data = expected_crash_datas[0]
     else:
         print("No crash data found in the expected log file")
         return False
 
-    is_crash_matched = True
+    is_crash_matched = False
     for data in actual_crash_data:
         is_crash_matched = True
-        if expected_crash_data.exception != data.exception or expected_crash_data.exception_class != data.exception_class:
-            is_crash_matched = False
-            continue
-        if expected_crash_data.stack_trace != data.stack_trace:
+        if expected_crash_data.exception != data.exception or expected_crash_data.exception_class != data.exception_class or expected_crash_data.stack_trace != data.stack_trace:
             is_crash_matched = False
             continue
 
