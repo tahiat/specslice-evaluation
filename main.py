@@ -359,23 +359,30 @@ def performEvaluation(issue_data) -> Result:
     specimin_path = get_specimin_env_var()
     specimin_command = build_specimin_command(repo_name, os.path.join(issue_folder_abs_dir, issue_id), issue_data[JsonKeys.ROOT_DIR.value], issue_data[JsonKeys.TARGETS.value], qual_jar_dir if os.path.exists(qual_jar_dir) else "")
     
-    if specimin_path is not None and os.path.exists(specimin_path):
-        result = run_specimin(issue_id ,specimin_command, specimin_path)
-    else:
-        result = run_specimin(issue_id ,specimin_command, os.path.join(issue_folder_abs_dir, specimin_project_name))
+    if specimin_path is not None and not os.path.exists(specimin_path):
+        print("Clone copy of Specimin is used")
+        specimin_path = os.path.join(issue_folder_abs_dir, specimin_project_name)
+    
+    result = run_specimin(issue_id ,specimin_command, specimin_path)   
     
     print(f"{result.name} - {result.status}")
 
-    # build script is shipped with input program. It exists in the "specimin" directory of the input program's root directory.
-    # Coping the build script to the output directory of the minimized program.
-    build_script_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "build.gradle")
-
-    if not os.path.exists(build_script_path): #TODO: when finish adding build script, raise exception to indicate missing build script
+    if not ("bug_type" in issue_data and issue_data["bug_type"]):
         return result
-    build_script_destination_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name, "build.gradle")
 
-    copy_build_script = f"cp {build_script_path} {build_script_destination_path}"
-    subprocess.run(copy_build_script, shell=True)
+    # build.gradle and settings.gradle are shipped with input program. It exists in the "specimin" directory of the input program's root directory.
+    # Coping both to the output directory of the minimized program.
+    build_gradle_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "build.gradle")
+    settings_gradle_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "settings.gradle")
+
+    if not os.path.exists(build_gradle_path) or not os.path.exists(settings_gradle_path):
+        print(f"{issue_id} build.gradle or settings.gradle not found in the input program") 
+        return result
+    
+    gradle_files_destination_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name)
+
+    copy_command = f"cp {build_gradle_path} {settings_gradle_path} {gradle_files_destination_path}"
+    subprocess.run(copy_command, shell=True)
     
     #../ISSUES/cf-xx/output/projectname/build_log.txt
     log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name, minimized_program_build_log_file)
@@ -383,25 +390,25 @@ def performEvaluation(issue_data) -> Result:
     if os.path.exists(log_file):
         os.remove(log_file)
 
+    target_gradle_script = os.path.join(gradle_files_destination_path, "build.gradle")
     # Open the log file in write mode
     min_prgrm_build_status = None
     with open(log_file, "w") as log_file_obj:
-        min_prgrm_build_status = subprocess.run(f"./gradlew -b  {build_script_destination_path} compileJava", cwd = os.path.abspath("resources"), shell=True, stderr=log_file_obj)
-        print(f"{issue_id} Minimized program gradle build status = {min_prgrm_build_status}")
+        min_prgrm_build_status = subprocess.run(f"./gradlew -b  {target_gradle_script} compileJava", cwd = specimin_path, shell=True, stderr=log_file_obj)
+        print(f"{issue_id} Minimized program gradle build status = {min_prgrm_build_status.returncode}")
 
     expected_log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "expected_log.txt")
+    status = False
     if (JsonKeys.BUG_TYPE.value in issue_data and issue_data[JsonKeys.BUG_TYPE.value] == "crash" and min_prgrm_build_status.returncode != 0):
         status = compare_crash_log(expected_log_file, log_file)
-        result.set_preservation_status(status)
     elif (JsonKeys.BUG_TYPE.value in issue_data and issue_data[JsonKeys.BUG_TYPE.value] == "error"):
         status = compare_error_log(expected_log_file, log_file, issue_data[JsonKeys.BUG_PATTERN.value])
-        result.set_preservation_status(status)
     elif (JsonKeys.BUG_TYPE.value in issue_data and issue_data[JsonKeys.BUG_TYPE.value] == "false_positive"):
         status = compare_false_positive_log(expected_log_file, log_file, issue_data[JsonKeys.BUG_PATTERN.value])
-        result.set_preservation_status(status)
     elif (JsonKeys.BUG_TYPE.value in issue_data and issue_data[JsonKeys.BUG_TYPE.value] == "semi_crash"):
         status = compare_semi_crash(expected_log_file, log_file, issue_data[JsonKeys.BUG_PATTERN.value])
-        result.set_preservation_status(status)
+        
+    result.set_preservation_status("PASS" if status else "FAIL")
     return result
 
 
@@ -414,10 +421,14 @@ def compare_semi_crash(expected_log_path, actual_log_path, bug_pattern_data):
 
     logs_to_match = []
 
+    # get logs based on defined pattern/grammer from expected log file
     for key in bug_pattern_data:
         pattern = bug_pattern_data[key]
         content = re.search(pattern, expected_content).group(1)
+        if key == "file_pattern":
+            content = os.path.basename(content)
         logs_to_match.append(content)
+
     return all(string in actual_content for string in logs_to_match)
 
 
@@ -477,7 +488,7 @@ def get_exception_data(log_file_data_list: list):
     return_data = []
     cf_crash_line = [line_no for line_no, line in enumerate(log_file_data_list) if line.lstrip().startswith('; The Checker Framework crashed.')]
     if len(cf_crash_line) == 0:
-        return None
+        return []
 
     for line_no in cf_crash_line: # if multiple crash location found, one shoud match exactly with the expected crash information
         crashed_class_name_line = -1

@@ -107,7 +107,7 @@
         "cf_version": "3.35.0",
         "java_version": "jdk-11",
         "note": "This issue describes multiple bugs. the second one is \"ant cf-only -Dcf.check.only=org/apache/cassandra/io/sstable/format/SSTableScanner.java\"",
-        "bug_type": "crash",
+        "bug_type": "",
         "checker_qual_required": true
     },
     {
@@ -149,7 +149,7 @@
         "cf_version": "3.35.0",
         "java_version": "jdk-17",
         "note": "",
-        "bug_type": "crash",
+        "bug_type": "",
         "checker_qual_required": false
     },
     {
@@ -286,7 +286,7 @@
         "note": "",
         "bug_type": "semi_crash",
         "bug_pattern": {
-            "file_pattern": "Compilation unit: (\\w+\\.java)",
+            "file_pattern": "Compilation unit: (.*)",
             "error_pattern": "error: (.+?):",
             "target_pattern": "Targeted annotations: (.*)",
             "valid_pattern": "Valid annotations: (.*)",
@@ -314,7 +314,13 @@
         "cf_version": "3.0.1",
         "java_version": "Jdk-8",
         "note": "",
-        "bug_type": "",
+        "bug_type": "semi_crash",
+        "bug_pattern": {
+            "file_pattern": "Compilation unit: (.*)",
+            "error_pattern": "error: (.+?):",
+            "exception_pattern": "Exception: (.+):",
+            "stack_trace_pattern": "Stack trace: (.+)"
+        },
         "checker_qual_required": false
     },
     {
