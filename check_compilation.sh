@@ -18,6 +18,8 @@ echo "Specimin path: $SPECIMIN"
 issue_ids="$(jq -r '.[].issue_id' resources/test_data.json)"
 cd ISSUES || exit 1
 
+issues_root=`pwd`
+
 for target in $issue_ids; do
     echo "Target = ${target}"
 
@@ -32,7 +34,7 @@ for target in $issue_ids; do
     if [ "$directory_count" -eq 0 ]; then 
         echo "No directories inside ${target}/output. Ignoring it."
         compile_status_json="$compile_status_json\n  \"$target\": \"FAIL\","
-        cd ../..
+        cd "${issues_root}"
         continue
     fi
 
@@ -48,8 +50,7 @@ for target in $issue_ids; do
         compile_status_json="$compile_status_json\n  \"$target\": \"FAIL\","
         returnval=2
     fi
-    
-    cd ../.. || exit 1
+    cd "${issues_root}" || exit 1
 
 done
 
