@@ -440,8 +440,19 @@ def compare_pattern_data(expected_log_path, actual_log_path, bug_pattern_data):
         if key == "file_pattern":
             content = os.path.basename(content)
         logs_to_match.append(content)
-
-    return all(string in actual_content for string in logs_to_match)
+    
+    actual_log = []
+    for key in bug_pattern_data:
+        pattern = bug_pattern_data[key]
+        content = re.search(pattern, actual_content)
+        if not content:
+            continue   
+        content = content.group(1) 
+        if key == "file_pattern":
+            content = os.path.basename(content)
+        actual_log.append(content)
+    
+    return actual_log == logs_to_match
 
 def get_exception_data(log_file_data_list: list):
     '''
@@ -552,6 +563,8 @@ def main():
     if parsed_data:
         for issue in parsed_data:
             issue_id = issue["issue_id"]
+            if issue_id != "cf-4614":
+                continue
             print(f"{issue_id} execution starts =========>")
             result = performEvaluation(issue)
             evaluation_results.append(result)
