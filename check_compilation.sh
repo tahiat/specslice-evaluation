@@ -40,7 +40,7 @@ for target in $issue_ids; do
 
     # javac relies on word splitting
     # shellcheck disable=SC2046
-    javac -classpath "$SPECIMIN/main/src/test/resources/shared/checker-qual-3.42.0.jar" $(find . -name "*.java")
+    javac -classpath "$SPECIMIN/src/test/resources/shared/checker-qual-3.42.0.jar" $(find . -name "*.java")
     javac_status=$?
     if [ $javac_status -eq 0 ]; then 
        echo "Running javac on ${target}/output PASSES"
