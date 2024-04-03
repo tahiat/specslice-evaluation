@@ -447,7 +447,7 @@ def compare_pattern_data(expected_log_path, actual_log_path, bug_pattern_data):
 
         if key == "file_pattern":
             expected_content = os.path.basename(expected_content)
-            [os.path.basename(item) for item in actual_content]
+            actual_content = [os.path.basename(item) for item in actual_content]
 
         if expected_content in actual_content:
             continue
