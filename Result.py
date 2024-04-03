@@ -6,7 +6,7 @@ class Result:
             name (string): issue name
             status (string): PASS/FAIL
             reason (string): reason to fail
-            preservation_status (strig):  Whether the minimized program preserve the target behavior
+            preservation_status (strig):  Whether the minimized program preserves the target behavior
         '''
         self.name = name
         self.status = status

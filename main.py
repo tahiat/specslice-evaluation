@@ -359,6 +359,7 @@ def performEvaluation(issue_data) -> Result:
     specimin_path = get_specimin_env_var()
     specimin_command = build_specimin_command(repo_name, os.path.join(issue_folder_abs_dir, issue_id), issue_data[JsonKeys.ROOT_DIR.value], issue_data[JsonKeys.TARGETS.value], qual_jar_dir if os.path.exists(qual_jar_dir) else "")
     
+    # Storing the Specimin path so that gradle wrapper of specimin can be used to build minimized programs. 
     if specimin_path is not None and not os.path.exists(specimin_path):
         print("Clone copy of Specimin is used")
         specimin_path = os.path.join(issue_folder_abs_dir, specimin_project_name)
@@ -377,7 +378,8 @@ def performEvaluation(issue_data) -> Result:
     settings_gradle_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "settings.gradle")
 
     if not os.path.exists(build_gradle_path) or not os.path.exists(settings_gradle_path):
-        print(f"{issue_id} build.gradle or settings.gradle not found in the input program") 
+        print(f"{issue_id}: {build_gradle_path} or {settings_gradle_path} not found.")
+        result.set_preservation_status("Build script missing") 
         return result
     
     gradle_files_destination_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name)
@@ -402,7 +404,13 @@ def performEvaluation(issue_data) -> Result:
         print(f"{issue_id} Minimized program gradle build successful. Expected: Fail")
         result.set_preservation_status("Target behavior is not preserved.")
         return result
+    
     expected_log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "expected_log.txt")
+    if not os.path.exists(expected_log_file):
+        print(f"{issue_id}: {expected_log_file} do not exists")
+        result.set_preservation_status("Expected log file missing")
+        return result
+    
     status = False
     if (JsonKeys.BUG_TYPE.value in issue_data and issue_data[JsonKeys.BUG_TYPE.value] == "crash"):
         status = compare_crash_log(expected_log_file, log_file)
