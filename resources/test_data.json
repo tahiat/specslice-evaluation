@@ -174,7 +174,7 @@
         "bug_pattern": {
             "file_pattern": "(\\w+\\.java)",
             "error_pattern": "error: \\[(.+?)\\]",
-            "source_pattern": "map(.+?)",
+            "source_pattern": "(\\.map\\(.*?\\)\\)\\))",
             "found_pattern": "found   : (.*)",
             "required_pattern": "required: (.*)"
         },

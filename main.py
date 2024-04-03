@@ -415,7 +415,11 @@ def performEvaluation(issue_data) -> Result:
     if (JsonKeys.BUG_TYPE.value in issue_data and issue_data[JsonKeys.BUG_TYPE.value] == "crash"):
         status = compare_crash_log(expected_log_file, log_file)
     else:
-        status = compare_pattern_data(expected_log_file, log_file, issue_data[JsonKeys.BUG_PATTERN.value])
+        try:
+            status = compare_pattern_data(expected_log_file, log_file, issue_data[JsonKeys.BUG_PATTERN.value])
+        except ValueError as e:
+            result.set_preservation_status(f"{e}")
+            return result
         
     result.set_preservation_status("PASS" if status else "FAIL")
     return result
@@ -423,36 +427,35 @@ def performEvaluation(issue_data) -> Result:
 
 def compare_pattern_data(expected_log_path, actual_log_path, bug_pattern_data):
     with open(expected_log_path, "r") as file:
-        expected_content = file.read()
+        expected_log_file_content = file.read()
 
     with open(actual_log_path, "r") as file:
-        actual_content = file.read()
+        actual_log_file_content = file.read()
 
-    logs_to_match = []
-
-    # get logs based on defined pattern/grammer from expected log file
+    #Algorithm steps:
+    #1.extract data from expected log file. One matched item should be there since only desired log information is in expected log file
+    #2.extract data from build log file. Multiple matched items can be found. 
+    #3.checked if item of st:2 is in items of st:3. if not there immediate return False. otherwise continue
+    #4.return True at method end since no mismatch found.
     for key in bug_pattern_data:
         pattern = bug_pattern_data[key]
-        content = re.search(pattern, expected_content)
-        if not content:
-            continue   
-        content = content.group(1) 
+        expected_content = re.search(pattern, expected_log_file_content)
+        if not expected_content: #TODO: this should trigger error. it indicates pattern error 
+            raise ValueError(f"{pattern} not matched")  
+        expected_content = expected_content.group(1) 
+        actual_content = re.findall(pattern, actual_log_file_content)
+
         if key == "file_pattern":
-            content = os.path.basename(content)
-        logs_to_match.append(content)
-    
-    actual_log = []
-    for key in bug_pattern_data:
-        pattern = bug_pattern_data[key]
-        content = re.search(pattern, actual_content)
-        if not content:
-            continue   
-        content = content.group(1) 
-        if key == "file_pattern":
-            content = os.path.basename(content)
-        actual_log.append(content)
-    
-    return actual_log == logs_to_match
+            expected_content = os.path.basename(expected_content)
+            [os.path.basename(item) for item in actual_content]
+
+        if expected_content in actual_content:
+            continue
+        else:
+            return False
+
+    return True
+
 
 def get_exception_data(log_file_data_list: list):
     '''
@@ -563,8 +566,6 @@ def main():
     if parsed_data:
         for issue in parsed_data:
             issue_id = issue["issue_id"]
-            if issue_id != "cf-4614":
-                continue
             print(f"{issue_id} execution starts =========>")
             result = performEvaluation(issue)
             evaluation_results.append(result)
