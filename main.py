@@ -397,22 +397,22 @@ def performEvaluation(issue_data) -> Result:
         min_prgrm_build_status = subprocess.run(f"./gradlew -b  {target_gradle_script} compileJava", cwd = specimin_path, shell=True, stderr=log_file_obj)
         print(f"{issue_id} Minimized program gradle build status = {min_prgrm_build_status.returncode}")
 
+    if min_prgrm_build_status.returncode == 0:
+        print(f"{issue_id} Minimized program gradle build successful. Expected: Fail")
+        result.set_preservation_status("Target behavior is not preserved.")
+        return result
     expected_log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "expected_log.txt")
     status = False
-    if (JsonKeys.BUG_TYPE.value in issue_data and issue_data[JsonKeys.BUG_TYPE.value] == "crash" and min_prgrm_build_status.returncode != 0):
+    if (JsonKeys.BUG_TYPE.value in issue_data and issue_data[JsonKeys.BUG_TYPE.value] == "crash"):
         status = compare_crash_log(expected_log_file, log_file)
-    elif (JsonKeys.BUG_TYPE.value in issue_data and issue_data[JsonKeys.BUG_TYPE.value] == "error"):
-        status = compare_error_log(expected_log_file, log_file, issue_data[JsonKeys.BUG_PATTERN.value])
-    elif (JsonKeys.BUG_TYPE.value in issue_data and issue_data[JsonKeys.BUG_TYPE.value] == "false_positive"):
-        status = compare_false_positive_log(expected_log_file, log_file, issue_data[JsonKeys.BUG_PATTERN.value])
-    elif (JsonKeys.BUG_TYPE.value in issue_data and issue_data[JsonKeys.BUG_TYPE.value] == "semi_crash"):
-        status = compare_semi_crash(expected_log_file, log_file, issue_data[JsonKeys.BUG_PATTERN.value])
+    else:
+        status = compare_pattern_data(expected_log_file, log_file, issue_data[JsonKeys.BUG_PATTERN.value])
         
     result.set_preservation_status("PASS" if status else "FAIL")
     return result
 
 
-def compare_semi_crash(expected_log_path, actual_log_path, bug_pattern_data):
+def compare_pattern_data(expected_log_path, actual_log_path, bug_pattern_data):
     with open(expected_log_path, "r") as file:
         expected_content = file.read()
 
@@ -424,58 +424,15 @@ def compare_semi_crash(expected_log_path, actual_log_path, bug_pattern_data):
     # get logs based on defined pattern/grammer from expected log file
     for key in bug_pattern_data:
         pattern = bug_pattern_data[key]
-        content = re.search(pattern, expected_content).group(1)
+        content = re.search(pattern, expected_content)
+        if not content:
+            continue   
+        content = content.group(1) 
         if key == "file_pattern":
             content = os.path.basename(content)
         logs_to_match.append(content)
 
     return all(string in actual_content for string in logs_to_match)
-
-
-def compare_false_positive_log(expected_log_path, actual_log_path,  bug_pattern_data):
-    with open(expected_log_path, "r") as file:
-        expected_content = file.read()
-
-    with open(actual_log_path, "r") as file:
-        actual_content = file.read()
-    
-    file_pattern = bug_pattern_data["file_pattern"]
-    error_pattern = bug_pattern_data["error_pattern"]
-    source_pattern = bug_pattern_data["source_pattern"]
-    found_pattern = bug_pattern_data["found_pattern"]
-    required_pattern = bug_pattern_data["required_pattern"]
-
-    java_file = re.search(file_pattern, expected_content).group(1)
-    error_message = re.search(error_pattern, expected_content).group(1)
-    code_triggered_bug = re.search(source_pattern, expected_content).group(1)
-    found_type = re.search(found_pattern, expected_content).group(1)
-    required_type = re.search(required_pattern, expected_content).group(1)
-
-    return java_file in actual_content and error_message in actual_content and code_triggered_bug in actual_content and found_type in actual_content and required_type in actual_content
-
-
-def compare_error_log(expected_log_path, actual_log_path, bug_pattern_data):
-    '''
-    Compare the error log of the minimized program with the expected error log
-    '''
-    with open(expected_log_path, "r") as file:
-        expected_content = file.read()
-
-    with open(actual_log_path, "r") as file:
-        actual_content = file.read()
-    
-    file_pattern = bug_pattern_data["file_pattern"]
-    error_pattern = bug_pattern_data["error_pattern"]
-    source_pattern = bug_pattern_data["source_pattern"]
-    reason_pattern = bug_pattern_data["reason_pattern"]
-
-    error_file = re.search(file_pattern, expected_content).group(1)
-    error_message = re.search(error_pattern, expected_content).group(1)
-    error_source = re.search(source_pattern, expected_content).group(1)
-    error_reason = re.search(reason_pattern, expected_content).group(1)
-
-    return error_file in actual_content and error_message in actual_content and error_source in actual_content and error_reason in actual_content
-
 
 def get_exception_data(log_file_data_list: list):
     '''
