@@ -437,7 +437,9 @@ def performEvaluation(issue_data) -> Result:
             print(f"{issue_id} Minimized program gradle build successful. Expected: Fail")
             result.set_preservation_status("Target behavior is not preserved.")
             return result
-    else: #TODO: shift to a method
+    else: 
+        #TODO: some targets don't reproduce target property with gradle build. 
+        #Build them with shell
         existing_jdk_dir = os.environ.get("JAVA_HOME")
         cf_url = issue_data.get("cf_release_url", "")
         version = issue_data.get("cf_version", "1.9.13")

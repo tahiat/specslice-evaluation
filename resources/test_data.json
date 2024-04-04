@@ -401,7 +401,7 @@
         "cf_version": "1.9.13",
         "java_version": "8",
         "note": "package java.util changed to com.example",
-        "bug_type": "error",
+        "bug_type": "",
         "bug_pattern": {
             "file_pattern": "Compilation unit: (.*)",
             "error_pattern": "error: (.+?):",
