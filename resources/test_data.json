@@ -378,8 +378,18 @@
         "cf_version": "1.9.13",
         "java_version": "8",
         "note": "target method is not confirmed. package name changed.",
-        "bug_type": "",
-        "checker_qual_required": false
+        "bug_type": "error",
+        "bug_pattern": {
+            "file_pattern": "Compilation unit: (.*)",
+            "error_pattern": "error: (.+?):",
+            "exception_pattern": "Exception: (.+);",
+            "stack_trace_pattern": "Stack trace: (.+)"
+        },
+        "checker_qual_required": false,
+        "build_system": "shell",
+        "build_flags": ["-processor", "formatter", "-AprintErrorStack"],
+        "build_targets": "src/**/*.java",
+        "cf_release_url": "https://github.com/typetools/checker-framework/releases/download"
     },
     {
         "issue_id" : "Issue689",
@@ -410,7 +420,7 @@
         },
         "checker_qual_required": true,
         "build_system": "shell",
-        "build_flags": "-processor guieffect -AprintErrorStack",
+        "build_flags": ["-processor", "guieffect", "-AprintErrorStack"],
         "build_targets": "src/**/*.java",
         "cf_release_url": "https://github.com/typetools/checker-framework/releases/download"
     },

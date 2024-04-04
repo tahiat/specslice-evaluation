@@ -443,16 +443,16 @@ def performEvaluation(issue_data) -> Result:
             result.set_preservation_status("Target behavior is not preserved.")
             return result
     else:
-        existing_jdk_dir = os.environ.get("JAVA_HOME")
-        print(f"java_home: {existing_jdk_dir}")
         cf_url = issue_data.get("cf_release_url", "")
         version = issue_data.get("cf_version", "1.9.13")
         cf_path = f"checker-framework-{version}"
         cf_abs_path = os.path.abspath(cf_path)
         cf_zip = f"{cf_abs_path}.zip"
         full_url = cf_url + "/" + cf_path + "/" + cf_path + ".zip"
-        download_with_wget(full_url, cf_zip)
-        if os.path.exists(cf_zip):
+        if not os.path.exists(cf_zip):
+            download_with_wget(full_url, cf_zip)
+
+        if os.path.exists(cf_zip) and not os.path.exists(cf_abs_path):
             unzip_file(cf_zip)
         
         jdk_template_url = "https://corretto.aws/downloads/latest/amazon-corretto-{version}-{arch}-{os}-jdk.tar.gz"
@@ -469,8 +469,6 @@ def performEvaluation(issue_data) -> Result:
         jdk_name = f"amazon-corretto-{version}"
         jdk_tar_name = f"{jdk_name}.tar.gz"
         jdk_tar_abs_path = os.path.abspath(jdk_tar_name)
-        if os.path.exists(jdk_tar_abs_path):
-            os.remove(jdk_tar_abs_path)
 
         if not os.path.exists(jdk_tar_abs_path):
             download_with_wget(jdk_url, jdk_tar_abs_path)
@@ -481,13 +479,10 @@ def performEvaluation(issue_data) -> Result:
         else:
             extracted_jdk_abs_path = os.path.abspath(jdk_name) + ".jdk" #//.//amazon-corretto-8.jdk
 
-        if os.path.exists(extracted_jdk_abs_path):
-            shutil.rmtree(extracted_jdk_abs_path)
-
-        os.makedirs(extracted_jdk_abs_path, exist_ok=True)
-
-        if os.path.exists(extracted_jdk_abs_path):
-            extract_and_rename(jdk_tar_abs_path, extracted_jdk_abs_path)
+        if not os.path.exists(extracted_jdk_abs_path):
+            os.makedirs(extracted_jdk_abs_path, exist_ok=True)
+            if os.path.exists(extracted_jdk_abs_path):
+                extract_and_rename(jdk_tar_abs_path, extracted_jdk_abs_path)
         
         if op == "linux":
             java_path = os.path.join(extracted_jdk_abs_path, "bin", "java")
@@ -496,7 +491,7 @@ def performEvaluation(issue_data) -> Result:
         
         checker_jar_path = os.path.join(cf_abs_path, "checker", "dist", "checker.jar")
         set_directory_exec_permission(checker_jar_path)
-        flags = issue_data.get("build_flags", "-processor nullness")
+
         targets = issue_data.get("build_targets", "src/**/*.java")
         
         target_dir = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name, targets)
@@ -504,11 +499,15 @@ def performEvaluation(issue_data) -> Result:
         log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name, minimized_program_build_log_file)
         if os.path.exists(log_file):
             os.remove(log_file)
-
+        flags = issue_data.get("build_flags", [])
         file_paths = glob.glob(target_dir, recursive=True)
-        command = [java_path, '-jar', checker_jar_path, '-processor', 'guieffect', '-AprintErrorStack', *file_paths]
-        execute_shell_command_with_logging(command, log_file)
-
+        command = [java_path, '-jar', checker_jar_path]
+        command.extend(flags)
+        command.extend([*file_paths])
+        try:
+            execute_shell_command_with_logging(command, log_file)
+        except Exception:
+            result.set_preservation_status("FAIL. Issue not reproduced")
         
     expected_log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "expected_log.txt")
     if not os.path.exists(expected_log_file):
@@ -678,7 +677,7 @@ def main():
     if parsed_data:
         for issue in parsed_data:
             issue_id = issue["issue_id"]
-            if issue_id != "Issue689":
+            if issue_id != "cf-691":
                 continue
             print(f"{issue_id} execution starts =========>")
             result = performEvaluation(issue)
