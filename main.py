@@ -442,9 +442,7 @@ def performEvaluation(issue_data) -> Result:
             print(f"{issue_id} Minimized program gradle build successful. Expected: Fail")
             result.set_preservation_status("Target behavior is not preserved.")
             return result
-    else: 
-        #TODO: some targets don't reproduce target property with gradle build. 
-        #Build them with shell
+    else:
         existing_jdk_dir = os.environ.get("JAVA_HOME")
         print(f"java_home: {existing_jdk_dir}")
         cf_url = issue_data.get("cf_release_url", "")
@@ -473,7 +471,7 @@ def performEvaluation(issue_data) -> Result:
         jdk_tar_abs_path = os.path.abspath(jdk_tar_name)
         if os.path.exists(jdk_tar_abs_path):
             os.remove(jdk_tar_abs_path)
-            
+
         if not os.path.exists(jdk_tar_abs_path):
             download_with_wget(jdk_url, jdk_tar_abs_path)
         
@@ -492,30 +490,24 @@ def performEvaluation(issue_data) -> Result:
             extract_and_rename(jdk_tar_abs_path, extracted_jdk_abs_path)
         
         if op == "linux":
-            jdk_home = os.path.join(extracted_jdk_abs_path, "bin")
+            java_path = os.path.join(extracted_jdk_abs_path, "bin", "java")
         else:
-            jdk_home = os.path.join(extracted_jdk_abs_path, "Contents", "Home")
+            java_path = os.path.join(extracted_jdk_abs_path, "Contents", "Home", "bin", "java")
         
-        try:
-            os.environ["JAVA_HOME"] = jdk_home
-        except Exception as e:
-            print(f"Error setting JAVA_HOME: {e}")
-
-        javac_path = os.path.join(cf_abs_path, "checker", "bin", "javac")
-        set_directory_exec_permission(javac_path)
+        checker_jar_path = os.path.join(cf_abs_path, "checker", "dist", "checker.jar")
+        set_directory_exec_permission(checker_jar_path)
         flags = issue_data.get("build_flags", "-processor nullness")
         targets = issue_data.get("build_targets", "src/**/*.java")
         
         target_dir = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name, targets)
-        set_directory_exec_permission(javac_path)
+        set_directory_exec_permission(java_path)
         log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name, minimized_program_build_log_file)
         if os.path.exists(log_file):
             os.remove(log_file)
 
         file_paths = glob.glob(target_dir, recursive=True)
-        command = [javac_path, '-processor', 'guieffect', '-AprintErrorStack', *file_paths]
+        command = [java_path, '-jar', checker_jar_path, '-processor', 'guieffect', '-AprintErrorStack', *file_paths]
         execute_shell_command_with_logging(command, log_file)
-        os.environ["JAVA_HOME"] = existing_jdk_dir
 
         
     expected_log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "expected_log.txt")
