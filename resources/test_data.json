@@ -43,7 +43,7 @@
             }
         ],
         "cf_version": "3.40.0",
-        "java_version": "jdk-17",
+        "java_version": "17",
         "note": "",
         "bug_type": "crash",
         "checker_qual_required": false
@@ -112,7 +112,7 @@
             }
         ],
         "cf_version": "3.35.0",
-        "java_version": "jdk-11",
+        "java_version": "11",
         "note": "This issue describes multiple bugs. the second one is \"ant cf-only -Dcf.check.only=org/apache/cassandra/io/sstable/format/SSTableScanner.java\"",
         "bug_type": "",
         "checker_qual_required": true
@@ -133,7 +133,7 @@
             }
         ],
         "cf_version": "3.35.0",
-        "java_version": "jdk-11",
+        "java_version": "11",
         "note": "",
         "bug_type": "crash",
         "checker_qual_required": true
@@ -154,7 +154,7 @@
             }
         ],
         "cf_version": "3.35.0",
-        "java_version": "jdk-17",
+        "java_version": "17",
         "note": "",
         "bug_type": "crash",
         "require_stack": false,
@@ -176,7 +176,7 @@
             }
         ],
         "cf_version": "3.12.0",
-        "java_version": "jdk-11",
+        "java_version": "11",
         "note": "",
         "bug_type": "false_positive",
         "bug_pattern": {
@@ -226,7 +226,7 @@
             }
         ],
         "cf_version": "1.9.11",
-        "java_version": "Jdk-8",
+        "java_version": "8",
         "note": "java.util.stream -> com.example.stream",
         "bug_type": "",
         "checker_qual_required": false
@@ -248,7 +248,7 @@
             }
         ],
         "cf_version": "3.1.0",
-        "java_version": "jdk-11",
+        "java_version": "11",
         "note": "",
         "bug_type": "",
         "checker_qual_required": false
@@ -269,7 +269,7 @@
             }
         ],
         "cf_version": "3.6.0",
-        "java_version": "jdk-11",
+        "java_version": "11",
         "note": "Project build: ./gradlew build. Error should occur on nullness checker",
         "bug_type": "",
         "checker_qual_required": false
@@ -290,7 +290,7 @@
             }
         ],
         "cf_version": "3.0.1",
-        "java_version": "Jdk-8",
+        "java_version": "8",
         "note": "",
         "bug_type": "semi_crash",
         "bug_pattern": {
@@ -320,7 +320,7 @@
             }
         ],
         "cf_version": "3.0.1",
-        "java_version": "Jdk-8",
+        "java_version": "8",
         "note": "",
         "bug_type": "semi_crash",
         "bug_pattern": {
@@ -348,7 +348,7 @@
             }
         ],
         "cf_version": "3.0.1",
-        "java_version": "Jdk-8",
+        "java_version": "8",
         "note": "",
         "bug_type": "",
         "bug_pattern": {
@@ -376,7 +376,7 @@
             }
         ],
         "cf_version": "1.9.13",
-        "java_version": "Jdk-8",
+        "java_version": "8",
         "note": "target method is not confirmed. package name changed.",
         "bug_type": "",
         "checker_qual_required": false
@@ -399,10 +399,20 @@
             }
         ],
         "cf_version": "1.9.13",
-        "java_version": "jdk-8",
+        "java_version": "8",
         "note": "package java.util changed to com.example",
-        "bug_type": "",
-        "checker_qual_required": false
+        "bug_type": "error",
+        "bug_pattern": {
+            "file_pattern": "Compilation unit: (.*)",
+            "error_pattern": "error: (.+?):",
+            "exception_pattern": "Exception: (.+);",
+            "stack_trace_pattern": "Stack trace: (.+)"
+        },
+        "checker_qual_required": true,
+        "build_system": "shell",
+        "build_flags": "-processor guieffect -AprintErrorStack",
+        "build_targets": "src/**/*.java",
+        "cf_release_url": "https://github.com/typetools/checker-framework/releases/download"
     },
     {
         "issue_id" : "cf-6388",
@@ -421,7 +431,7 @@
             }
         ],
         "cf_version": "3.40.0",
-        "java_version": "jdk-17",
+        "java_version": "17",
         "note": "",
         "bug_type": "",
         "checker_qual_required": false

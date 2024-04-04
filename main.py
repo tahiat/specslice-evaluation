@@ -8,6 +8,10 @@ from Keyvalue import JsonKeys
 from Result import Result
 from report_builder import TableGenerator
 from exception_data import ExceptionData
+import zipfile
+import platform
+import tarfile
+import glob
 
 issue_folder_dir = 'ISSUES'
 specimin_input = 'input'
@@ -48,6 +52,36 @@ def get_specimin_env_var():
     '''
     specimin_env_value = os.environ.get(specimin_env_var)
     return specimin_env_value
+
+def set_directory_exec_permission(directory_path):
+    current_permissions = os.stat(directory_path).st_mode
+    new_permissions = current_permissions | 0o111
+    os.chmod(directory_path, new_permissions)
+
+def download_with_wget(url, save_as):
+    try:
+        subprocess.run(["wget", "-O", save_as, url], check=True)
+        print("File downloaded successfully.")
+    except subprocess.CalledProcessError as e:
+        print("Failed to download file:", e)
+
+def unzip_file(zip_file):
+    '''
+    unzips a zip file
+    '''
+    with zipfile.ZipFile(zip_file, 'r') as zip_ref:
+        zip_ref.extractall()
+
+def extract_tar_gz(file_path):
+    with tarfile.open(file_path, 'r:gz') as tar:
+        tar.extractall()
+
+def execute_shell_command_with_logging(command, log_file_path):
+    with open(log_file_path, 'w') as f:
+       st = subprocess.run(command, stderr=f)
+       if st.returncode == 0:
+           raise Exception("exception")
+
 
 def get_repository_name(github_ssh: str):
     '''
@@ -365,46 +399,104 @@ def performEvaluation(issue_data) -> Result:
         specimin_path = os.path.join(issue_folder_abs_dir, specimin_project_name)
     
     result = run_specimin(issue_id ,specimin_command, specimin_path)   
-    
     print(f"{result.name} - {result.status}")
-
 
     if not ("bug_type" in issue_data and issue_data["bug_type"]):
         return result
 
-    # build.gradle and settings.gradle are shipped with input program. It exists in the "specimin" directory of the input program's root directory.
-    # Coping both to the output directory of the minimized program.
-    build_gradle_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "build.gradle")
-    settings_gradle_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "settings.gradle")
+    build_system = issue_data.get("build_system", "gradle")
+    if build_system == "gradle":
+        # build.gradle and settings.gradle are shipped with input program. It exists in the "specimin" directory of the input program's root directory.
+        # Coping both to the output directory of the minimized program.
+        build_gradle_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "build.gradle")
+        settings_gradle_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "settings.gradle")
 
-    if not os.path.exists(build_gradle_path) or not os.path.exists(settings_gradle_path):
-        print(f"{issue_id}: {build_gradle_path} or {settings_gradle_path} not found.")
-        result.set_preservation_status("Build script missing") 
-        return result
-    
-    gradle_files_destination_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name)
+        if not os.path.exists(build_gradle_path) or not os.path.exists(settings_gradle_path):
+            print(f"{issue_id}: {build_gradle_path} or {settings_gradle_path} not found.")
+            result.set_preservation_status("Build script missing") 
+            return result
+        
+        gradle_files_destination_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name)
 
-    copy_command = f"cp {build_gradle_path} {settings_gradle_path} {gradle_files_destination_path}"
-    subprocess.run(copy_command, shell=True)
-    
-    #../ISSUES/cf-xx/output/projectname/build_log.txt
-    log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name, minimized_program_build_log_file)
+        copy_command = f"cp {build_gradle_path} {settings_gradle_path} {gradle_files_destination_path}"
+        subprocess.run(copy_command, shell=True)
+        
+        #../ISSUES/cf-xx/output/projectname/build_log.txt
+        log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name, minimized_program_build_log_file)
 
-    if os.path.exists(log_file):
-        os.remove(log_file)
+        if os.path.exists(log_file):
+            os.remove(log_file)
 
-    target_gradle_script = os.path.join(gradle_files_destination_path, "build.gradle")
-    # Open the log file in write mode
-    min_prgrm_build_status = None
-    with open(log_file, "w") as log_file_obj:
-        min_prgrm_build_status = subprocess.run(f"./gradlew -b  {target_gradle_script} compileJava", cwd = specimin_path, shell=True, stderr=log_file_obj)
-        print(f"{issue_id} Minimized program gradle build status = {min_prgrm_build_status.returncode}")
+        target_gradle_script = os.path.join(gradle_files_destination_path, "build.gradle")
+        # Open the log file in write mode
+        min_prgrm_build_status = None
+        with open(log_file, "w") as log_file_obj:
+            min_prgrm_build_status = subprocess.run(f"./gradlew -b  {target_gradle_script} compileJava", cwd = specimin_path, shell=True, stderr=log_file_obj)
+            print(f"{issue_id} Minimized program gradle build status = {min_prgrm_build_status.returncode}")
+        if min_prgrm_build_status.returncode == 0:
+            print(f"{issue_id} Minimized program gradle build successful. Expected: Fail")
+            result.set_preservation_status("Target behavior is not preserved.")
+            return result
+    else: #TODO: shift to a method
+        existing_jdk_dir = os.environ.get("JAVA_HOME")
+        cf_url = issue_data.get("cf_release_url", "")
+        version = issue_data.get("cf_version", "1.9.13")
+        cf_path = f"checker-framework-{version}"
+        cf_abs_path = os.path.abspath(cf_path)
+        cf_zip = f"{cf_abs_path}.zip"
+        full_url = cf_url + "/" + cf_path + "/" + cf_path + ".zip"
+        download_with_wget(full_url, cf_zip)
+        if os.path.exists(cf_zip):
+            unzip_file(cf_zip)
+        
+        jdk_template_url = "https://corretto.aws/downloads/latest/amazon-corretto-{version}-{arch}-{os}-jdk.tar.gz"
+        version = issue_data.get(JsonKeys.JAVA_VERSION.value, "11")
+        arch = "x64"
+        if platform.machine() == "arm64": #ignoring x86
+            arch = "aarch64"
+        op = "linux"
+        if platform.system() == "Darwin":
+            op = "macos"
+        elif platform.system() == "Windows":
+            print("windows not supported")
+        
+        jdk_url = jdk_template_url.format(version=version, arch=arch, os=op)
 
-    if min_prgrm_build_status.returncode == 0:
-        print(f"{issue_id} Minimized program gradle build successful. Expected: Fail")
-        result.set_preservation_status("Target behavior is not preserved.")
-        return result
-    
+        jdk_name = f"amazon-corretto-{version}"
+        jdk_tar_name = f"{jdk_name}.tar.gz"
+        jdk_abs_path = os.path.abspath(jdk_tar_name)
+        if not os.path.exists(jdk_abs_path):
+            download_with_wget(jdk_url, jdk_tar_name)
+        
+        extracted_jdk_name = jdk_name + "."+ "jdk"
+        extracted_jdk_abs_path = os.path.abspath(extracted_jdk_name)
+        if os.path.exists(extracted_jdk_abs_path):
+            shutil.rmtree(extracted_jdk_abs_path)
+        if os.path.exists(jdk_abs_path):
+            extract_tar_gz(jdk_abs_path)
+        
+        set_directory_exec_permission(extracted_jdk_abs_path)
+
+        jdk_home = os.path.join(extracted_jdk_abs_path, "Contents", "Home")
+        os.environ["JAVA_HOME"] = jdk_home 
+
+        javac_path = os.path.join(cf_abs_path, "checker", "bin", "javac")
+        set_directory_exec_permission(javac_path)
+        flags = issue_data.get("build_flags", "-processor nullness")
+        targets = issue_data.get("build_targets", "src/**/*.java")
+        
+        target_dir = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name, targets)
+        set_directory_exec_permission(javac_path)
+        log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name, minimized_program_build_log_file)
+        if os.path.exists(log_file):
+            os.remove(log_file)
+
+        file_paths = glob.glob(target_dir, recursive=True)
+        command = [javac_path, '-processor', 'guieffect', '-AprintErrorStack', *file_paths]
+        execute_shell_command_with_logging(command, log_file)
+        os.environ["JAVA_HOME"] = existing_jdk_dir
+
+        
     expected_log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "expected_log.txt")
     if not os.path.exists(expected_log_file):
         print(f"{issue_id}: {expected_log_file} do not exists")
@@ -570,6 +662,8 @@ def main():
     if parsed_data:
         for issue in parsed_data:
             issue_id = issue["issue_id"]
+            if issue_id != "Issue689":
+                continue
             print(f"{issue_id} execution starts =========>")
             result = performEvaluation(issue)
             evaluation_results.append(result)
