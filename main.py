@@ -483,7 +483,7 @@ def performEvaluation(issue_data) -> Result:
             os.makedirs(extracted_jdk_abs_path, exist_ok=True)
             if os.path.exists(extracted_jdk_abs_path):
                 extract_and_rename(jdk_tar_abs_path, extracted_jdk_abs_path)
-        
+        #TODO: OS filtering is added at the beginning of the program. Will add exception if op is not either linux of macos later. 
         if op == "linux":
             java_path = os.path.join(extracted_jdk_abs_path, "bin", "java")
         else:
@@ -648,8 +648,9 @@ def main():
     '''
     Main method of the script. It iterates over the json data and perform minimization for each cases.   
     '''
-    if platform.system() == "Windows":
-        print("Windows is not supported")
+    op_sys = platform.system()
+    if op_sys != "Linux" and op_sys != "Darwin":
+        print(f"{op_sys} no supported")
         sys.exit(1)
 
     os.makedirs(issue_folder_dir, exist_ok=True)   # create the issue holder directory
