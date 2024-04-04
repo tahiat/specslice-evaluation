@@ -23,6 +23,8 @@ TIMEOUT_DURATION = 300
 specimin_env_var = "SPECIMIN"
 json_status_file_name = "target_status.json"
 minimized_program_build_log_file = "build_log.txt"
+linux_system_identifier = "Linux"
+macos_system_identifier = "Darwin"
 
 def read_json_from_file(file_path):
     '''
@@ -461,9 +463,16 @@ def performEvaluation(issue_data) -> Result:
         arch = "x64"
         if platform.machine() == "arm64": #ignoring x86
             arch = "aarch64"
-        op = "linux"
-        if platform.system() == "Darwin":
+        platform_system = platform.system()
+        op = ""  # use this variable to only form the jdk download url
+        if platform_system == linux_system_identifier:
+            op = "linux"
+        elif platform_system == macos_system_identifier:
             op = "macos"
+        else:
+            result.set_preservation_status(f"{platform_system} not supported")
+            raise Exception(f"{platform_system} not supported")
+
         jdk_url = jdk_template_url.format(version=version, arch=arch, os=op)
 
         jdk_name = f"amazon-corretto-{version}"
@@ -473,22 +482,29 @@ def performEvaluation(issue_data) -> Result:
         if not os.path.exists(jdk_tar_abs_path):
             download_with_wget(jdk_url, jdk_tar_abs_path)
         
-        extracted_jdk_name = ""
-        if op == "linux":
-            extracted_jdk_abs_path = os.path.abspath(jdk_name) #/../amazon-corretto-8
-        else:
-            extracted_jdk_abs_path = os.path.abspath(jdk_name) + ".jdk" #//.//amazon-corretto-8.jdk
 
+        if platform_system ==linux_system_identifier:
+            extracted_jdk_abs_path = os.path.abspath(jdk_name) #/../amazon-corretto-8
+        elif platform_system == macos_system_identifier:
+            extracted_jdk_abs_path = os.path.abspath(jdk_name) + ".jdk" #//.//amazon-corretto-8.jdk
+        else:
+            raise Exception(f"{platform_system} not supported")
+        
         if not os.path.exists(extracted_jdk_abs_path):
             os.makedirs(extracted_jdk_abs_path, exist_ok=True)
             if os.path.exists(extracted_jdk_abs_path):
                 extract_and_rename(jdk_tar_abs_path, extracted_jdk_abs_path)
-        #TODO: OS filtering is added at the beginning of the program. Will add exception if op is not either linux of macos later. 
-        if op == "linux":
+        # https://checkerframework.org/manual/#external-tools
+        # using option 3 for CF invokation with downloaded jdk
+        #Option 3: Whenever this document tells you to run javac, instead run checker.jar via java (not javac) as in:
+        #java -jar "$CHECKERFRAMEWORK/checker/dist/checker.jar" -cp "myclasspath" -processor nullness MyFile.java
+        if platform.system() == linux_system_identifier:
             java_path = os.path.join(extracted_jdk_abs_path, "bin", "java")
-        else:
+        elif platform.system() == macos_system_identifier:
             java_path = os.path.join(extracted_jdk_abs_path, "Contents", "Home", "bin", "java")
-        
+        else:
+            raise Exception(f"{platform_system} not supported")
+
         checker_jar_path = os.path.join(cf_abs_path, "checker", "dist", "checker.jar")
         set_directory_exec_permission(checker_jar_path)
 
@@ -649,7 +665,7 @@ def main():
     Main method of the script. It iterates over the json data and perform minimization for each cases.   
     '''
     op_sys = platform.system()
-    if op_sys != "Linux" and op_sys != "Darwin":
+    if op_sys != linux_system_identifier and op_sys != macos_system_identifier:
         print(f"{op_sys} no supported")
         sys.exit(1)
 
@@ -680,7 +696,12 @@ def main():
         for issue in parsed_data:
             issue_id = issue["issue_id"]
             print(f"{issue_id} execution starts =========>")
-            result = performEvaluation(issue)
+            try:
+                result = performEvaluation(issue)
+            except Exception as e:
+                print(f"Exception: {e}")
+                print("Aborting execution")
+                sys.exit(1)
             evaluation_results.append(result)
             json_status[issue_id] = result.status
             print((f"{issue_id} <========= execution Ends."))            
