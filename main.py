@@ -77,6 +77,7 @@ def extract_and_rename(tar_file, target_name):
     with tarfile.open(tar_file, "r:gz") as tar:
         tar.extractall()
         extracted_dir = tar.getnames()[0]
+        set_directory_exec_permission(extracted_dir)
     os.rename(extracted_dir, target_name)
 
 def execute_shell_command_with_logging(command, log_file_path):
@@ -397,7 +398,7 @@ def performEvaluation(issue_data) -> Result:
     specimin_command = build_specimin_command(repo_name, os.path.join(issue_folder_abs_dir, issue_id), issue_data[JsonKeys.ROOT_DIR.value], issue_data[JsonKeys.TARGETS.value], qual_jar_dir if os.path.exists(qual_jar_dir) else "")
     
     # Storing the Specimin path so that gradle wrapper of specimin can be used to build minimized programs. 
-    if specimin_path is not None and not os.path.exists(specimin_path):
+    if not specimin_path or not os.path.exists(specimin_path):
         print("Clone copy of Specimin is used")
         specimin_path = os.path.join(issue_folder_abs_dir, specimin_project_name)
     
@@ -408,6 +409,7 @@ def performEvaluation(issue_data) -> Result:
         return result
 
     build_system = issue_data.get("build_system", "gradle")
+    print(f"build used = {build_system}")
     if build_system == "gradle":
         # build.gradle and settings.gradle are shipped with input program. It exists in the "specimin" directory of the input program's root directory.
         # Copying both to the output directory of the minimized program.
