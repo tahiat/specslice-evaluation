@@ -351,7 +351,14 @@
         "java_version": "Jdk-8",
         "note": "",
         "bug_type": "",
-        "checker_qual_required": false
+        "bug_pattern": {
+            "file_pattern": "(\\w+\\.java)",
+            "error_pattern": "error: \\[(.+?)\\]",
+            "source_pattern": "(new\\s+\\w+;)",
+            "found_pattern": "found   : (.*)",
+            "required_pattern": "required: (.*)"
+        },
+        "checker_qual_required": true
     },
     {
         "issue_id" : "cf-691",
