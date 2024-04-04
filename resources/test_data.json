@@ -149,7 +149,8 @@
         "cf_version": "3.35.0",
         "java_version": "jdk-17",
         "note": "",
-        "bug_type": "",
+        "bug_type": "crash",
+        "require_stack": false,
         "checker_qual_required": false
     },
     {

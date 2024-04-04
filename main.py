@@ -413,7 +413,8 @@ def performEvaluation(issue_data) -> Result:
     
     status = False
     if (JsonKeys.BUG_TYPE.value in issue_data and issue_data[JsonKeys.BUG_TYPE.value] == "crash"):
-        status = compare_crash_log(expected_log_file, log_file)
+        require_stack = issue_data.get("require_stack", False)
+        status = compare_crash_log(expected_log_file, log_file, require_stack)
     else:
         try:
             status = compare_pattern_data(expected_log_file, log_file, issue_data[JsonKeys.BUG_PATTERN.value])
@@ -457,7 +458,7 @@ def compare_pattern_data(expected_log_path, actual_log_path, bug_pattern_data):
     return True
 
 
-def get_exception_data(log_file_data_list: list):
+def get_exception_data(log_file: str, require_stack = False):
     '''
     Parse the exception data from the log file
 
@@ -465,74 +466,77 @@ def get_exception_data(log_file_data_list: list):
         exception_data (ExceptionData): exception data
     '''
 
+    with open(log_file, "r") as file:
+        logs = file.read()
+
+    lines_of_logs = logs.split('\n')
+
     return_data = []
-    cf_crash_line = [line_no for line_no, line in enumerate(log_file_data_list) if line.lstrip().startswith('; The Checker Framework crashed.')]
+    cf_crash_line = [line_no for line_no, line in enumerate(lines_of_logs) if line.lstrip().startswith('; The Checker Framework crashed.')]
     if len(cf_crash_line) == 0:
+        print(f"No crash data in {log_file}")
         return []
 
     for line_no in cf_crash_line: # if multiple crash location found, one shoud match exactly with the expected crash information
         crashed_class_name_line = -1
         for i in range(line_no, line_no + 5): # should be immediate next line of crash line
-            if log_file_data_list[i].strip().startswith("Compilation unit:"):
+            if lines_of_logs[i].strip().startswith("Compilation unit:"):
                 crashed_class_name_line = i
                 break
         if crashed_class_name_line == -1:
             continue  # start looking for next crash location
-        class_name_abs_path = log_file_data_list[crashed_class_name_line].split(" ")[-1]
+        class_name_abs_path = lines_of_logs[crashed_class_name_line].split(" ")[-1]
         crashed_class_name = os.path.basename(class_name_abs_path)
 
         exception_line = -1
         for i in range(crashed_class_name_line, crashed_class_name_line + 5): # should be immediate next line of crash line
-            if log_file_data_list[i].strip().startswith("Exception:"):
+            if lines_of_logs[i].strip().startswith("Exception:"):
                 exception_line = i
                 break
         exception_stack = [] #compare it with actual stack trace
-        exception_line_str = log_file_data_list[exception_line] #Exception: java.lang.NullPointerException; java.lang.NullPointerException
+        exception_line_str = lines_of_logs[exception_line] #Exception: java.lang.NullPointerException; java.lang.NullPointerException
         exception_line_sub_str = (exception_line_str[exception_line_str.index("Exception:") + 10:]).split()[0] # java.lang.NullPointerException; java.lang.NullPointerException
         exception_cause = re.sub(r'^[^a-zA-Z]+|[^a-zA-Z]+$', '', exception_line_sub_str) # java.lang.NullPointerException
-        for i in range(exception_line + 1, exception_line + 6):
-            if log_file_data_list[i].lstrip().startswith("at"):
-                exception_stack.append(log_file_data_list[i].split()[-1].strip())
         
-        if crashed_class_name != None and exception_cause != None and len(exception_stack) > 0:
+        if not require_stack and crashed_class_name and exception_cause: # if stack is not required, not adding them in exception data. 
+            exception_data = ExceptionData(crashed_class_name, exception_cause)
+            return_data.append(exception_data)
+            continue
+        
+        for i in range(exception_line + 1, exception_line + 6):
+            if lines_of_logs[i].lstrip().startswith("at"):
+                exception_stack.append(lines_of_logs[i].split()[-1].strip())
+        
+        if crashed_class_name and exception_cause and len(exception_stack) > 0:
             exception_data = ExceptionData(crashed_class_name, exception_cause, exception_stack)
             return_data.append(exception_data)
 
     return return_data
 
-def compare_crash_log(expected_log_path, actual_log_path):
+def compare_crash_log(expected_log_path, actual_log_path, require_stack = False):
     '''
     Compare the crash log of the minimized program with the expected crash log
     '''
 
-    with open(expected_log_path, "r") as file:
-        expected_content = file.read()
+    expected_crash_datas = get_exception_data(expected_log_path, require_stack) # there should be 1 crash data
+    actual_crash_data = get_exception_data(actual_log_path, require_stack)
 
-    with open(actual_log_path, "r") as file:
-        actual_content = file.read()
+    if not expected_crash_datas:
+        raise ValueError(f"{expected_log_path} invalid. No crash data") # no crash data found in the expected log file
     
-    expected_lines = expected_content.split('\n')
-    actual_lines = actual_content.split('\n')
-
-    expected_crash_datas = get_exception_data(expected_lines) # there should be 1 crash data
-    actual_crash_data = get_exception_data(actual_lines)
-
-    if expected_crash_datas != None or len(expected_crash_datas) != 0:
-        expected_crash_data = expected_crash_datas[0]
-    else:
-        return False # no crash data found in the expected log file
-
-    is_crash_matched = True
+    expected_crash_data = expected_crash_datas[0]
+        
     for data in actual_crash_data:
-        is_crash_matched = True
-        if expected_crash_data.exception != data.exception or expected_crash_data.exception_class != data.exception_class:
-            is_crash_matched = False
-            continue
-        if expected_crash_data.stack_trace != data.stack_trace:
-            is_crash_matched = False
-            continue
-
-    return is_crash_matched
+        if require_stack:
+            if (expected_crash_data.exception == data.exception and
+                expected_crash_data.exception_class == data.exception_class and
+                expected_crash_data.stack_trace == data.stack_trace):
+                return True
+        else:
+            if (expected_crash_data.exception == data.exception and
+                expected_crash_data.exception_class == data.exception_class):
+                return True
+    return False
 
 
 def main():
