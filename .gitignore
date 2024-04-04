@@ -10,3 +10,8 @@ __pycache__/
 *.class
 
 output
+
+amazon-corretto-8.jdk/
+amazon-corretto-8.tar.gz
+checker-framework-1.9.13.zip
+checker-framework-1.9.13/

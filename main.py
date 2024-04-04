@@ -8,6 +8,11 @@ from Keyvalue import JsonKeys
 from Result import Result
 from report_builder import TableGenerator
 from exception_data import ExceptionData
+import zipfile
+import platform
+import tarfile
+import glob
+import stat
 
 issue_folder_dir = 'ISSUES'
 specimin_input = 'input'
@@ -48,6 +53,36 @@ def get_specimin_env_var():
     '''
     specimin_env_value = os.environ.get(specimin_env_var)
     return specimin_env_value
+
+def set_directory_exec_permission(directory_path):
+    current_permissions = os.stat(directory_path).st_mode
+    new_permissions = current_permissions | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH # owner, group, other
+    os.chmod(directory_path, new_permissions)
+
+def download_with_wget(url, save_as):
+    try:
+        subprocess.run(["wget", "-O", save_as, url], check=True)
+        print("File downloaded successfully.")
+    except subprocess.CalledProcessError as e:
+        print("Failed to download file:", e)
+
+def unzip_file(zip_file):
+    '''
+    unzips a zip file
+    '''
+    with zipfile.ZipFile(zip_file, 'r') as zip_ref:
+        zip_ref.extractall()
+
+def extract_tar_gz(file_path):
+    with tarfile.open(file_path, 'r:gz') as tar:
+        tar.extractall()
+
+def execute_shell_command_with_logging(command, log_file_path):
+    with open(log_file_path, 'w') as f:
+       st = subprocess.run(command, stderr=f)
+       if st.returncode == 0:
+           raise Exception("exception")
+
 
 def get_repository_name(github_ssh: str):
     '''
@@ -359,115 +394,164 @@ def performEvaluation(issue_data) -> Result:
     specimin_path = get_specimin_env_var()
     specimin_command = build_specimin_command(repo_name, os.path.join(issue_folder_abs_dir, issue_id), issue_data[JsonKeys.ROOT_DIR.value], issue_data[JsonKeys.TARGETS.value], qual_jar_dir if os.path.exists(qual_jar_dir) else "")
     
-    if specimin_path is not None and os.path.exists(specimin_path):
-        result = run_specimin(issue_id ,specimin_command, specimin_path)
-    else:
-        result = run_specimin(issue_id ,specimin_command, os.path.join(issue_folder_abs_dir, specimin_project_name))
+    # Storing the Specimin path so that gradle wrapper of specimin can be used to build minimized programs. 
+    if specimin_path is not None and not os.path.exists(specimin_path):
+        print("Clone copy of Specimin is used")
+        specimin_path = os.path.join(issue_folder_abs_dir, specimin_project_name)
     
+    result = run_specimin(issue_id ,specimin_command, specimin_path)   
     print(f"{result.name} - {result.status}")
 
-    return result  #TODO: will remove this line once preservation checking steps pass the CI pipeline from specimin
-    # build script is shipped with input program. It exists in the "specimin" directory of the input program's root directory.
-    # Coping the build script to the output directory of the minimized program.
-    build_script_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "build.gradle")
-
-    if not os.path.exists(build_script_path): #TODO: when finish adding build script, raise exception to indicate missing build script
+    if not ("bug_type" in issue_data and issue_data["bug_type"]):
         return result
-    build_script_destination_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name, "build.gradle")
 
-    copy_build_script = f"cp {build_script_path} {build_script_destination_path}"
-    subprocess.run(copy_build_script, shell=True)
-    
-    #../ISSUES/cf-xx/output/projectname/build_log.txt
-    log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name, minimized_program_build_log_file)
+    build_system = issue_data.get("build_system", "gradle")
+    if build_system == "gradle":
+        # build.gradle and settings.gradle are shipped with input program. It exists in the "specimin" directory of the input program's root directory.
+        # Copying both to the output directory of the minimized program.
+        build_gradle_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "build.gradle")
+        settings_gradle_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "settings.gradle")
 
-    if os.path.exists(log_file):
-        os.remove(log_file)
+        if not os.path.exists(build_gradle_path) or not os.path.exists(settings_gradle_path):
+            print(f"{issue_id}: {build_gradle_path} or {settings_gradle_path} not found.")
+            result.set_preservation_status("Build script missing") 
+            return result
+        
+        gradle_files_destination_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name)
 
-    # Open the log file in write mode
-    min_prgrm_build_status = None
-    with open(log_file, "w") as log_file_obj:
-        min_prgrm_build_status = subprocess.run(f"./gradlew -b  {build_script_destination_path} compileJava", cwd = os.path.abspath("resources"), shell=True, stderr=log_file_obj)
-        print(f"{issue_id} Minimized program gradle build status = {min_prgrm_build_status}")
+        copy_command = f"cp {build_gradle_path} {settings_gradle_path} {gradle_files_destination_path}"
+        subprocess.run(copy_command, shell=True)
+        
+        #../ISSUES/cf-xx/output/projectname/build_log.txt
+        log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name, minimized_program_build_log_file)
 
+        if os.path.exists(log_file):
+            os.remove(log_file)
+
+        target_gradle_script = os.path.join(gradle_files_destination_path, "build.gradle")
+        # Open the log file in write mode
+        min_prgrm_build_status = None
+        with open(log_file, "w") as log_file_obj:
+            min_prgrm_build_status = subprocess.run(f"./gradlew -b  {target_gradle_script} compileJava", cwd = specimin_path, shell=True, stderr=log_file_obj)
+            print(f"{issue_id} Minimized program gradle build status = {min_prgrm_build_status.returncode}")
+        if min_prgrm_build_status.returncode == 0:
+            print(f"{issue_id} Minimized program gradle build successful. Expected: Fail")
+            result.set_preservation_status("Target behavior is not preserved.")
+            return result
+    else: 
+        #TODO: some targets don't reproduce target property with gradle build. 
+        #Build them with shell
+        existing_jdk_dir = os.environ.get("JAVA_HOME")
+        cf_url = issue_data.get("cf_release_url", "")
+        version = issue_data.get("cf_version", "1.9.13")
+        cf_path = f"checker-framework-{version}"
+        cf_abs_path = os.path.abspath(cf_path)
+        cf_zip = f"{cf_abs_path}.zip"
+        full_url = cf_url + "/" + cf_path + "/" + cf_path + ".zip"
+        download_with_wget(full_url, cf_zip)
+        if os.path.exists(cf_zip):
+            unzip_file(cf_zip)
+        
+        jdk_template_url = "https://corretto.aws/downloads/latest/amazon-corretto-{version}-{arch}-{os}-jdk.tar.gz"
+        version = issue_data.get(JsonKeys.JAVA_VERSION.value, "11")
+        #TODO: if version is not 8, no need to pull jdk
+        arch = "x64"
+        if platform.machine() == "arm64": #ignoring x86
+            arch = "aarch64"
+        op = "linux"
+        if platform.system() == "Darwin":
+            op = "macos"
+        jdk_url = jdk_template_url.format(version=version, arch=arch, os=op)
+
+        jdk_name = f"amazon-corretto-{version}"
+        jdk_tar_name = f"{jdk_name}.tar.gz"
+        jdk_abs_path = os.path.abspath(jdk_tar_name)
+        if not os.path.exists(jdk_abs_path):
+            download_with_wget(jdk_url, jdk_tar_name)
+        
+        extracted_jdk_name = jdk_name + "."+ "jdk"
+        extracted_jdk_abs_path = os.path.abspath(extracted_jdk_name)
+        if os.path.exists(extracted_jdk_abs_path):
+            shutil.rmtree(extracted_jdk_abs_path)
+        if os.path.exists(jdk_abs_path):
+            extract_tar_gz(jdk_abs_path)
+        
+        set_directory_exec_permission(extracted_jdk_abs_path)
+
+        jdk_home = os.path.join(extracted_jdk_abs_path, "Contents", "Home")
+        os.environ["JAVA_HOME"] = jdk_home 
+
+        javac_path = os.path.join(cf_abs_path, "checker", "bin", "javac")
+        set_directory_exec_permission(javac_path)
+        flags = issue_data.get("build_flags", "-processor nullness")
+        targets = issue_data.get("build_targets", "src/**/*.java")
+        
+        target_dir = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name, targets)
+        set_directory_exec_permission(javac_path)
+        log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name, minimized_program_build_log_file)
+        if os.path.exists(log_file):
+            os.remove(log_file)
+
+        file_paths = glob.glob(target_dir, recursive=True)
+        command = [javac_path, '-processor', 'guieffect', '-AprintErrorStack', *file_paths]
+        execute_shell_command_with_logging(command, log_file)
+        os.environ["JAVA_HOME"] = existing_jdk_dir
+
+        
     expected_log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "expected_log.txt")
-    if (JsonKeys.BUG_TYPE.value in issue_data and issue_data[JsonKeys.BUG_TYPE.value] == "crash" and min_prgrm_build_status.returncode != 0):
-        status = compare_crash_log(expected_log_file, log_file)
-        result.set_preservation_status(status)
-    elif (JsonKeys.BUG_TYPE.value in issue_data and issue_data[JsonKeys.BUG_TYPE.value] == "error"):
-        status = compare_error_log(expected_log_file, log_file, issue_data[JsonKeys.BUG_PATTERN.value])
-        result.set_preservation_status(status)
-    elif (JsonKeys.BUG_TYPE.value in issue_data and issue_data[JsonKeys.BUG_TYPE.value] == "false_positive"):
-        status = compare_false_positive_log(expected_log_file, log_file, issue_data[JsonKeys.BUG_PATTERN.value])
-        result.set_preservation_status(status)
-    elif (JsonKeys.BUG_TYPE.value in issue_data and issue_data[JsonKeys.BUG_TYPE.value] == "semi_crash"):
-        status = compare_semi_crash(expected_log_file, log_file, issue_data[JsonKeys.BUG_PATTERN.value])
-        result.set_preservation_status(status)
+    if not os.path.exists(expected_log_file):
+        print(f"{issue_id}: {expected_log_file} do not exists")
+        result.set_preservation_status("Expected log file missing")
+        return result
+    
+    status = False
+    if (JsonKeys.BUG_TYPE.value in issue_data and issue_data[JsonKeys.BUG_TYPE.value] == "crash"):
+        require_stack = issue_data.get("require_stack", False)
+        status = compare_crash_log(expected_log_file, log_file, require_stack)
+    else:
+        try:
+            status = compare_pattern_data(expected_log_file, log_file, issue_data[JsonKeys.BUG_PATTERN.value])
+        except ValueError as e:
+            result.set_preservation_status(f"{e}")
+            return result
+        
+    result.set_preservation_status("PASS" if status else "FAIL")
     return result
 
 
-def compare_semi_crash(expected_log_path, actual_log_path, bug_pattern_data):
+def compare_pattern_data(expected_log_path, actual_log_path, bug_pattern_data):
     with open(expected_log_path, "r") as file:
-        expected_content = file.read()
+        expected_log_file_content = file.read()
 
     with open(actual_log_path, "r") as file:
-        actual_content = file.read()
+        actual_log_file_content = file.read()
 
-    logs_to_match = []
-
+    #Algorithm steps:
+    #1.extract data from expected log file. One matched item should be there since only desired log information is in expected log file
+    #2.extract data from build log file. Multiple matched items can be found. 
+    #3.checked if item of st:2 is in items of st:3. if not there immediate return False. otherwise continue
+    #4.return True at method end since no mismatch found.
     for key in bug_pattern_data:
         pattern = bug_pattern_data[key]
-        content = re.search(pattern, expected_content).group(1)
-        logs_to_match.append(content)
-    return all(string in actual_content for string in logs_to_match)
+        expected_content = re.search(pattern, expected_log_file_content)
+        if not expected_content: #TODO: this should trigger error. it indicates pattern error 
+            raise ValueError(f"{pattern} not matched")  
+        expected_content = expected_content.group(1) 
+        actual_content = re.findall(pattern, actual_log_file_content)
+
+        if key == "file_pattern":
+            expected_content = os.path.basename(expected_content)
+            actual_content = [os.path.basename(item) for item in actual_content]
+
+        if expected_content in actual_content:
+            continue
+        else:
+            return False
+
+    return True
 
 
-def compare_false_positive_log(expected_log_path, actual_log_path,  bug_pattern_data):
-    with open(expected_log_path, "r") as file:
-        expected_content = file.read()
-
-    with open(actual_log_path, "r") as file:
-        actual_content = file.read()
-    
-    file_pattern = bug_pattern_data["file_pattern"]
-    error_pattern = bug_pattern_data["error_pattern"]
-    source_pattern = bug_pattern_data["source_pattern"]
-    found_pattern = bug_pattern_data["found_pattern"]
-    required_pattern = bug_pattern_data["required_pattern"]
-
-    java_file = re.search(file_pattern, expected_content).group(1)
-    error_message = re.search(error_pattern, expected_content).group(1)
-    code_triggered_bug = re.search(source_pattern, expected_content).group(1)
-    found_type = re.search(found_pattern, expected_content).group(1)
-    required_type = re.search(required_pattern, expected_content).group(1)
-
-    return java_file in actual_content and error_message in actual_content and code_triggered_bug in actual_content and found_type in actual_content and required_type in actual_content
-
-
-def compare_error_log(expected_log_path, actual_log_path, bug_pattern_data):
-    '''
-    Compare the error log of the minimized program with the expected error log
-    '''
-    with open(expected_log_path, "r") as file:
-        expected_content = file.read()
-
-    with open(actual_log_path, "r") as file:
-        actual_content = file.read()
-    
-    file_pattern = bug_pattern_data["file_pattern"]
-    error_pattern = bug_pattern_data["error_pattern"]
-    source_pattern = bug_pattern_data["source_pattern"]
-    reason_pattern = bug_pattern_data["reason_pattern"]
-
-    error_file = re.search(file_pattern, expected_content).group(1)
-    error_message = re.search(error_pattern, expected_content).group(1)
-    error_source = re.search(source_pattern, expected_content).group(1)
-    error_reason = re.search(reason_pattern, expected_content).group(1)
-
-    return error_file in actual_content and error_message in actual_content and error_source in actual_content and error_reason in actual_content
-
-
-def get_exception_data(log_file_data_list: list):
+def get_exception_data(log_file: str, require_stack = False):
     '''
     Parse the exception data from the log file
 
@@ -475,82 +559,88 @@ def get_exception_data(log_file_data_list: list):
         exception_data (ExceptionData): exception data
     '''
 
+    with open(log_file, "r") as file:
+        logs = file.read()
+
+    lines_of_logs = logs.split('\n')
+
     return_data = []
-    cf_crash_line = [line_no for line_no, line in enumerate(log_file_data_list) if line.lstrip().startswith('; The Checker Framework crashed.')]
+    cf_crash_line = [line_no for line_no, line in enumerate(lines_of_logs) if line.lstrip().startswith('; The Checker Framework crashed.')]
     if len(cf_crash_line) == 0:
-        return None
+        print(f"No crash data in {log_file}")
+        return []
 
     for line_no in cf_crash_line: # if multiple crash location found, one shoud match exactly with the expected crash information
         crashed_class_name_line = -1
         for i in range(line_no, line_no + 5): # should be immediate next line of crash line
-            if log_file_data_list[i].strip().startswith("Compilation unit:"):
+            if lines_of_logs[i].strip().startswith("Compilation unit:"):
                 crashed_class_name_line = i
                 break
         if crashed_class_name_line == -1:
             continue  # start looking for next crash location
-        class_name_abs_path = log_file_data_list[crashed_class_name_line].split(" ")[-1]
+        class_name_abs_path = lines_of_logs[crashed_class_name_line].split(" ")[-1]
         crashed_class_name = os.path.basename(class_name_abs_path)
 
         exception_line = -1
         for i in range(crashed_class_name_line, crashed_class_name_line + 5): # should be immediate next line of crash line
-            if log_file_data_list[i].strip().startswith("Exception:"):
+            if lines_of_logs[i].strip().startswith("Exception:"):
                 exception_line = i
                 break
         exception_stack = [] #compare it with actual stack trace
-        exception_line_str = log_file_data_list[exception_line] #Exception: java.lang.NullPointerException; java.lang.NullPointerException
+        exception_line_str = lines_of_logs[exception_line] #Exception: java.lang.NullPointerException; java.lang.NullPointerException
         exception_line_sub_str = (exception_line_str[exception_line_str.index("Exception:") + 10:]).split()[0] # java.lang.NullPointerException; java.lang.NullPointerException
         exception_cause = re.sub(r'^[^a-zA-Z]+|[^a-zA-Z]+$', '', exception_line_sub_str) # java.lang.NullPointerException
-        for i in range(exception_line + 1, exception_line + 6):
-            if log_file_data_list[i].lstrip().startswith("at"):
-                exception_stack.append(log_file_data_list[i].split()[-1].strip())
         
-        if crashed_class_name != None and exception_cause != None and len(exception_stack) > 0:
+        if not require_stack and crashed_class_name and exception_cause: # if stack is not required, not adding them in exception data. 
+            exception_data = ExceptionData(crashed_class_name, exception_cause)
+            return_data.append(exception_data)
+            continue
+        
+        for i in range(exception_line + 1, exception_line + 6):
+            if lines_of_logs[i].lstrip().startswith("at"):
+                exception_stack.append(lines_of_logs[i].split()[-1].strip())
+        
+        if crashed_class_name and exception_cause and len(exception_stack) > 0:
             exception_data = ExceptionData(crashed_class_name, exception_cause, exception_stack)
             return_data.append(exception_data)
 
     return return_data
 
-def compare_crash_log(expected_log_path, actual_log_path):
+def compare_crash_log(expected_log_path, actual_log_path, require_stack = True):
     '''
     Compare the crash log of the minimized program with the expected crash log
     '''
 
-    with open(expected_log_path, "r") as file:
-        expected_content = file.read()
+    expected_crash_datas = get_exception_data(expected_log_path, require_stack) # there should be 1 crash data
+    actual_crash_data = get_exception_data(actual_log_path, require_stack)
 
-    with open(actual_log_path, "r") as file:
-        actual_content = file.read()
+    if not expected_crash_datas:
+        raise ValueError(f"{expected_log_path} invalid. No crash data") # no crash data found in the expected log file
     
-    expected_lines = expected_content.split('\n')
-    actual_lines = actual_content.split('\n')
-
-    expected_crash_datas = get_exception_data(expected_lines) # there should be 1 crash data
-    actual_crash_data = get_exception_data(actual_lines)
-
-    if expected_crash_datas != None or len(expected_crash_datas) != 0:
-        expected_crash_data = expected_crash_datas[0]
-    else:
-        return False # no crash data found in the expected log file
-
-    is_crash_matched = True
+    expected_crash_data = expected_crash_datas[0]
+        
     for data in actual_crash_data:
-        is_crash_matched = True
-        if expected_crash_data.exception != data.exception or expected_crash_data.exception_class != data.exception_class:
-            is_crash_matched = False
-            continue
-        if expected_crash_data.stack_trace != data.stack_trace:
-            is_crash_matched = False
-            continue
-
-    return is_crash_matched
+        if require_stack:
+            if (expected_crash_data.exception == data.exception and
+                expected_crash_data.exception_class == data.exception_class and
+                expected_crash_data.stack_trace == data.stack_trace):
+                return True
+        else:
+            if (expected_crash_data.exception == data.exception and
+                expected_crash_data.exception_class == data.exception_class):
+                return True
+    return False
 
 
 def main():
     '''
     Main method of the script. It iterates over the json data and perform minimization for each cases.   
     '''
+    if platform.system() == "Windows":
+        print("Windows is not supported")
+        sys.exit(1)
+
     os.makedirs(issue_folder_dir, exist_ok=True)   # create the issue holder directory
-    
     specimin_path = get_specimin_env_var()
     if specimin_path is not None and os.path.exists(specimin_path) and os.path.isdir(specimin_path):
         print("Local Specimin copy is being used")
