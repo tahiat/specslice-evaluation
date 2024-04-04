@@ -442,6 +442,7 @@ def performEvaluation(issue_data) -> Result:
         #TODO: some targets don't reproduce target property with gradle build. 
         #Build them with shell
         existing_jdk_dir = os.environ.get("JAVA_HOME")
+        print(f"java_home: {existing_jdk_dir}")
         cf_url = issue_data.get("cf_release_url", "")
         version = issue_data.get("cf_version", "1.9.13")
         cf_path = f"checker-framework-{version}"
@@ -479,7 +480,10 @@ def performEvaluation(issue_data) -> Result:
         set_directory_exec_permission(extracted_jdk_abs_path)
 
         jdk_home = os.path.join(extracted_jdk_abs_path, "Contents", "Home")
-        os.environ["JAVA_HOME"] = jdk_home 
+        try:
+            os.environ["JAVA_HOME"] = jdk_home
+        except Exception as e:
+            print(f"Error setting JAVA_HOME: {e}")
 
         javac_path = os.path.join(cf_abs_path, "checker", "bin", "javac")
         set_directory_exec_permission(javac_path)
@@ -666,6 +670,8 @@ def main():
     if parsed_data:
         for issue in parsed_data:
             issue_id = issue["issue_id"]
+            if issue_id != "Issue689":
+                continue
             print(f"{issue_id} execution starts =========>")
             result = performEvaluation(issue)
             evaluation_results.append(result)
