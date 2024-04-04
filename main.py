@@ -73,9 +73,11 @@ def unzip_file(zip_file):
     with zipfile.ZipFile(zip_file, 'r') as zip_ref:
         zip_ref.extractall()
 
-def extract_tar_gz(file_path):
-    with tarfile.open(file_path, 'r:gz') as tar:
+def extract_and_rename(tar_file, target_name):
+    with tarfile.open(tar_file, "r:gz") as tar:
         tar.extractall()
+        extracted_dir = tar.getnames()[0]
+    os.rename(extracted_dir, target_name)
 
 def execute_shell_command_with_logging(command, log_file_path):
     with open(log_file_path, 'w') as f:
@@ -466,20 +468,32 @@ def performEvaluation(issue_data) -> Result:
 
         jdk_name = f"amazon-corretto-{version}"
         jdk_tar_name = f"{jdk_name}.tar.gz"
-        jdk_abs_path = os.path.abspath(jdk_tar_name)
-        if not os.path.exists(jdk_abs_path):
-            download_with_wget(jdk_url, jdk_tar_name)
+        jdk_tar_abs_path = os.path.abspath(jdk_tar_name)
+        if os.path.exists(jdk_tar_abs_path):
+            os.remove(jdk_tar_abs_path)
+            
+        if not os.path.exists(jdk_tar_abs_path):
+            download_with_wget(jdk_url, jdk_tar_abs_path)
         
-        extracted_jdk_name = jdk_name + "."+ "jdk"
-        extracted_jdk_abs_path = os.path.abspath(extracted_jdk_name)
+        extracted_jdk_name = ""
+        if op == "linux":
+            extracted_jdk_abs_path = os.path.abspath(jdk_name) #/../amazon-corretto-8
+        else:
+            extracted_jdk_abs_path = os.path.abspath(jdk_name) + ".jdk" #//.//amazon-corretto-8.jdk
+
         if os.path.exists(extracted_jdk_abs_path):
             shutil.rmtree(extracted_jdk_abs_path)
-        if os.path.exists(jdk_abs_path):
-            extract_tar_gz(jdk_abs_path)
-        
-        set_directory_exec_permission(extracted_jdk_abs_path)
 
-        jdk_home = os.path.join(extracted_jdk_abs_path, "Contents", "Home")
+        os.makedirs(extracted_jdk_abs_path, exist_ok=True)
+
+        if os.path.exists(extracted_jdk_abs_path):
+            extract_and_rename(jdk_tar_abs_path, extracted_jdk_abs_path)
+        
+        if op == "linux":
+            jdk_home = os.path.join(extracted_jdk_abs_path, "bin")
+        else:
+            jdk_home = os.path.join(extracted_jdk_abs_path, "Contents", "Home")
+        
         try:
             os.environ["JAVA_HOME"] = jdk_home
         except Exception as e:
