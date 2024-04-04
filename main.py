@@ -440,7 +440,7 @@ def performEvaluation(issue_data) -> Result:
             print(f"{issue_id} Minimized program gradle build status = {min_prgrm_build_status.returncode}")
         if min_prgrm_build_status.returncode == 0:
             print(f"{issue_id} Minimized program gradle build successful. Expected: Fail")
-            result.set_preservation_status("Target behavior is not preserved.")
+            result.set_preservation_status("Fail. Issue is not reproduced")
             return result
     else:
         cf_url = issue_data.get("cf_release_url", "")
@@ -507,7 +507,8 @@ def performEvaluation(issue_data) -> Result:
         try:
             execute_shell_command_with_logging(command, log_file)
         except Exception:
-            result.set_preservation_status("FAIL. Issue not reproduced")
+            result.set_preservation_status("FAIL. Issue is not reproduced")
+            return result
         
     expected_log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "expected_log.txt")
     if not os.path.exists(expected_log_file):
