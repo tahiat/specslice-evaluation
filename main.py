@@ -640,7 +640,7 @@ def main():
     '''
     Main method of the script. It iterates over the json data and perform minimization for each cases.   
     '''
-    if os.system() == "Windows":
+    if platform.system() == "Windows":
         print("Windows is not supported")
         sys.exit(1)
 
