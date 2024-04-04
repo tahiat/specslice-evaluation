@@ -453,6 +453,7 @@ def performEvaluation(issue_data) -> Result:
         
         jdk_template_url = "https://corretto.aws/downloads/latest/amazon-corretto-{version}-{arch}-{os}-jdk.tar.gz"
         version = issue_data.get(JsonKeys.JAVA_VERSION.value, "11")
+        #TODO: if version is not 8, no need to pull jdk
         arch = "x64"
         if platform.machine() == "arm64": #ignoring x86
             arch = "aarch64"
@@ -460,7 +461,7 @@ def performEvaluation(issue_data) -> Result:
         if platform.system() == "Darwin":
             op = "macos"
         elif platform.system() == "Windows":
-            print("windows not supported")
+            print("windows not supported") #TODO: return or exception
         
         jdk_url = jdk_template_url.format(version=version, arch=arch, os=op)
 
