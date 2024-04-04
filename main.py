@@ -12,6 +12,7 @@ import zipfile
 import platform
 import tarfile
 import glob
+import stat
 
 issue_folder_dir = 'ISSUES'
 specimin_input = 'input'
@@ -55,7 +56,7 @@ def get_specimin_env_var():
 
 def set_directory_exec_permission(directory_path):
     current_permissions = os.stat(directory_path).st_mode
-    new_permissions = current_permissions | 0o111
+    new_permissions = current_permissions | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH # owner, group, other
     os.chmod(directory_path, new_permissions)
 
 def download_with_wget(url, save_as):
@@ -407,7 +408,7 @@ def performEvaluation(issue_data) -> Result:
     build_system = issue_data.get("build_system", "gradle")
     if build_system == "gradle":
         # build.gradle and settings.gradle are shipped with input program. It exists in the "specimin" directory of the input program's root directory.
-        # Coping both to the output directory of the minimized program.
+        # Copying both to the output directory of the minimized program.
         build_gradle_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "build.gradle")
         settings_gradle_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "settings.gradle")
 
@@ -460,9 +461,6 @@ def performEvaluation(issue_data) -> Result:
         op = "linux"
         if platform.system() == "Darwin":
             op = "macos"
-        elif platform.system() == "Windows":
-            print("windows not supported") #TODO: return or exception
-        
         jdk_url = jdk_template_url.format(version=version, arch=arch, os=op)
 
         jdk_name = f"amazon-corretto-{version}"
@@ -608,7 +606,7 @@ def get_exception_data(log_file: str, require_stack = False):
 
     return return_data
 
-def compare_crash_log(expected_log_path, actual_log_path, require_stack = False):
+def compare_crash_log(expected_log_path, actual_log_path, require_stack = True):
     '''
     Compare the crash log of the minimized program with the expected crash log
     '''
@@ -638,8 +636,11 @@ def main():
     '''
     Main method of the script. It iterates over the json data and perform minimization for each cases.   
     '''
+    if os.system() == "Windows":
+        print("Windows is not supported")
+        sys.exit(1)
+
     os.makedirs(issue_folder_dir, exist_ok=True)   # create the issue holder directory
-    
     specimin_path = get_specimin_env_var()
     if specimin_path is not None and os.path.exists(specimin_path) and os.path.isdir(specimin_path):
         print("Local Specimin copy is being used")
