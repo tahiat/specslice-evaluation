@@ -443,7 +443,7 @@
         "cf_version": "3.40.0",
         "java_version": "17",
         "note": "",
-        "bug_type": "",
+        "bug_type": "crash",
         "checker_qual_required": false
     }
 ]
