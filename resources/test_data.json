@@ -350,11 +350,11 @@
         "cf_version": "3.0.1",
         "java_version": "8",
         "note": "",
-        "bug_type": "",
+        "bug_type": "error",
         "bug_pattern": {
             "file_pattern": "(\\w+\\.java)",
             "error_pattern": "error: \\[(.+?)\\]",
-            "source_pattern": "(new\\s+\\w+;)",
+            "source_pattern": "(return\\s+new\\s+WrappedCollection\\(.*\\);)",
             "found_pattern": "found   : (.*)",
             "required_pattern": "required: (.*)"
         },
