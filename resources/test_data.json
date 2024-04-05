@@ -271,8 +271,13 @@
         "cf_version": "3.6.0",
         "java_version": "11",
         "note": "Project build: ./gradlew build. Error should occur on nullness checker",
-        "bug_type": "",
-        "checker_qual_required": false
+        "bug_type": "error",
+        "bug_pattern": {
+            "file_pattern": "(\\w+\\.java)",
+            "error_pattern": "error: \\[(.+?)\\]",
+            "source_pattern": "(return\\sthis\\s==\\sobj)"
+        },
+        "checker_qual_required": true
     },
     {
         "issue_id" : "cf-3021",
