@@ -23,6 +23,8 @@ TIMEOUT_DURATION = 300
 specimin_env_var = "SPECIMIN"
 json_status_file_name = "target_status.json"
 minimized_program_build_log_file = "build_log.txt"
+linux_system_identifier = "Linux"
+macos_system_identifier = "Darwin"
 
 def read_json_from_file(file_path):
     '''
@@ -73,9 +75,12 @@ def unzip_file(zip_file):
     with zipfile.ZipFile(zip_file, 'r') as zip_ref:
         zip_ref.extractall()
 
-def extract_tar_gz(file_path):
-    with tarfile.open(file_path, 'r:gz') as tar:
+def extract_and_rename(tar_file, target_name):
+    with tarfile.open(tar_file, "r:gz") as tar:
         tar.extractall()
+        extracted_dir = tar.getnames()[0]
+        set_directory_exec_permission(extracted_dir)
+    os.rename(extracted_dir, target_name)
 
 def execute_shell_command_with_logging(command, log_file_path):
     with open(log_file_path, 'w') as f:
@@ -395,7 +400,7 @@ def performEvaluation(issue_data) -> Result:
     specimin_command = build_specimin_command(repo_name, os.path.join(issue_folder_abs_dir, issue_id), issue_data[JsonKeys.ROOT_DIR.value], issue_data[JsonKeys.TARGETS.value], qual_jar_dir if os.path.exists(qual_jar_dir) else "")
     
     # Storing the Specimin path so that gradle wrapper of specimin can be used to build minimized programs. 
-    if specimin_path is not None and not os.path.exists(specimin_path):
+    if not specimin_path or not os.path.exists(specimin_path):
         print("Clone copy of Specimin is used")
         specimin_path = os.path.join(issue_folder_abs_dir, specimin_project_name)
     
@@ -406,6 +411,7 @@ def performEvaluation(issue_data) -> Result:
         return result
 
     build_system = issue_data.get("build_system", "gradle")
+    print(f"build used = {build_system}")
     if build_system == "gradle":
         # build.gradle and settings.gradle are shipped with input program. It exists in the "specimin" directory of the input program's root directory.
         # Copying both to the output directory of the minimized program.
@@ -436,20 +442,19 @@ def performEvaluation(issue_data) -> Result:
             print(f"{issue_id} Minimized program gradle build status = {min_prgrm_build_status.returncode}")
         if min_prgrm_build_status.returncode == 0:
             print(f"{issue_id} Minimized program gradle build successful. Expected: Fail")
-            result.set_preservation_status("Target behavior is not preserved.")
+            result.set_preservation_status("Fail. Issue is not reproduced")
             return result
-    else: 
-        #TODO: some targets don't reproduce target property with gradle build. 
-        #Build them with shell
-        existing_jdk_dir = os.environ.get("JAVA_HOME")
+    else:
         cf_url = issue_data.get("cf_release_url", "")
         version = issue_data.get("cf_version", "1.9.13")
         cf_path = f"checker-framework-{version}"
         cf_abs_path = os.path.abspath(cf_path)
         cf_zip = f"{cf_abs_path}.zip"
         full_url = cf_url + "/" + cf_path + "/" + cf_path + ".zip"
-        download_with_wget(full_url, cf_zip)
-        if os.path.exists(cf_zip):
+        if not os.path.exists(cf_zip):
+            download_with_wget(full_url, cf_zip)
+
+        if os.path.exists(cf_zip) and not os.path.exists(cf_abs_path):
             unzip_file(cf_zip)
         
         jdk_template_url = "https://corretto.aws/downloads/latest/amazon-corretto-{version}-{arch}-{os}-jdk.tar.gz"
@@ -458,45 +463,68 @@ def performEvaluation(issue_data) -> Result:
         arch = "x64"
         if platform.machine() == "arm64": #ignoring x86
             arch = "aarch64"
-        op = "linux"
-        if platform.system() == "Darwin":
+        platform_system = platform.system()
+        op = ""  # use this variable to only form the jdk download url
+        if platform_system == linux_system_identifier:
+            op = "linux"
+        elif platform_system == macos_system_identifier:
             op = "macos"
+        else:
+            result.set_preservation_status(f"{platform_system} not supported")
+            raise Exception(f"{platform_system} not supported")
+
         jdk_url = jdk_template_url.format(version=version, arch=arch, os=op)
 
         jdk_name = f"amazon-corretto-{version}"
         jdk_tar_name = f"{jdk_name}.tar.gz"
-        jdk_abs_path = os.path.abspath(jdk_tar_name)
-        if not os.path.exists(jdk_abs_path):
-            download_with_wget(jdk_url, jdk_tar_name)
-        
-        extracted_jdk_name = jdk_name + "."+ "jdk"
-        extracted_jdk_abs_path = os.path.abspath(extracted_jdk_name)
-        if os.path.exists(extracted_jdk_abs_path):
-            shutil.rmtree(extracted_jdk_abs_path)
-        if os.path.exists(jdk_abs_path):
-            extract_tar_gz(jdk_abs_path)
-        
-        set_directory_exec_permission(extracted_jdk_abs_path)
+        jdk_tar_abs_path = os.path.abspath(jdk_tar_name)
 
-        jdk_home = os.path.join(extracted_jdk_abs_path, "Contents", "Home")
-        os.environ["JAVA_HOME"] = jdk_home 
+        if not os.path.exists(jdk_tar_abs_path):
+            download_with_wget(jdk_url, jdk_tar_abs_path)
+        
 
-        javac_path = os.path.join(cf_abs_path, "checker", "bin", "javac")
-        set_directory_exec_permission(javac_path)
-        flags = issue_data.get("build_flags", "-processor nullness")
+        if platform_system ==linux_system_identifier:
+            extracted_jdk_abs_path = os.path.abspath(jdk_name) #/../amazon-corretto-8
+        elif platform_system == macos_system_identifier:
+            extracted_jdk_abs_path = os.path.abspath(jdk_name) + ".jdk" #//.//amazon-corretto-8.jdk
+        else:
+            raise Exception(f"{platform_system} not supported")
+        
+        if not os.path.exists(extracted_jdk_abs_path):
+            os.makedirs(extracted_jdk_abs_path, exist_ok=True)
+            if os.path.exists(extracted_jdk_abs_path):
+                extract_and_rename(jdk_tar_abs_path, extracted_jdk_abs_path)
+        # https://checkerframework.org/manual/#external-tools
+        # using option 3 for CF invokation with downloaded jdk
+        #Option 3: Whenever this document tells you to run javac, instead run checker.jar via java (not javac) as in:
+        #java -jar "$CHECKERFRAMEWORK/checker/dist/checker.jar" -cp "myclasspath" -processor nullness MyFile.java
+        if platform.system() == linux_system_identifier:
+            java_path = os.path.join(extracted_jdk_abs_path, "bin", "java")
+        elif platform.system() == macos_system_identifier:
+            java_path = os.path.join(extracted_jdk_abs_path, "Contents", "Home", "bin", "java")
+        else:
+            raise Exception(f"{platform_system} not supported")
+
+        checker_jar_path = os.path.join(cf_abs_path, "checker", "dist", "checker.jar")
+        set_directory_exec_permission(checker_jar_path)
+
         targets = issue_data.get("build_targets", "src/**/*.java")
         
         target_dir = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name, targets)
-        set_directory_exec_permission(javac_path)
+        set_directory_exec_permission(java_path)
         log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name, minimized_program_build_log_file)
         if os.path.exists(log_file):
             os.remove(log_file)
-
+        flags = issue_data.get("build_flags", [])
         file_paths = glob.glob(target_dir, recursive=True)
-        command = [javac_path, '-processor', 'guieffect', '-AprintErrorStack', *file_paths]
-        execute_shell_command_with_logging(command, log_file)
-        os.environ["JAVA_HOME"] = existing_jdk_dir
-
+        command = [java_path, '-jar', checker_jar_path]
+        command.extend(flags)
+        command.extend([*file_paths])
+        try:
+            execute_shell_command_with_logging(command, log_file)
+        except Exception:
+            result.set_preservation_status("FAIL. Issue is not reproduced")
+            return result
         
     expected_log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "expected_log.txt")
     if not os.path.exists(expected_log_file):
@@ -636,8 +664,9 @@ def main():
     '''
     Main method of the script. It iterates over the json data and perform minimization for each cases.   
     '''
-    if platform.system() == "Windows":
-        print("Windows is not supported")
+    op_sys = platform.system()
+    if op_sys != linux_system_identifier and op_sys != macos_system_identifier:
+        print(f"{op_sys} no supported")
         sys.exit(1)
 
     os.makedirs(issue_folder_dir, exist_ok=True)   # create the issue holder directory
@@ -667,7 +696,12 @@ def main():
         for issue in parsed_data:
             issue_id = issue["issue_id"]
             print(f"{issue_id} execution starts =========>")
-            result = performEvaluation(issue)
+            try:
+                result = performEvaluation(issue)
+            except Exception as e:
+                print(f"Exception: {e}")
+                print("Aborting execution")
+                sys.exit(1)
             evaluation_results.append(result)
             json_status[issue_id] = result.status
             print((f"{issue_id} <========= execution Ends."))            

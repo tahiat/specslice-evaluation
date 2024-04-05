@@ -114,7 +114,7 @@
         "cf_version": "3.35.0",
         "java_version": "11",
         "note": "This issue describes multiple bugs. the second one is \"ant cf-only -Dcf.check.only=org/apache/cassandra/io/sstable/format/SSTableScanner.java\"",
-        "bug_type": "",
+        "bug_type": "crash",
         "checker_qual_required": true
     },
     {
@@ -271,8 +271,13 @@
         "cf_version": "3.6.0",
         "java_version": "11",
         "note": "Project build: ./gradlew build. Error should occur on nullness checker",
-        "bug_type": "",
-        "checker_qual_required": false
+        "bug_type": "error",
+        "bug_pattern": {
+            "file_pattern": "(\\w+\\.java)",
+            "error_pattern": "error: \\[(.+?)\\]",
+            "source_pattern": "(return\\sthis\\s==\\sobj)"
+        },
+        "checker_qual_required": true
     },
     {
         "issue_id" : "cf-3021",
@@ -350,11 +355,11 @@
         "cf_version": "3.0.1",
         "java_version": "8",
         "note": "",
-        "bug_type": "",
+        "bug_type": "error",
         "bug_pattern": {
             "file_pattern": "(\\w+\\.java)",
             "error_pattern": "error: \\[(.+?)\\]",
-            "source_pattern": "(new\\s+\\w+;)",
+            "source_pattern": "(return\\s+new\\s+WrappedCollection\\(.*\\);)",
             "found_pattern": "found   : (.*)",
             "required_pattern": "required: (.*)"
         },
@@ -378,8 +383,18 @@
         "cf_version": "1.9.13",
         "java_version": "8",
         "note": "target method is not confirmed. package name changed.",
-        "bug_type": "",
-        "checker_qual_required": false
+        "bug_type": "error",
+        "bug_pattern": {
+            "file_pattern": "Compilation unit: (.*)",
+            "error_pattern": "error: (.+?):",
+            "exception_pattern": "Exception: (.+);",
+            "stack_trace_pattern": "Stack trace: (.+)"
+        },
+        "checker_qual_required": false,
+        "build_system": "shell",
+        "build_flags": ["-processor", "formatter", "-AprintErrorStack"],
+        "build_targets": "src/**/*.java",
+        "cf_release_url": "https://github.com/typetools/checker-framework/releases/download"
     },
     {
         "issue_id" : "Issue689",
@@ -401,7 +416,7 @@
         "cf_version": "1.9.13",
         "java_version": "8",
         "note": "package java.util changed to com.example",
-        "bug_type": "",
+        "bug_type": "error",
         "bug_pattern": {
             "file_pattern": "Compilation unit: (.*)",
             "error_pattern": "error: (.+?):",
@@ -410,7 +425,7 @@
         },
         "checker_qual_required": true,
         "build_system": "shell",
-        "build_flags": "-processor guieffect -AprintErrorStack",
+        "build_flags": ["-processor", "guieffect", "-AprintErrorStack"],
         "build_targets": "src/**/*.java",
         "cf_release_url": "https://github.com/typetools/checker-framework/releases/download"
     },
@@ -433,7 +448,7 @@
         "cf_version": "3.40.0",
         "java_version": "17",
         "note": "",
-        "bug_type": "",
+        "bug_type": "crash",
         "checker_qual_required": false
     }
 ]
