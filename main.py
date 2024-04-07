@@ -407,7 +407,8 @@ def performEvaluation(issue_data) -> Result:
     result = run_specimin(issue_id ,specimin_command, specimin_path)   
     print(f"{result.name} - {result.status}")
 
-    if not ("bug_type" in issue_data and issue_data["bug_type"]):
+    if result.status.lower() == "fail":
+        result.set_preservation_status("Minimization did not succeed.")
         return result
 
     build_system = issue_data.get("build_system", "gradle")
