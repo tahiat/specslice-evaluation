@@ -25,6 +25,7 @@ json_status_file_name = "target_status.json"
 minimized_program_build_log_file = "build_log.txt"
 linux_system_identifier = "Linux"
 macos_system_identifier = "Darwin"
+preservation_status_file_name = "preservation_status.json"
 
 def read_json_from_file(file_path):
     '''
@@ -443,7 +444,7 @@ def performEvaluation(issue_data) -> Result:
             print(f"{issue_id} Minimized program gradle build status = {min_prgrm_build_status.returncode}")
         if min_prgrm_build_status.returncode == 0:
             print(f"{issue_id} Minimized program gradle build successful. Expected: Fail")
-            result.set_preservation_status("FAIL", "Issue is not reproduced")
+            result.set_preservation_status("FAIL", "Min program is not reproducing issue with modular analyses")
             return result
     else:
         cf_url = issue_data.get("cf_release_url", "")
@@ -524,7 +525,7 @@ def performEvaluation(issue_data) -> Result:
         try:
             execute_shell_command_with_logging(command, log_file)
         except Exception:
-            result.set_preservation_status("FAIL", "Issue is not reproduced")
+            result.set_preservation_status("FAIL", "Min program is not showing issue with modular analyses")
             return result
         
     expected_log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "expected_log.txt")
@@ -544,7 +545,7 @@ def performEvaluation(issue_data) -> Result:
             result.set_preservation_status("FAIL", f"{e}")
             return result
         
-    result.set_preservation_status("PASS" if status else "FAIL", "" if status else f"Please check {log_file}")
+    result.set_preservation_status("PASS" if status else "FAIL", "" if status else f"log mismatched between target and min program")
     return result
 
 
@@ -694,12 +695,8 @@ def main():
     evaluation_results = []
     json_status: dict[str, str] = {} # Contains PASS/FAIL status of targets to be printed as a json file 
     preservation_status: dict[str, str] = {}
-    i = 0
     if parsed_data:
         for issue in parsed_data:
-            i+=1
-            if i > 4:
-                break
             issue_id = issue["issue_id"]
             print(f"{issue_id} execution starts =========>")
             try:
@@ -720,6 +717,10 @@ def main():
     # Write JSON data in a file. This can be compared from specimin to verify that the successful # of targets do not get reduced in a PR
     with open(json_status_file, "w") as json_file:
         json.dump(json_status, json_file, indent= 2)
+
+    prev_status_file = os.path.join(issue_folder_dir, preservation_status_file_name)
+    with open(prev_status_file, "w") as json_file:
+        json.dump(preservation_status, json_file, indent= 2)
 
     print("\n\n\n\n")
     print(f"issue_name    |    status    |  Fail reason  | preservation_status | preservation reason ")
