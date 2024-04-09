@@ -25,6 +25,7 @@ json_status_file_name = "target_status.json"
 minimized_program_build_log_file = "build_log.txt"
 linux_system_identifier = "Linux"
 macos_system_identifier = "Darwin"
+preservation_status_file_name = "preservation_status.json"
 
 def read_json_from_file(file_path):
     '''
@@ -407,7 +408,8 @@ def performEvaluation(issue_data) -> Result:
     result = run_specimin(issue_id ,specimin_command, specimin_path)   
     print(f"{result.name} - {result.status}")
 
-    if not ("bug_type" in issue_data and issue_data["bug_type"]):
+    if result.status.lower() == "fail":
+        result.set_preservation_status("FAIL", "Minimization did not succeed.")
         return result
 
     build_system = issue_data.get("build_system", "gradle")
@@ -420,7 +422,7 @@ def performEvaluation(issue_data) -> Result:
 
         if not os.path.exists(build_gradle_path) or not os.path.exists(settings_gradle_path):
             print(f"{issue_id}: {build_gradle_path} or {settings_gradle_path} not found.")
-            result.set_preservation_status("Build script missing") 
+            result.set_preservation_status("FAIL", "Build script missing") 
             return result
         
         gradle_files_destination_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name)
@@ -442,7 +444,7 @@ def performEvaluation(issue_data) -> Result:
             print(f"{issue_id} Minimized program gradle build status = {min_prgrm_build_status.returncode}")
         if min_prgrm_build_status.returncode == 0:
             print(f"{issue_id} Minimized program gradle build successful. Expected: Fail")
-            result.set_preservation_status("Fail. Issue is not reproduced")
+            result.set_preservation_status("FAIL", "Min program is not reproducing issue with modular analyses")
             return result
     else:
         cf_url = issue_data.get("cf_release_url", "")
@@ -470,7 +472,7 @@ def performEvaluation(issue_data) -> Result:
         elif platform_system == macos_system_identifier:
             op = "macos"
         else:
-            result.set_preservation_status(f"{platform_system} not supported")
+            result.set_preservation_status("FAIL", f"{platform_system} not supported")
             raise Exception(f"{platform_system} not supported")
 
         jdk_url = jdk_template_url.format(version=version, arch=arch, os=op)
@@ -523,13 +525,13 @@ def performEvaluation(issue_data) -> Result:
         try:
             execute_shell_command_with_logging(command, log_file)
         except Exception:
-            result.set_preservation_status("FAIL. Issue is not reproduced")
+            result.set_preservation_status("FAIL", "Min program is not showing issue with modular analyses")
             return result
         
     expected_log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "expected_log.txt")
     if not os.path.exists(expected_log_file):
         print(f"{issue_id}: {expected_log_file} do not exists")
-        result.set_preservation_status("Expected log file missing")
+        result.set_preservation_status("FAIL", "Expected log file missing")
         return result
     
     status = False
@@ -540,10 +542,10 @@ def performEvaluation(issue_data) -> Result:
         try:
             status = compare_pattern_data(expected_log_file, log_file, issue_data[JsonKeys.BUG_PATTERN.value])
         except ValueError as e:
-            result.set_preservation_status(f"{e}")
+            result.set_preservation_status("FAIL", f"{e}")
             return result
         
-    result.set_preservation_status("PASS" if status else "FAIL")
+    result.set_preservation_status("PASS" if status else "FAIL", "" if status else f"log mismatched between target and min program")
     return result
 
 
@@ -692,6 +694,7 @@ def main():
 
     evaluation_results = []
     json_status: dict[str, str] = {} # Contains PASS/FAIL status of targets to be printed as a json file 
+    preservation_status: dict[str, str] = {}
     if parsed_data:
         for issue in parsed_data:
             issue_id = issue["issue_id"]
@@ -704,6 +707,7 @@ def main():
                 sys.exit(1)
             evaluation_results.append(result)
             json_status[issue_id] = result.status
+            preservation_status[issue_id] = result.preservation_status
             print((f"{issue_id} <========= execution Ends."))            
 
     report_generator: TableGenerator = TableGenerator(evaluation_results)
@@ -714,12 +718,16 @@ def main():
     with open(json_status_file, "w") as json_file:
         json.dump(json_status, json_file, indent= 2)
 
+    prev_status_file = os.path.join(issue_folder_dir, preservation_status_file_name)
+    with open(prev_status_file, "w") as json_file:
+        json.dump(preservation_status, json_file, indent= 2)
+
     print("\n\n\n\n")
-    print(f"issue_name    |    status    |  Fail reason  | preservation_status")
-    print("--------------------------------------------")
+    print(f"issue_name    |    status    |  Fail reason  | preservation_status | preservation reason ")
+    print("------------------------------------------------------------------------------------------")
     case = 1
     for minimization_result in evaluation_results:
-        print(f"({case}){minimization_result.name}    |    {minimization_result.status}     |    {minimization_result.reason}      | {minimization_result.preservation_status}")
+        print(f"({case}){minimization_result.name}    |    {minimization_result.status}     |    {minimization_result.reason}            | {minimization_result.preservation_status}           |   {minimization_result.preservation_status_reason}")
         case +=1
 
     
