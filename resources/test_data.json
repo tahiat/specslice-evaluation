@@ -524,5 +524,35 @@
             "error_pattern": "(error: incompatible types:)"
         },
         "checker_qual_required": false
+    },
+    {
+        "issue_id" : "jdk-8288590",
+        "url": "https://github.com/tahiat/assertj.git",
+        "issue_url": "https://bugs.openjdk.org/browse/JDK-8288590",
+        "test_case_url": "https://bugs.openjdk.org/browse/JDK-8288590",
+        "branch": "JDK-8288590",
+        "commit_hash": "",
+        "project_name": "assertj",
+        "build_command": "",
+        "root_dir": "assertj-core/src/main/java/", 
+        "targets": [
+            {
+                "method": "simpleFieldValues(String, Class<T> clazz, Iterable<?>)",
+                "file": "FieldSupport.java",
+                "package": "org.assertj.core.util.introspection",
+                "inner_class": ""
+            }
+        ],
+        "cf_version": "",
+        "java_version": "17",
+        "note": "",
+        "bug_type": "error",
+        "bug_pattern": {
+            "file_pattern": "(\\w+\\.java)",
+            "error_pattern": "incompatible types: (.*?)",
+            "upper_bound_patter": "upper bounds: (.*?)",
+            "equality_pattern": "equality constraints: (.*?)"
+        },
+        "checker_qual_required": false
     }
 ]
