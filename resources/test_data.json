@@ -471,7 +471,8 @@
     {
         "issue_id" : "cf-3025",
         "url": "https://github.com/tahiat/guava.git",
-        "branch": "cf-3020",
+        "issue_url": "https://github.com/typetools/checker-framework/issues/3025",
+        "branch": "cf-3025",
         "commit_hash": "",
         "project_name": "guava",
         "build_command": "",
@@ -519,10 +520,8 @@
         "note": "",
         "bug_type": "error",
         "bug_pattern": {
-            "file_pattern": "",
-            "error_pattern": "",
-            "exception_pattern": "",
-            "stack_trace_pattern": ""
+            "file_pattern": "(\\w+\\.java)",
+            "error_pattern": "(error: incompatible types:)"
         },
         "checker_qual_required": false
     }
