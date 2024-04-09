@@ -522,6 +522,8 @@ def performEvaluation(issue_data) -> Result:
         command = [java_path, '-jar', checker_jar_path]
         command.extend(flags)
         command.extend([*file_paths])
+        command_str = ' '.join(command)
+        print(f"{issue_id}: executing this command to check preservation status: {command_str}")
         try:
             execute_shell_command_with_logging(command, log_file)
         except Exception:
