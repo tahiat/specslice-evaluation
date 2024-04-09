@@ -695,8 +695,6 @@ def main():
     if parsed_data:
         for issue in parsed_data:
             issue_id = issue["issue_id"]
-            if issue_id != "cf-3025":
-                continue
             print(f"{issue_id} execution starts =========>")
             try:
                 result = performEvaluation(issue)

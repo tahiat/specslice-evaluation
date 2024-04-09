@@ -500,7 +500,7 @@
         "cf_version": "",
         "java_version": "16.0.1",
         "note": "",
-        "bug_type": "exception",
+        "bug_type": "error",
         "bug_pattern": {
             "file_pattern": "",
             "error_pattern": "",
@@ -510,50 +510,20 @@
         "checker_qual_required": false
     },
     {
-        "issue_id" : "jdk-8269121",
-        "url": "https://github.com/tahiat/TypeInferenceBugOfMethodReferences.git",
-        "issue_url": "https://bugs.openjdk.org/browse/JDK-8269121",
-        "test_case_url": "https://bugs.openjdk.org/browse/JDK-8269121",
-        "branch": "",
-        "commit_hash": "",
-        "project_name": "TypeInferenceBugOfMethodReferences",
-        "build_command": "",
-        "root_dir": "src/main/java/", 
-        "targets": [
-            {
-                "method": "main(String[])",
-                "file": "Main.java",
-                "package": "net.mirwaldt.bug",
-                "inner_class": ""
-            }
-        ],
-        "cf_version": "",
-        "java_version": "16.0.1",
-        "note": "",
-        "bug_type": "exception",
-        "bug_pattern": {
-            "file_pattern": "",
-            "error_pattern": "",
-            "exception_pattern": "",
-            "stack_trace_pattern": ""
-        },
-        "checker_qual_required": false
-    },
-    {
-        "issue_id" : "jdk-8288590",
+        "issue_id" : "jdk-8319461",
         "url": "https://github.com/tahiat/property.git",
         "issue_url": "https://bugs.openjdk.org/browse/JDK-8319461",
         "test_case_url": "https://bugs.openjdk.org/browse/JDK-8319461",
         "branch": "test",
         "commit_hash": "",
-        "project_name": "TypeInferenceBugOfMethodReferences",
+        "project_name": "property",
         "build_command": "",
-        "root_dir": "src/main/java/", 
+        "root_dir": "core/src/main/java/", 
         "targets": [
             {
-                "method": "main(String[])",
-                "file": "Main.java",
-                "package": "net.mirwaldt.bug",
+                "method": "create(Class<P>, Class<V>, String ,PropertyMetadata<V>)",
+                "file": "PropertyFactoryManager.java",
+                "package": "io.github.mmm.property.factory",
                 "inner_class": ""
             }
         ],
