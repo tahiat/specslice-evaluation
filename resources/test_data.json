@@ -509,7 +509,7 @@
         "root_dir": "core/src/main/java/", 
         "targets": [
             {
-                "method": "create(Class<P>, Class<V>, String ,PropertyMetadata<V>)",
+                "method": "create(Class<P>, Class<V>, String, PropertyMetadata<V>)",
                 "file": "PropertyFactoryManager.java",
                 "package": "io.github.mmm.property.factory",
                 "inner_class": ""
