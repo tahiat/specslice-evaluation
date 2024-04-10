@@ -10,8 +10,10 @@
 # when this script is invoked from specimin CI, 
 # compilation result will be compared with "expected" result and CI will be passed/failed accordingly.
 
-# first parameter specifies the Specimin output directory
-# second parater specifies the name of generated status file
+# usage: shell check_compilation.sh jar_output --> to compile approximate mode min program
+# or
+# usage: shell check_compilation.sh output --> to compile exact mode min program
+
 
 specimin_output_dir_name="$1"
 
