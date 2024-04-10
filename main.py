@@ -13,10 +13,12 @@ import platform
 import tarfile
 import glob
 import stat
+import argparse
 
 issue_folder_dir = 'ISSUES'
 specimin_input = 'input'
 specimin_output = 'output'
+specimin_jar_output = 'jar_output'
 specimin_project_name = 'specimin'
 specimin_source_url = 'https://github.com/kelloggm/specimin.git'
 TIMEOUT_DURATION = 300
@@ -372,7 +374,7 @@ def run_specimin(issue_name, command, directory) -> Result:
     
     
 
-def performEvaluation(issue_data) -> Result:
+def performEvaluation(issue_data, isJarMode = False) -> Result:
     '''
     For each issue data, execute SPECIMIN on a target project. 
 
@@ -385,7 +387,11 @@ def performEvaluation(issue_data) -> Result:
     branch = issue_data[JsonKeys.BRANCH.value]
     commit_hash = issue_data[JsonKeys.COMMIT_HASH.value]
     qual_jar_required = issue_data[JsonKeys.CHECKER_QUAL_REQURIED.value]
-    qual_jar_dir = ""
+
+    is_jar_mode_configured = issue_data.get("jar_support", False)
+    if isJarMode and not is_jar_mode_configured:
+        print(f"{issue_id} not configured for jar mode yet. aborting execution")
+        return Result(issue_id, "FAIL")
 
     issue_folder_abs_dir = os.path.abspath(issue_folder_dir)
     input_dir = create_issue_directory(issue_folder_abs_dir, issue_id)
@@ -393,12 +399,18 @@ def performEvaluation(issue_data) -> Result:
     get_target_data(url, branch, commit_hash, input_dir) 
     
     repo_name = get_repository_name(url)
-    if qual_jar_required:
-        qual_jar_dir = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name)
+    jar_path = ""
+    if isJarMode and qual_jar_required:
+        jar_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "libs") # this should include the qual jar if needed
+    elif qual_jar_required:
+        jar_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "quals")
+    else:
+        jar_path = ""
+    
     specimin_command = ""
     result: Result = None
     specimin_path = get_specimin_env_var()
-    specimin_command = build_specimin_command(repo_name, os.path.join(issue_folder_abs_dir, issue_id), issue_data[JsonKeys.ROOT_DIR.value], issue_data[JsonKeys.TARGETS.value], qual_jar_dir if os.path.exists(qual_jar_dir) else "")
+    specimin_command = build_specimin_command(repo_name, os.path.join(issue_folder_abs_dir, issue_id), issue_data[JsonKeys.ROOT_DIR.value], issue_data[JsonKeys.TARGETS.value], jar_path if os.path.exists(jar_path) else "")
     
     # Storing the Specimin path so that gradle wrapper of specimin can be used to build minimized programs. 
     if not specimin_path or not os.path.exists(specimin_path):
@@ -681,19 +693,16 @@ def main():
         print("Local Specimin not found. Cloning a Specimin copy")
         clone_specimin(issue_folder_dir, specimin_source_url)
 
-    args = sys.argv
-    specified_targets: str = ""
-    if (len(args) - 1) >= 1:
-        specified_targets = args[1]  # paper_target/bug_target
+    parser = argparse.ArgumentParser(description='command line parser')
+    parser.add_argument('-j', '--isJarMode', type=bool, help='pass "true" if jar mode execution')
+    args = parser.parse_args()
 
-    json_file_path: str
-    if specified_targets.lower() == "bugs":
-        json_file_path = os.path.join("resources", "sp_issue.json")
-    else:
-        json_file_path = os.path.join("resources", "test_data.json")
-
+    json_file_path = os.path.join("resources", "test_data.json")
     parsed_data = read_json_from_file(json_file_path)
-
+    
+    isJar = args.isJarMode
+    print("execution mode Jar = ", isJar)
+    
     evaluation_results = []
     json_status: dict[str, str] = {} # Contains PASS/FAIL status of targets to be printed as a json file 
     preservation_status: dict[str, str] = {}
@@ -702,7 +711,7 @@ def main():
             issue_id = issue["issue_id"]
             print(f"{issue_id} execution starts =========>")
             try:
-                result = performEvaluation(issue)
+                result = performEvaluation(issue, isJar)
             except Exception as e:
                 print(f"Exception: {e}")
                 print("Aborting execution")

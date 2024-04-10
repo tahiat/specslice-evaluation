@@ -46,7 +46,8 @@
         "java_version": "17",
         "note": "",
         "bug_type": "crash",
-        "checker_qual_required": false
+        "checker_qual_required": false,
+        "jar_support": true
     },
     {
         "issue_id" : "cf-6077",
