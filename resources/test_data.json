@@ -468,5 +468,92 @@
         "note": "",
         "bug_type": "crash",
         "checker_qual_required": false
+    },
+    {
+        "issue_id" : "cf-3025",
+        "url": "https://github.com/tahiat/guava.git",
+        "issue_url": "https://github.com/typetools/checker-framework/issues/3025",
+        "branch": "cf-3025",
+        "commit_hash": "",
+        "project_name": "guava",
+        "build_command": "",
+        "root_dir": "guava/src/", 
+        "targets": [
+            {
+                "method": "difference(Map<? extends K, ? extends V>, Map<? extends K, ? extends V>, Equivalence<? super V>)",
+                "file": "Maps.java",
+                "package": "com.google.common.collect",
+                "inner_class": ""
+            }
+        ],
+        "cf_version": "3.0.1",
+        "java_version": "8",
+        "note": "",
+        "bug_type": "semi_crash",
+        "bug_pattern": {
+            "file_pattern": "Compilation unit: (.*)",
+            "error_pattern": "error: (.+?):",
+            "exception_pattern": "Exception: (.+):",
+            "stack_trace_pattern": "Stack trace: (.+)"
+        },
+        "checker_qual_required": true
+    },
+    {
+        "issue_id" : "jdk-8319461",
+        "url": "https://github.com/tahiat/property.git",
+        "issue_url": "https://bugs.openjdk.org/browse/JDK-8319461",
+        "test_case_url": "https://bugs.openjdk.org/browse/JDK-8319461",
+        "branch": "test",
+        "commit_hash": "",
+        "project_name": "property",
+        "build_command": "",
+        "root_dir": "core/src/main/java/", 
+        "targets": [
+            {
+                "method": "create(Class<P>, Class<V>, String, PropertyMetadata<V>)",
+                "file": "PropertyFactoryManager.java",
+                "package": "io.github.mmm.property.factory",
+                "inner_class": ""
+            }
+        ],
+        "cf_version": "",
+        "java_version": "21.0.1",
+        "note": "",
+        "bug_type": "error",
+        "bug_pattern": {
+            "file_pattern": "(\\w+\\.java)",
+            "error_pattern": "(error: incompatible types:)"
+        },
+        "checker_qual_required": false
+    },
+    {
+        "issue_id" : "jdk-8288590",
+        "url": "https://github.com/tahiat/assertj.git",
+        "issue_url": "https://bugs.openjdk.org/browse/JDK-8288590",
+        "test_case_url": "https://bugs.openjdk.org/browse/JDK-8288590",
+        "branch": "JDK-8288590",
+        "commit_hash": "",
+        "project_name": "assertj",
+        "build_command": "",
+        "root_dir": "assertj-core/src/main/java/", 
+        "targets": [
+            {
+                "method": "simpleFieldValues(String, Class<T> clazz, Iterable<?>)",
+                "file": "FieldSupport.java",
+                "package": "org.assertj.core.util.introspection",
+                "inner_class": ""
+            }
+        ],
+        "cf_version": "",
+        "java_version": "17",
+        "note": "",
+        "bug_type": "error",
+        "bug_pattern": {
+            "file_pattern": "(\\w+\\.java)",
+            "error_pattern": "incompatible types: (.*?)",
+            "upper_bound_patter": "upper bounds: (.*?)",
+            "equality_pattern": "equality constraints: (.*?)"
+        },
+        "checker_qual_required": false
     }
 ]
