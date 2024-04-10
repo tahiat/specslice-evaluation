@@ -19,6 +19,7 @@ issue_folder_dir = 'ISSUES'
 specimin_input = 'input'
 specimin_output = 'output'
 specimin_jar_output = 'jar_output'
+specimin_jar_output = 'jar_output'
 specimin_project_name = 'specimin'
 specimin_source_url = 'https://github.com/kelloggm/specimin.git'
 TIMEOUT_DURATION = 300
