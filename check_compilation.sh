@@ -10,6 +10,11 @@
 # when this script is invoked from specimin CI, 
 # compilation result will be compared with "expected" result and CI will be passed/failed accordingly.
 
+# first parameter specifies the Specimin output directory
+# second parater specifies the name of generated status file
+
+specimin_output_dir_name="$1"
+
 returnval=0
 compile_status_json="{"
 echo "Specimin path: $SPECIMIN"
@@ -23,7 +28,7 @@ issues_root=`pwd`
 for target in $issue_ids; do
     echo "Target = ${target}"
 
-    cd "${target}/output/"
+    cd "${target}/${specimin_output_dir_name}/"
     if [ $? -eq 1 ]; then
       compile_status_json="$compile_status_json\n  \"$target\": \"FAIL\","
       continue
