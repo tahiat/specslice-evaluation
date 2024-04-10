@@ -256,7 +256,8 @@ def build_specimin_command(project_name: str,
                            target_base_dir_path: str,
                            root_dir: str,  
                            targets: list,
-                           jar_path: str = ""):
+                           jar_path: str = "",
+                           isJarMode = False):
     '''
     Build the gradle command to execute Specimin on target project
 
@@ -281,8 +282,11 @@ def build_specimin_command(project_name: str,
     if not os.path.isabs(target_base_dir_path):
         raise ValueError("Invalid argument: target_base_dir_path must be an absolute path")
 
-    output_dir = os.path.join(target_base_dir_path, specimin_output, project_name, "src", "main", "java")
-
+    if isJarMode:
+        output_dir = os.path.join(target_base_dir_path, specimin_jar_output, project_name, "src", "main", "java")
+    else:
+        output_dir = os.path.join(target_base_dir_path, specimin_output, project_name, "src", "main", "java")
+                                  
     if os.path.exists(output_dir):
         shutil.rmtree(output_dir)
 
@@ -392,7 +396,7 @@ def performEvaluation(issue_data, isJarMode = False) -> Result:
     is_jar_mode_configured = issue_data.get("jar_support", False)
     if isJarMode and not is_jar_mode_configured:
         print(f"{issue_id} not configured for jar mode yet. aborting execution")
-        return Result(issue_id, "FAIL")
+        return Result(issue_id, "FAIL", "Jar mode is not configured")
 
     issue_folder_abs_dir = os.path.abspath(issue_folder_dir)
     input_dir = create_issue_directory(issue_folder_abs_dir, issue_id)
@@ -401,17 +405,17 @@ def performEvaluation(issue_data, isJarMode = False) -> Result:
     
     repo_name = get_repository_name(url)
     jar_path = ""
-    if isJarMode and qual_jar_required:
+    if isJarMode:
         jar_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "libs") # this should include the qual jar if needed
     elif qual_jar_required:
-        jar_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "quals")
+        jar_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "quals") # in seperate directory so that unnecessary jar's are not loaded
     else:
         jar_path = ""
     
     specimin_command = ""
     result: Result = None
     specimin_path = get_specimin_env_var()
-    specimin_command = build_specimin_command(repo_name, os.path.join(issue_folder_abs_dir, issue_id), issue_data[JsonKeys.ROOT_DIR.value], issue_data[JsonKeys.TARGETS.value], jar_path if os.path.exists(jar_path) else "")
+    specimin_command = build_specimin_command(repo_name, os.path.join(issue_folder_abs_dir, issue_id), issue_data[JsonKeys.ROOT_DIR.value], issue_data[JsonKeys.TARGETS.value], jar_path if os.path.exists(jar_path) else "", isJarMode)
     
     # Storing the Specimin path so that gradle wrapper of specimin can be used to build minimized programs. 
     if not specimin_path or not os.path.exists(specimin_path):
@@ -438,14 +442,18 @@ def performEvaluation(issue_data, isJarMode = False) -> Result:
             result.set_preservation_status("FAIL", "Build script missing") 
             return result
         
-        gradle_files_destination_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name)
+        if isJarMode:
+            gradle_files_destination_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_jar_output, repo_name)
+            #../ISSUES/cf-xx/jar_output/projectname/build_log.txt
+            log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_jar_output, repo_name, minimized_program_build_log_file)
+        else:
+            gradle_files_destination_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name)
+            #../ISSUES/cf-xx/output/projectname/build_log.txt
+            log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name, minimized_program_build_log_file)
 
         copy_command = f"cp {build_gradle_path} {settings_gradle_path} {gradle_files_destination_path}"
         subprocess.run(copy_command, shell=True)
-        
-        #../ISSUES/cf-xx/output/projectname/build_log.txt
-        log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name, minimized_program_build_log_file)
-
+    
         if os.path.exists(log_file):
             os.remove(log_file)
 
@@ -525,9 +533,15 @@ def performEvaluation(issue_data, isJarMode = False) -> Result:
 
         targets = issue_data.get("build_targets", "src/**/*.java")
         
-        target_dir = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name, targets)
+        if isJarMode:
+            target_dir = os.path.join(issue_folder_abs_dir, issue_id, specimin_jar_output, repo_name, targets)
+            log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_jar_output, repo_name, minimized_program_build_log_file)
+        else:
+            target_dir = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name, targets)
+            log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name, minimized_program_build_log_file)
+        
         set_directory_exec_permission(java_path)
-        log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name, minimized_program_build_log_file)
+        
         if os.path.exists(log_file):
             os.remove(log_file)
         flags = issue_data.get("build_flags", [])
