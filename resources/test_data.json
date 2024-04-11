@@ -99,27 +99,6 @@
     {
         "issue_id" : "cf-6030",
         "url": "https://github.com/tahiat/cassandra.git",
-        "branch": "cf-6030",
-        "commit_hash": "",
-        "project_name": "cassandra",
-        "build_command": "ant cf-only -Dcf.check.only=org/apache/cassandra/service/reads/DataResolver.java",
-        "root_dir": "src/java",
-        "targets": [
-            {
-                "method": "getData()",
-                "file": "DataResolver.java",
-                "package": "org.apache.cassandra.service.reads"
-            }
-        ],
-        "cf_version": "3.35.0",
-        "java_version": "11",
-        "note": "This issue describes multiple bugs. the second one is \"ant cf-only -Dcf.check.only=org/apache/cassandra/io/sstable/format/SSTableScanner.java\"",
-        "bug_type": "crash",
-        "checker_qual_required": true
-    },
-    {
-        "issue_id" : "cf-6030b",
-        "url": "https://github.com/tahiat/cassandra.git",
         "branch": "cf-6030b",
         "commit_hash": "",
         "project_name": "cassandra",
@@ -134,7 +113,7 @@
         ],
         "cf_version": "3.35.0",
         "java_version": "11",
-        "note": "",
+        "note": "This issue describes multiple bugs. This is the second one (\"ant cf-only -Dcf.check.only=org/apache/cassandra/io/sstable/format/SSTableScanner.java\"). Based on the comments in the issue, the maintainers could not reproduce the first crash at the time (https://github.com/typetools/checker-framework/issues/6030#issuecomment-1601171591), so there's no reason that we should either.",
         "bug_type": "crash",
         "checker_qual_required": true
     },
