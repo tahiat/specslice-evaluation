@@ -10,6 +10,23 @@
 # when this script is invoked from specimin CI, 
 # compilation result will be compared with "expected" result and CI will be passed/failed accordingly.
 
+# usage: shell check_compilation.sh 1 --> for approximate mode
+# or
+# usage: shell check_compilation.sh 2 --> for exact/jar mode
+
+param="$1"
+
+if [ $param -eq 1 ]; then
+   min_program_dir="output"
+   status_file="compile_status.json"
+elif [ $param -eq 2 ]; then
+   min_program_dir="jar_output"
+   status_file="jar_compile_status.json"
+else
+   echo "Invalid parameter"
+   exit 1
+fi
+
 returnval=0
 compile_status_json="{"
 echo "Specimin path: $SPECIMIN"
@@ -23,7 +40,7 @@ issues_root=`pwd`
 for target in $issue_ids; do
     echo "Target = ${target}"
 
-    cd "${target}/output/"
+    cd "${target}/${min_program_dir}/"
     if [ $? -eq 1 ]; then
       compile_status_json="$compile_status_json\n  \"$target\": \"FAIL\","
       continue
@@ -62,6 +79,6 @@ fi
 
 compile_status_json="${compile_status_json%,}"
 compile_status_json="$compile_status_json\n}"
-rm compile_status.json
-echo "$compile_status_json" > compile_status.json
+rm "$status_file"
+echo "$compile_status_json" > "$status_file"
 find . -name "*.class" -exec rm {} \;

@@ -13,10 +13,12 @@ import platform
 import tarfile
 import glob
 import stat
+import argparse
 
 issue_folder_dir = 'ISSUES'
 specimin_input = 'input'
 specimin_output = 'output'
+specimin_jar_output = 'jar_output'
 specimin_project_name = 'specimin'
 specimin_source_url = 'https://github.com/kelloggm/specimin.git'
 TIMEOUT_DURATION = 300
@@ -253,7 +255,8 @@ def build_specimin_command(project_name: str,
                            target_base_dir_path: str,
                            root_dir: str,  
                            targets: list,
-                           jar_path: str = ""):
+                           jar_path: str = "",
+                           isJarMode = False):
     '''
     Build the gradle command to execute Specimin on target project
 
@@ -278,8 +281,11 @@ def build_specimin_command(project_name: str,
     if not os.path.isabs(target_base_dir_path):
         raise ValueError("Invalid argument: target_base_dir_path must be an absolute path")
 
-    output_dir = os.path.join(target_base_dir_path, specimin_output, project_name, "src", "main", "java")
-
+    if isJarMode:
+        output_dir = os.path.join(target_base_dir_path, specimin_jar_output, project_name, "src", "main", "java")
+    else:
+        output_dir = os.path.join(target_base_dir_path, specimin_output, project_name, "src", "main", "java")
+                                  
     if os.path.exists(output_dir):
         shutil.rmtree(output_dir)
 
@@ -369,10 +375,22 @@ def run_specimin(issue_name, command, directory) -> Result:
         return Result(issue_name, "FAIL", "Timeout")
     except Exception as e:
         return Result(issue_name, "FAIL", f"Unhandled exception occurred: {e}")
-    
-    
 
-def performEvaluation(issue_data) -> Result:
+
+def pullDependencies(script_path, specimin_path):
+    status = subprocess.run(f"./gradlew -b  {script_path} pullJar", cwd = specimin_path, shell=True)
+    print(f"Jar pull status = {status.returncode}")
+
+def copyFiles(src_dir, des_dir):
+    files = os.listdir(src_dir)
+    # Iterate through the files and copy .jar files
+    for file in files:
+        if file.endswith(".jar"):
+            src_file = os.path.join(src_dir, file)
+            dest_file = os.path.join(des_dir, file)
+            shutil.copy2(src_file, dest_file)
+
+def performEvaluation(issue_data, isJarMode = False) -> Result:
     '''
     For each issue data, execute SPECIMIN on a target project. 
 
@@ -385,25 +403,43 @@ def performEvaluation(issue_data) -> Result:
     branch = issue_data[JsonKeys.BRANCH.value]
     commit_hash = issue_data[JsonKeys.COMMIT_HASH.value]
     qual_jar_required = issue_data[JsonKeys.CHECKER_QUAL_REQURIED.value]
-    qual_jar_dir = ""
 
     issue_folder_abs_dir = os.path.abspath(issue_folder_dir)
     input_dir = create_issue_directory(issue_folder_abs_dir, issue_id)
-
-    get_target_data(url, branch, commit_hash, input_dir) 
-    
     repo_name = get_repository_name(url)
-    if qual_jar_required:
-        qual_jar_dir = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name)
-    specimin_command = ""
-    result: Result = None
+
     specimin_path = get_specimin_env_var()
-    specimin_command = build_specimin_command(repo_name, os.path.join(issue_folder_abs_dir, issue_id), issue_data[JsonKeys.ROOT_DIR.value], issue_data[JsonKeys.TARGETS.value], qual_jar_dir if os.path.exists(qual_jar_dir) else "")
-    
-    # Storing the Specimin path so that gradle wrapper of specimin can be used to build minimized programs. 
     if not specimin_path or not os.path.exists(specimin_path):
         print("Clone copy of Specimin is used")
         specimin_path = os.path.join(issue_folder_abs_dir, specimin_project_name)
+
+    get_target_data(url, branch, commit_hash, input_dir) 
+
+    jar_path = ""
+    if isJarMode:
+        jar_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "libs") # this should include the qual jar if needed
+        os.makedirs(jar_path, exist_ok=True)
+        req_dep_in_jar_mode = issue_data.get("has_dependency", False)
+        jar_pull_script = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "dependency.gradle")
+        if req_dep_in_jar_mode and not os.path.exists(jar_pull_script):
+            print("Jar pull script is not available.")
+            return Result(issue_id, "FAIL", "Jar pull script unavailable")
+        elif req_dep_in_jar_mode and os.path.exists(jar_pull_script):
+            pullDependencies(jar_pull_script, specimin_path)
+    elif qual_jar_required:
+        jar_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "checker") # in seperate directory so that unnecessary jar's are not loaded
+    else:
+        jar_path = ""
+    
+    qual_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "checker")
+    if isJarMode and qual_jar_required:
+        if os.path.exists(qual_path):
+            copyFiles(qual_path, jar_path)
+    
+    specimin_command = ""
+    result: Result = None
+    
+    specimin_command = build_specimin_command(repo_name, os.path.join(issue_folder_abs_dir, issue_id), issue_data[JsonKeys.ROOT_DIR.value], issue_data[JsonKeys.TARGETS.value], jar_path if os.path.exists(jar_path) else "", isJarMode)
     
     result = run_specimin(issue_id ,specimin_command, specimin_path)   
     print(f"{result.name} - {result.status}")
@@ -425,14 +461,18 @@ def performEvaluation(issue_data) -> Result:
             result.set_preservation_status("FAIL", "Build script missing") 
             return result
         
-        gradle_files_destination_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name)
+        if isJarMode:
+            gradle_files_destination_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_jar_output, repo_name)
+            #../ISSUES/cf-xx/jar_output/projectname/build_log.txt
+            log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_jar_output, repo_name, minimized_program_build_log_file)
+        else:
+            gradle_files_destination_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name)
+            #../ISSUES/cf-xx/output/projectname/build_log.txt
+            log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name, minimized_program_build_log_file)
 
         copy_command = f"cp {build_gradle_path} {settings_gradle_path} {gradle_files_destination_path}"
         subprocess.run(copy_command, shell=True)
-        
-        #../ISSUES/cf-xx/output/projectname/build_log.txt
-        log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name, minimized_program_build_log_file)
-
+    
         if os.path.exists(log_file):
             os.remove(log_file)
 
@@ -512,9 +552,15 @@ def performEvaluation(issue_data) -> Result:
 
         targets = issue_data.get("build_targets", "src/**/*.java")
         
-        target_dir = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name, targets)
+        if isJarMode:
+            target_dir = os.path.join(issue_folder_abs_dir, issue_id, specimin_jar_output, repo_name, targets)
+            log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_jar_output, repo_name, minimized_program_build_log_file)
+        else:
+            target_dir = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name, targets)
+            log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name, minimized_program_build_log_file)
+        
         set_directory_exec_permission(java_path)
-        log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name, minimized_program_build_log_file)
+        
         if os.path.exists(log_file):
             os.remove(log_file)
         flags = issue_data.get("build_flags", [])
@@ -681,19 +727,16 @@ def main():
         print("Local Specimin not found. Cloning a Specimin copy")
         clone_specimin(issue_folder_dir, specimin_source_url)
 
-    args = sys.argv
-    specified_targets: str = ""
-    if (len(args) - 1) >= 1:
-        specified_targets = args[1]  # paper_target/bug_target
+    parser = argparse.ArgumentParser(description='command line parser')
+    parser.add_argument('-j', '--isJarMode', type=bool, help='pass "true" if jar mode execution')
+    args = parser.parse_args()
 
-    json_file_path: str
-    if specified_targets.lower() == "bugs":
-        json_file_path = os.path.join("resources", "sp_issue.json")
-    else:
-        json_file_path = os.path.join("resources", "test_data.json")
-
+    json_file_path = os.path.join("resources", "test_data.json")
     parsed_data = read_json_from_file(json_file_path)
-
+    
+    isJar = args.isJarMode
+    print("execution mode Jar = ", isJar)
+    
     evaluation_results = []
     json_status: dict[str, str] = {} # Contains PASS/FAIL status of targets to be printed as a json file 
     preservation_status: dict[str, str] = {}
@@ -702,7 +745,7 @@ def main():
             issue_id = issue["issue_id"]
             print(f"{issue_id} execution starts =========>")
             try:
-                result = performEvaluation(issue)
+                result = performEvaluation(issue, isJar)
             except Exception as e:
                 print(f"Exception: {e}")
                 print("Aborting execution")
@@ -715,12 +758,15 @@ def main():
     report_generator: TableGenerator = TableGenerator(evaluation_results)
     report_generator.generateTable()
 
-    json_status_file = os.path.join(issue_folder_dir, json_status_file_name)
+    if isJar:
+        json_status_file = os.path.join(issue_folder_dir, "jar_target_status.json")
+        prev_status_file = os.path.join(issue_folder_dir, "jar_preservation_status.json")
+    else:
+        json_status_file = os.path.join(issue_folder_dir, json_status_file_name)
+        prev_status_file = os.path.join(issue_folder_dir, preservation_status_file_name)
     # Write JSON data in a file. This can be compared from specimin to verify that the successful # of targets do not get reduced in a PR
     with open(json_status_file, "w") as json_file:
         json.dump(json_status, json_file, indent= 2)
-
-    prev_status_file = os.path.join(issue_folder_dir, preservation_status_file_name)
     with open(prev_status_file, "w") as json_file:
         json.dump(preservation_status, json_file, indent= 2)
 
