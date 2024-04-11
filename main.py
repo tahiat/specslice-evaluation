@@ -418,6 +418,8 @@ def performEvaluation(issue_data, isJarMode = False) -> Result:
 
     jar_path = ""
     if isJarMode:
+        jar_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "libs") # this should include the qual jar if needed
+        os.makedirs(jar_path, exist_ok=True)
         req_dep_in_jar_mode = issue_data.get("has_dependency", False)
         jar_pull_script = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "dependency.gradle")
         if req_dep_in_jar_mode and not os.path.exists(jar_pull_script):
@@ -425,7 +427,6 @@ def performEvaluation(issue_data, isJarMode = False) -> Result:
             return Result(issue_id, "FAIL", "Jar pull script unavailable")
         elif req_dep_in_jar_mode and os.path.exists(jar_pull_script):
             pullDependencies(jar_pull_script, specimin_path)
-        jar_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "libs") # this should include the qual jar if needed
     elif qual_jar_required:
         jar_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "checker") # in seperate directory so that unnecessary jar's are not loaded
     else:
@@ -758,12 +759,15 @@ def main():
     report_generator: TableGenerator = TableGenerator(evaluation_results)
     report_generator.generateTable()
 
-    json_status_file = os.path.join(issue_folder_dir, json_status_file_name)
+    if isJar:
+        json_status_file = os.path.join(issue_folder_dir, "jar_target_status.json")
+        prev_status_file = os.path.join(issue_folder_dir, "jar_preservation_status.json")
+    else:
+        json_status_file = os.path.join(issue_folder_dir, json_status_file_name)
+        prev_status_file = os.path.join(issue_folder_dir, preservation_status_file_name)
     # Write JSON data in a file. This can be compared from specimin to verify that the successful # of targets do not get reduced in a PR
     with open(json_status_file, "w") as json_file:
         json.dump(json_status, json_file, indent= 2)
-
-    prev_status_file = os.path.join(issue_folder_dir, preservation_status_file_name)
     with open(prev_status_file, "w") as json_file:
         json.dump(preservation_status, json_file, indent= 2)
 
