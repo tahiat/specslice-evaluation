@@ -376,8 +376,20 @@ def run_specimin(issue_name, command, directory) -> Result:
         return Result(issue_name, "FAIL", "Timeout")
     except Exception as e:
         return Result(issue_name, "FAIL", f"Unhandled exception occurred: {e}")
-    
-    
+
+
+def pullDependencies(script_path, specimin_path):
+    status = subprocess.run(f"./gradlew -b  {script_path} pullJar", cwd = specimin_path, shell=True)
+    print(f"Jar pull status = {status.returncode}")
+
+def copyFiles(src_dir, des_dir):
+    files = os.listdir(src_dir)
+    # Iterate through the files and copy .jar files
+    for file in files:
+        if file.endswith(".jar"):
+            src_file = os.path.join(src_dir, file)
+            dest_file = os.path.join(des_dir, file)
+            shutil.copy2(src_file, dest_file)
 
 def performEvaluation(issue_data, isJarMode = False) -> Result:
     '''
@@ -393,34 +405,41 @@ def performEvaluation(issue_data, isJarMode = False) -> Result:
     commit_hash = issue_data[JsonKeys.COMMIT_HASH.value]
     qual_jar_required = issue_data[JsonKeys.CHECKER_QUAL_REQURIED.value]
 
-    is_jar_mode_configured = issue_data.get("jar_support", False)
-    if isJarMode and not is_jar_mode_configured:
-        print(f"{issue_id} not configured for jar mode yet. aborting execution")
-        return Result(issue_id, "FAIL", "Jar mode is not configured")
-
     issue_folder_abs_dir = os.path.abspath(issue_folder_dir)
     input_dir = create_issue_directory(issue_folder_abs_dir, issue_id)
+    repo_name = get_repository_name(url)
+
+    specimin_path = get_specimin_env_var()
+    if not specimin_path or not os.path.exists(specimin_path):
+        print("Clone copy of Specimin is used")
+        specimin_path = os.path.join(issue_folder_abs_dir, specimin_project_name)
 
     get_target_data(url, branch, commit_hash, input_dir) 
-    
-    repo_name = get_repository_name(url)
+
     jar_path = ""
     if isJarMode:
+        req_dep_in_jar_mode = issue_data.get("has_dependency", False)
+        jar_pull_script = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "dependency.gradle")
+        if req_dep_in_jar_mode and not os.path.exists(jar_pull_script):
+            print("Jar pull script is not available.")
+            return Result(issue_id, "FAIL", "Jar pull script unavailable")
+        elif req_dep_in_jar_mode and os.path.exists(jar_pull_script):
+            pullDependencies(jar_pull_script, specimin_path)
         jar_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "libs") # this should include the qual jar if needed
     elif qual_jar_required:
         jar_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "checker") # in seperate directory so that unnecessary jar's are not loaded
     else:
         jar_path = ""
     
+    qual_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "checker")
+    if isJarMode and qual_jar_required:
+        if os.path.exists(qual_path):
+            copyFiles(qual_path, jar_path)
+    
     specimin_command = ""
     result: Result = None
-    specimin_path = get_specimin_env_var()
-    specimin_command = build_specimin_command(repo_name, os.path.join(issue_folder_abs_dir, issue_id), issue_data[JsonKeys.ROOT_DIR.value], issue_data[JsonKeys.TARGETS.value], jar_path if os.path.exists(jar_path) else "", isJarMode)
     
-    # Storing the Specimin path so that gradle wrapper of specimin can be used to build minimized programs. 
-    if not specimin_path or not os.path.exists(specimin_path):
-        print("Clone copy of Specimin is used")
-        specimin_path = os.path.join(issue_folder_abs_dir, specimin_project_name)
+    specimin_command = build_specimin_command(repo_name, os.path.join(issue_folder_abs_dir, issue_id), issue_data[JsonKeys.ROOT_DIR.value], issue_data[JsonKeys.TARGETS.value], jar_path if os.path.exists(jar_path) else "", isJarMode)
     
     result = run_specimin(issue_id ,specimin_command, specimin_path)   
     print(f"{result.name} - {result.status}")
