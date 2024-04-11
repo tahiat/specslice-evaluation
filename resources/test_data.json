@@ -536,7 +536,7 @@
         "root_dir": "assertj-core/src/main/java/", 
         "targets": [
             {
-                "method": "simpleFieldValues(String, Class<T> clazz, Iterable<?>)",
+                "method": "simpleFieldValues(String, Class<T>, Iterable<?>)",
                 "file": "FieldSupport.java",
                 "package": "org.assertj.core.util.introspection",
                 "inner_class": ""
