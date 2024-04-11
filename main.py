@@ -408,7 +408,7 @@ def performEvaluation(issue_data, isJarMode = False) -> Result:
     if isJarMode:
         jar_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "libs") # this should include the qual jar if needed
     elif qual_jar_required:
-        jar_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "quals") # in seperate directory so that unnecessary jar's are not loaded
+        jar_path = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "checker") # in seperate directory so that unnecessary jar's are not loaded
     else:
         jar_path = ""
     
