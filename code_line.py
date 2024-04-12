@@ -7,7 +7,7 @@ def main():
     json_file_path = os.path.join("resources", "test_data.json")
     parsed_data = read_json_from_file(json_file_path)
 
-    code_count = []
+    code_count = {}
 
     if parsed_data:
         for issue in parsed_data:
@@ -40,10 +40,11 @@ def main():
                 print(f"Minimization was failed/ not executed {issue_id}")
             
             combined_code_info = {"test": hand_code_line, "specimin": specimin_code_line}
-            code_count.append({issue_id: combined_code_info})
+            code_count[issue_id] = combined_code_info
 
 
-    print(json.dumps(code_count))
+    pretty_json = json.dumps(code_count, indent=4)
+    print(pretty_json)
 
 
 if __name__ == "__main__":
