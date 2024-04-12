@@ -454,6 +454,8 @@ def performEvaluation(issue_data, isJarMode = False) -> Result:
     result: Result = None
     
     specimin_command = build_specimin_command(repo_name, os.path.join(issue_folder_abs_dir, issue_id), issue_data[JsonKeys.ROOT_DIR.value], issue_data[JsonKeys.TARGETS.value], jar_path if os.path.exists(jar_path) else "", isJarMode)
+
+    print(f"build command: {specimin_command}")
     start_time = time.time()
     result = run_specimin(issue_id ,specimin_command, specimin_path)   
     end_time = time.time()
