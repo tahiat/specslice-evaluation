@@ -386,9 +386,11 @@
         "root_dir": "", 
         "targets": [
             {
-                "method": "sort(List<T>)",
+		"method": "",
+                "field": "EMPTY_NAVIGABLE_SET",
                 "file": "Collections.java",
-                "package": "com.example"
+                "package": "com.example",
+		"inner_class": "UnmodifiableNavigableSet"
             }
         ],
         "cf_version": "1.9.13",

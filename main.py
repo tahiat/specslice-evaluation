@@ -272,7 +272,7 @@ def build_specimin_command(project_name: str,
         project_name (str): Name of the target project. Example: daikon
         target_base_dir (str): path of the target project directory. Ex: ISSUES/cf-1291
         root_dir (str): A directory path relative to the project base directory where java package stored.
-        targets ({'method': '', 'file': '', 'package': ''}) : target java file and method name data
+        targets ({'method': '' or 'field': '', 'file': '', 'package': ''}) : target java file and method/field name data
     
     Retruns:
         command (str): The gradle command of SPECIMIN for the issue.
@@ -294,10 +294,12 @@ def build_specimin_command(project_name: str,
 
     target_file_list = []
     target_method_list = []
+    target_field_list = []
 
     for target in targets:
 
         method_name = target[JsonKeys.METHOD_NAME.value]
+        field_name = target.get(JsonKeys.FIELD_NAME.value)
         file_name = target[JsonKeys.FILE_NAME.value]
         package_name = target[JsonKeys.PACKAGE.value]
 
@@ -307,10 +309,11 @@ def build_specimin_command(project_name: str,
             qualified_file_name = os.path.join(dot_replaced_package_name, file_name)
             target_file_list.append(qualified_file_name)
 
+        inner_class_name = ""
+        if JsonKeys.INNER_CLASS.value in target and target[JsonKeys.INNER_CLASS.value] :
+            inner_class_name = f".{target[JsonKeys.INNER_CLASS.value]}"
+
         if method_name:
-            inner_class_name = ""
-            if JsonKeys.INNER_CLASS.value in target and target[JsonKeys.INNER_CLASS.value] :
-                inner_class_name = f".{target[JsonKeys.INNER_CLASS.value]}"
             #if non-primary class exists, file name will not be included in target-method
             # Look for PR #177: https://github.com/kelloggm/specimin/pull/177
 
@@ -319,6 +322,9 @@ def build_specimin_command(project_name: str,
             else:
                 qualified_method_name = package_name + "." + os.path.splitext(file_name)[0]+ inner_class_name + "#" + method_name
             target_method_list.append(qualified_method_name)
+
+        if field_name:
+            target_field_list.append(package_name + "." + os.path.splitext(file_name)[0]+ inner_class_name + "#" + field_name)
 
     output_dir_subcommand = "--outputDirectory" + " " + f"\"{output_dir}\""
     root_dir_subcommand = "--root" + " " + f"\"{root_dir}\""
@@ -329,12 +335,16 @@ def build_specimin_command(project_name: str,
     target_method_subcommand = ""
     for method in target_method_list:
         target_method_subcommand += "--targetMethod" + " " + f"\"{method}\""
-    
+
+    target_field_subcommand = ""
+    for field in target_field_list:
+        target_field_subcommand += " --targetField" + " " + f"\"{field}\""
+
     jar_path_subcommand = ""
     if jar_path:
         jar_path_subcommand = " --jarPath" + " " + f"\"{jar_path}\""
 
-    command_args = root_dir_subcommand + " " + output_dir_subcommand + " " + target_file_subcommand + " " + target_method_subcommand + jar_path_subcommand
+    command_args = root_dir_subcommand + " " + output_dir_subcommand + " " + target_file_subcommand + " " + target_method_subcommand +  target_field_subcommand + jar_path_subcommand
     command = "./gradlew" + " " + "run" + " " + "--args=" + f"\'{command_args}\'"
     
     return command
