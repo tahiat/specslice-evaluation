@@ -3,6 +3,11 @@ from main import read_json_from_file
 from main import get_repository_name
 import json
 import subprocess
+
+'''
+This script depends on scc tool: https://github.com/boyter/scc
+'''
+
 def main():
     json_file_path = os.path.join("resources", "test_data.json")
     parsed_data = read_json_from_file(json_file_path)
