@@ -299,7 +299,7 @@ def build_specimin_command(project_name: str,
     for target in targets:
 
         method_name = target[JsonKeys.METHOD_NAME.value]
-        field_name = target[JsonKeys.FIELD_NAME.value]
+        field_name = target.get(JsonKeys.FIELD_NAME.value)
         file_name = target[JsonKeys.FILE_NAME.value]
         package_name = target[JsonKeys.PACKAGE.value]
 
@@ -338,13 +338,13 @@ def build_specimin_command(project_name: str,
 
     target_field_subcommand = ""
     for field in target_field_list:
-        target_field_subcommand += "--targetField" + " " + f"\"{field}\""
+        target_field_subcommand += " --targetField" + " " + f"\"{field}\""
 
     jar_path_subcommand = ""
     if jar_path:
         jar_path_subcommand = " --jarPath" + " " + f"\"{jar_path}\""
 
-    command_args = root_dir_subcommand + " " + output_dir_subcommand + " " + target_file_subcommand + " " + target_method_subcommand + " " + target_field_subcommand + jar_path_subcommand
+    command_args = root_dir_subcommand + " " + output_dir_subcommand + " " + target_file_subcommand + " " + target_method_subcommand +  target_field_subcommand + jar_path_subcommand
     command = "./gradlew" + " " + "run" + " " + "--args=" + f"\'{command_args}\'"
     
     return command
