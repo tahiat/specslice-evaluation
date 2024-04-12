@@ -11,6 +11,7 @@ class JsonKeys(Enum):
     PACKAGE = 'package'
     TARGETS = 'targets'
     METHOD_NAME = 'method'
+    FIELD_NAME = 'field'
     FILE_NAME = 'file'
     CF_Version = 'cf_version'
     JAVA_VERSION = 'java_version'

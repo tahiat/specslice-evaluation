@@ -70,7 +70,7 @@ def set_directory_exec_permission(directory_path):
 
 def download_with_wget(url, save_as):
     try:
-        subprocess.run(["wget", "-O", save_as, url], check=True)
+        subprocess.run(["wget", "-q", "--show-progress", "-O", save_as, url], check=True)
         print("File downloaded successfully.")
     except subprocess.CalledProcessError as e:
         print("Failed to download file:", e)
@@ -276,7 +276,7 @@ def build_specimin_command(project_name: str,
         project_name (str): Name of the target project. Example: daikon
         target_base_dir (str): path of the target project directory. Ex: ISSUES/cf-1291
         root_dir (str): A directory path relative to the project base directory where java package stored.
-        targets ({'method': '', 'file': '', 'package': ''}) : target java file and method name data
+        targets ({'method': '' or 'field': '', 'file': '', 'package': ''}) : target java file and method/field name data
     
     Retruns:
         command (str): The gradle command of SPECIMIN for the issue.
@@ -298,10 +298,12 @@ def build_specimin_command(project_name: str,
 
     target_file_list = []
     target_method_list = []
+    target_field_list = []
 
     for target in targets:
 
         method_name = target[JsonKeys.METHOD_NAME.value]
+        field_name = target.get(JsonKeys.FIELD_NAME.value)
         file_name = target[JsonKeys.FILE_NAME.value]
         package_name = target[JsonKeys.PACKAGE.value]
 
@@ -311,10 +313,11 @@ def build_specimin_command(project_name: str,
             qualified_file_name = os.path.join(dot_replaced_package_name, file_name)
             target_file_list.append(qualified_file_name)
 
+        inner_class_name = ""
+        if JsonKeys.INNER_CLASS.value in target and target[JsonKeys.INNER_CLASS.value] :
+            inner_class_name = f".{target[JsonKeys.INNER_CLASS.value]}"
+
         if method_name:
-            inner_class_name = ""
-            if JsonKeys.INNER_CLASS.value in target and target[JsonKeys.INNER_CLASS.value] :
-                inner_class_name = f".{target[JsonKeys.INNER_CLASS.value]}"
             #if non-primary class exists, file name will not be included in target-method
             # Look for PR #177: https://github.com/kelloggm/specimin/pull/177
 
@@ -323,6 +326,9 @@ def build_specimin_command(project_name: str,
             else:
                 qualified_method_name = package_name + "." + os.path.splitext(file_name)[0]+ inner_class_name + "#" + method_name
             target_method_list.append(qualified_method_name)
+
+        if field_name:
+            target_field_list.append(package_name + "." + os.path.splitext(file_name)[0]+ inner_class_name + "#" + field_name)
 
     output_dir_subcommand = "--outputDirectory" + " " + f"\"{output_dir}\""
     root_dir_subcommand = "--root" + " " + f"\"{root_dir}\""
@@ -333,12 +339,16 @@ def build_specimin_command(project_name: str,
     target_method_subcommand = ""
     for method in target_method_list:
         target_method_subcommand += "--targetMethod" + " " + f"\"{method}\""
-    
+
+    target_field_subcommand = ""
+    for field in target_field_list:
+        target_field_subcommand += " --targetField" + " " + f"\"{field}\""
+
     jar_path_subcommand = ""
     if jar_path:
         jar_path_subcommand = " --jarPath" + " " + f"\"{jar_path}\""
 
-    command_args = root_dir_subcommand + " " + output_dir_subcommand + " " + target_file_subcommand + " " + target_method_subcommand + jar_path_subcommand
+    command_args = root_dir_subcommand + " " + output_dir_subcommand + " " + target_file_subcommand + " " + target_method_subcommand +  target_field_subcommand + jar_path_subcommand
     command = "./gradlew" + " " + "run" + " " + "--args=" + f"\'{command_args}\'"
     
     return command
@@ -498,19 +508,24 @@ def performEvaluation(issue_data, isJarMode = False) -> Result:
             result.set_preservation_status("FAIL", "Min program is not reproducing issue with modular analyses")
             return result
     else:
-        cf_url = issue_data.get("cf_release_url", "")
-        version = issue_data.get("cf_version", "1.9.13")
-        cf_path = f"checker-framework-{version}"
-        cf_abs_path = os.path.abspath(cf_path)
-        cf_zip = f"{cf_abs_path}.zip"
-        full_url = cf_url + "/" + cf_path + "/" + cf_path + ".zip"
-        if not os.path.exists(cf_zip):
-            download_with_wget(full_url, cf_zip)
+        if build_system != "javac":
+            cf_url = issue_data.get("cf_release_url", "")
+            version = issue_data.get("cf_version", "1.9.13")
+            cf_path = f"checker-framework-{version}"
+            cf_abs_path = os.path.abspath(cf_path)
+            cf_zip = f"{cf_abs_path}.zip"
+            full_url = cf_url + "/" + cf_path + "/" + cf_path + ".zip"
+            if not os.path.exists(cf_zip):
+                download_with_wget(full_url, cf_zip)
 
-        if os.path.exists(cf_zip) and not os.path.exists(cf_abs_path):
-            unzip_file(cf_zip)
+            if os.path.exists(cf_zip) and not os.path.exists(cf_abs_path):
+                unzip_file(cf_zip)
         
-        jdk_template_url = "https://corretto.aws/downloads/latest/amazon-corretto-{version}-{arch}-{os}-jdk.tar.gz"
+        if build_system == "javac":
+            jdk_template_url = "https://download.oracle.com/java/17/archive/jdk-{version}_{os}-{arch}_bin.tar.gz"
+        else:
+            jdk_template_url = "https://corretto.aws/downloads/latest/amazon-corretto-{version}-{arch}-{os}-jdk.tar.gz"
+        
         version = issue_data.get(JsonKeys.JAVA_VERSION.value, "11")
         #TODO: if version is not 8, no need to pull jdk
         arch = "x64"
@@ -528,7 +543,11 @@ def performEvaluation(issue_data, isJarMode = False) -> Result:
 
         jdk_url = jdk_template_url.format(version=version, arch=arch, os=op)
 
-        jdk_name = f"amazon-corretto-{version}"
+        if build_system == "javac":
+            jdk_name = f"jdk-{version}"
+        else:
+            jdk_name = f"amazon-corretto-{version}"
+        
         jdk_tar_name = f"{jdk_name}.tar.gz"
         jdk_tar_abs_path = os.path.abspath(jdk_tar_name)
 
@@ -546,20 +565,32 @@ def performEvaluation(issue_data, isJarMode = False) -> Result:
         if not os.path.exists(extracted_jdk_abs_path):
             os.makedirs(extracted_jdk_abs_path, exist_ok=True)
             if os.path.exists(extracted_jdk_abs_path):
-                extract_and_rename(jdk_tar_abs_path, extracted_jdk_abs_path)
+                if build_system == "javac":
+                    with tarfile.open(jdk_tar_abs_path, "r:gz") as tar:
+                            tar.extractall()
+                    set_directory_exec_permission(extracted_jdk_abs_path)
+                else:
+                    extract_and_rename(jdk_tar_abs_path, extracted_jdk_abs_path)
         # https://checkerframework.org/manual/#external-tools
         # using option 3 for CF invokation with downloaded jdk
         #Option 3: Whenever this document tells you to run javac, instead run checker.jar via java (not javac) as in:
         #java -jar "$CHECKERFRAMEWORK/checker/dist/checker.jar" -cp "myclasspath" -processor nullness MyFile.java
         if platform.system() == linux_system_identifier:
-            java_path = os.path.join(extracted_jdk_abs_path, "bin", "java")
+            if build_system == "javac":
+                java_path = os.path.join(extracted_jdk_abs_path, "bin", "javac")
+            else:
+                java_path = os.path.join(extracted_jdk_abs_path, "bin", "java")
         elif platform.system() == macos_system_identifier:
-            java_path = os.path.join(extracted_jdk_abs_path, "Contents", "Home", "bin", "java")
+            if build_system == "javac":
+                java_path = os.path.join(extracted_jdk_abs_path, "Contents", "Home", "bin", "javac")
+            else:
+                java_path = os.path.join(extracted_jdk_abs_path, "Contents", "Home", "bin", "java")
         else:
             raise Exception(f"{platform_system} not supported")
 
-        checker_jar_path = os.path.join(cf_abs_path, "checker", "dist", "checker.jar")
-        set_directory_exec_permission(checker_jar_path)
+        if build_system != "javac":
+            checker_jar_path = os.path.join(cf_abs_path, "checker", "dist", "checker.jar")
+            set_directory_exec_permission(checker_jar_path)
 
         targets = issue_data.get("build_targets", "src/**/*.java")
         
@@ -574,18 +605,39 @@ def performEvaluation(issue_data, isJarMode = False) -> Result:
         
         if os.path.exists(log_file):
             os.remove(log_file)
-        flags = issue_data.get("build_flags", [])
+
         file_paths = glob.glob(target_dir, recursive=True)
-        command = [java_path, '-jar', checker_jar_path]
-        command.extend(flags)
-        command.extend([*file_paths])
-        command_str = ' '.join(command)
-        print(f"{issue_id}: executing this command to check preservation status: {command_str}")
-        try:
-            execute_shell_command_with_logging(command, log_file)
-        except Exception:
-            result.set_preservation_status("FAIL", "Min program is not showing issue with modular analyses")
-            return result
+        if build_system == "javac":
+            command = [java_path]
+            command.extend([*file_paths])
+            command_str = ' '.join(command)
+            compiler_option = issue_data.get("compiler_option", "")
+            ## generate a shell script and execute that
+            print(f"{issue_id}: executing this command to check preservation status: {command_str}")
+            ##
+            shell_script = os.path.join(issue_folder_abs_dir, issue_id, specimin_jar_output if isJarMode else specimin_output, repo_name, "build.sh")
+            with open(shell_script, 'w') as script:
+                script.write("#!/bin/sh\n")
+                script.write(compiler_option + "\n")
+                script.write(command_str + "\n")
+            with open(log_file, 'w') as f:
+                st = subprocess.run(["bash", shell_script], stderr=f)
+                if st.returncode == 0:
+                    result.set_preservation_status("FAIL", "Min program is not showing issue with modular analyses")
+                    return result
+        else:
+            flags = issue_data.get("build_flags", [])
+            command = [java_path, '-jar', checker_jar_path]
+            command.extend(flags)
+            command.extend([*file_paths])
+            command_str = ' '.join(command)
+            print(f"{issue_id}: executing this command to check preservation status: {command_str}")
+            try:
+                execute_shell_command_with_logging(command, log_file)
+            except Exception as e:
+                print("Exception:", str(e))
+                result.set_preservation_status("FAIL", "Min program is not showing issue with modular analyses")
+                return result
         
     expected_log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "expected_log.txt")
     if not os.path.exists(expected_log_file):

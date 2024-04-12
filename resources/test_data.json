@@ -386,9 +386,11 @@
         "root_dir": "", 
         "targets": [
             {
-                "method": "sort(List<T>)",
+		"method": "",
+                "field": "EMPTY_NAVIGABLE_SET",
                 "file": "Collections.java",
-                "package": "com.example"
+                "package": "com.example",
+		"inner_class": "UnmodifiableNavigableSet"
             }
         ],
         "cf_version": "1.9.13",
@@ -543,15 +545,15 @@
             }
         ],
         "cf_version": "",
-        "java_version": "17",
-        "note": "",
+        "java_version": "17.0.9",
+        "note": "Issue occurs in oracle jdk.",
         "bug_type": "error",
         "bug_pattern": {
             "file_pattern": "(\\w+\\.java)",
-            "error_pattern": "incompatible types: (.*?)",
-            "upper_bound_patter": "upper bounds: (.*?)",
-            "equality_pattern": "equality constraints: (.*?)"
+            "error_pattern": "(incompatible types:)"
         },
+        "build_system": "javac",
+        "compiler_option": "export _JAVA_OPTIONS=\"-XX:+UnlockExperimentalVMOptions -XX:hashCode=2\"",
         "checker_qual_required": false,
         "has_dependency": false
     }
