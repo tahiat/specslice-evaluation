@@ -513,6 +513,18 @@
                 "file": "PropertyFactoryManager.java",
                 "package": "io.github.mmm.property.factory",
                 "inner_class": ""
+            },
+            {
+                "method": "getFactory(Class<P>, Class<V>)",
+                "file": "PropertyFactoryManager.java",
+                "package": "io.github.mmm.property.factory",
+                "inner_class": ""
+            },
+            {
+                "method": "create(Class<P>, PropertyTypeInfo<V>, String, PropertyMetadata<V>)",
+                "file": "PropertyFactoryManager.java",
+                "package": "io.github.mmm.property.factory",
+                "inner_class": ""
             }
         ],
         "cf_version": "",
