@@ -729,12 +729,14 @@ def main():
 
     parser = argparse.ArgumentParser(description='command line parser')
     parser.add_argument('-j', '--isJarMode', type=bool, help='pass "true" if jar mode execution')
+    parser.add_argument('--debug', type=str, help='python main.py --debug #issue to run only that target')
     args = parser.parse_args()
 
     json_file_path = os.path.join("resources", "test_data.json")
     parsed_data = read_json_from_file(json_file_path)
     
     isJar = args.isJarMode
+    debug_target = args.debug
     print("execution mode Jar = ", isJar)
     
     evaluation_results = []
@@ -743,6 +745,8 @@ def main():
     if parsed_data:
         for issue in parsed_data:
             issue_id = issue["issue_id"]
+            if debug_target and issue_id != debug_target:
+                continue
             print(f"{issue_id} execution starts =========>")
             try:
                 result = performEvaluation(issue, isJar)
