@@ -199,7 +199,7 @@
     {
         "issue_id" : "cf-577",
         "url": "https://github.com/tahiat/issue-577.git",
-        "branch": "",
+        "branch": "jar577",
         "commit_hash": "",
         "project_name": "issue-577",
         "build_command": "javac -processor nullness -AprintErrorStack java/util/stream/IncomparableTypes.java",
@@ -208,7 +208,7 @@
             {
                 "method": "arrayForOne(int[], int, IntConsumer)",
                 "file": "IncomparableTypes.java",
-                "package": "com.example.stream",
+                "package": "java.util.stream",
                 "inner_class": "Splitr"
             }
         ],

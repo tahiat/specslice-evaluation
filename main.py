@@ -21,7 +21,7 @@ specimin_output = 'output'
 specimin_jar_output = 'jar_output'
 specimin_project_name = 'specimin'
 specimin_source_url = 'https://github.com/kelloggm/specimin.git'
-TIMEOUT_DURATION = 300
+TIMEOUT_DURATION = 10000
 specimin_env_var = "SPECIMIN"
 json_status_file_name = "target_status.json"
 minimized_program_build_log_file = "build_log.txt"
@@ -346,7 +346,7 @@ def build_specimin_command(project_name: str,
 
     command_args = root_dir_subcommand + " " + output_dir_subcommand + " " + target_file_subcommand + " " + target_method_subcommand +  target_field_subcommand + jar_path_subcommand
     command = "./gradlew" + " " + "run" + " " + "--args=" + f"\'{command_args}\'"
-    
+
     return command
 
 def run_specimin(issue_name, command, directory) -> Result:
@@ -450,7 +450,7 @@ def performEvaluation(issue_data, isJarMode = False) -> Result:
     result: Result = None
     
     specimin_command = build_specimin_command(repo_name, os.path.join(issue_folder_abs_dir, issue_id), issue_data[JsonKeys.ROOT_DIR.value], issue_data[JsonKeys.TARGETS.value], jar_path if os.path.exists(jar_path) else "", isJarMode)
-    
+    print(f"{issue_id} command: {specimin_command}")
     result = run_specimin(issue_id ,specimin_command, specimin_path)   
     print(f"{result.name} - {result.status}")
 
