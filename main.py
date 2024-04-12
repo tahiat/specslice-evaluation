@@ -66,7 +66,7 @@ def set_directory_exec_permission(directory_path):
 
 def download_with_wget(url, save_as):
     try:
-        subprocess.run(["wget", "-O", save_as, url], check=True)
+        subprocess.run(["wget", "-q", "--show-progress", "-O", save_as, url], check=True)
         print("File downloaded successfully.")
     except subprocess.CalledProcessError as e:
         print("Failed to download file:", e)
@@ -497,19 +497,24 @@ def performEvaluation(issue_data, isJarMode = False) -> Result:
             result.set_preservation_status("FAIL", "Min program is not reproducing issue with modular analyses")
             return result
     else:
-        cf_url = issue_data.get("cf_release_url", "")
-        version = issue_data.get("cf_version", "1.9.13")
-        cf_path = f"checker-framework-{version}"
-        cf_abs_path = os.path.abspath(cf_path)
-        cf_zip = f"{cf_abs_path}.zip"
-        full_url = cf_url + "/" + cf_path + "/" + cf_path + ".zip"
-        if not os.path.exists(cf_zip):
-            download_with_wget(full_url, cf_zip)
+        if build_system != "javac":
+            cf_url = issue_data.get("cf_release_url", "")
+            version = issue_data.get("cf_version", "1.9.13")
+            cf_path = f"checker-framework-{version}"
+            cf_abs_path = os.path.abspath(cf_path)
+            cf_zip = f"{cf_abs_path}.zip"
+            full_url = cf_url + "/" + cf_path + "/" + cf_path + ".zip"
+            if not os.path.exists(cf_zip):
+                download_with_wget(full_url, cf_zip)
 
-        if os.path.exists(cf_zip) and not os.path.exists(cf_abs_path):
-            unzip_file(cf_zip)
+            if os.path.exists(cf_zip) and not os.path.exists(cf_abs_path):
+                unzip_file(cf_zip)
         
-        jdk_template_url = "https://corretto.aws/downloads/latest/amazon-corretto-{version}-{arch}-{os}-jdk.tar.gz"
+        if build_system == "javac":
+            jdk_template_url = "https://download.oracle.com/java/17/archive/jdk-{version}_{os}-{arch}_bin.tar.gz"
+        else:
+            jdk_template_url = "https://corretto.aws/downloads/latest/amazon-corretto-{version}-{arch}-{os}-jdk.tar.gz"
+        
         version = issue_data.get(JsonKeys.JAVA_VERSION.value, "11")
         #TODO: if version is not 8, no need to pull jdk
         arch = "x64"
@@ -527,7 +532,11 @@ def performEvaluation(issue_data, isJarMode = False) -> Result:
 
         jdk_url = jdk_template_url.format(version=version, arch=arch, os=op)
 
-        jdk_name = f"amazon-corretto-{version}"
+        if build_system == "javac":
+            jdk_name = f"jdk-{version}"
+        else:
+            jdk_name = f"amazon-corretto-{version}"
+        
         jdk_tar_name = f"{jdk_name}.tar.gz"
         jdk_tar_abs_path = os.path.abspath(jdk_tar_name)
 
@@ -545,20 +554,32 @@ def performEvaluation(issue_data, isJarMode = False) -> Result:
         if not os.path.exists(extracted_jdk_abs_path):
             os.makedirs(extracted_jdk_abs_path, exist_ok=True)
             if os.path.exists(extracted_jdk_abs_path):
-                extract_and_rename(jdk_tar_abs_path, extracted_jdk_abs_path)
+                if build_system == "javac":
+                    with tarfile.open(jdk_tar_abs_path, "r:gz") as tar:
+                            tar.extractall()
+                    set_directory_exec_permission(extracted_jdk_abs_path)
+                else:
+                    extract_and_rename(jdk_tar_abs_path, extracted_jdk_abs_path)
         # https://checkerframework.org/manual/#external-tools
         # using option 3 for CF invokation with downloaded jdk
         #Option 3: Whenever this document tells you to run javac, instead run checker.jar via java (not javac) as in:
         #java -jar "$CHECKERFRAMEWORK/checker/dist/checker.jar" -cp "myclasspath" -processor nullness MyFile.java
         if platform.system() == linux_system_identifier:
-            java_path = os.path.join(extracted_jdk_abs_path, "bin", "java")
+            if build_system == "javac":
+                java_path = os.path.join(extracted_jdk_abs_path, "bin", "javac")
+            else:
+                java_path = os.path.join(extracted_jdk_abs_path, "bin", "java")
         elif platform.system() == macos_system_identifier:
-            java_path = os.path.join(extracted_jdk_abs_path, "Contents", "Home", "bin", "java")
+            if build_system == "javac":
+                java_path = os.path.join(extracted_jdk_abs_path, "Contents", "Home", "bin", "javac")
+            else:
+                java_path = os.path.join(extracted_jdk_abs_path, "Contents", "Home", "bin", "java")
         else:
             raise Exception(f"{platform_system} not supported")
 
-        checker_jar_path = os.path.join(cf_abs_path, "checker", "dist", "checker.jar")
-        set_directory_exec_permission(checker_jar_path)
+        if build_system != "javac":
+            checker_jar_path = os.path.join(cf_abs_path, "checker", "dist", "checker.jar")
+            set_directory_exec_permission(checker_jar_path)
 
         targets = issue_data.get("build_targets", "src/**/*.java")
         
@@ -573,18 +594,39 @@ def performEvaluation(issue_data, isJarMode = False) -> Result:
         
         if os.path.exists(log_file):
             os.remove(log_file)
-        flags = issue_data.get("build_flags", [])
+
         file_paths = glob.glob(target_dir, recursive=True)
-        command = [java_path, '-jar', checker_jar_path]
-        command.extend(flags)
-        command.extend([*file_paths])
-        command_str = ' '.join(command)
-        print(f"{issue_id}: executing this command to check preservation status: {command_str}")
-        try:
-            execute_shell_command_with_logging(command, log_file)
-        except Exception:
-            result.set_preservation_status("FAIL", "Min program is not showing issue with modular analyses")
-            return result
+        if build_system == "javac":
+            command = [java_path]
+            command.extend([*file_paths])
+            command_str = ' '.join(command)
+            compiler_option = issue_data.get("compiler_option", "")
+            ## generate a shell script and execute that
+            print(f"{issue_id}: executing this command to check preservation status: {command_str}")
+            ##
+            shell_script = os.path.join(issue_folder_abs_dir, issue_id, specimin_jar_output if isJarMode else specimin_output, repo_name, "build.sh")
+            with open(shell_script, 'w') as script:
+                script.write("#!/bin/sh\n")
+                script.write(compiler_option + "\n")
+                script.write(command_str + "\n")
+            with open(log_file, 'w') as f:
+                st = subprocess.run(["bash", shell_script], stderr=f)
+                if st.returncode == 0:
+                    result.set_preservation_status("FAIL", "Min program is not showing issue with modular analyses")
+                    return result
+        else:
+            flags = issue_data.get("build_flags", [])
+            command = [java_path, '-jar', checker_jar_path]
+            command.extend(flags)
+            command.extend([*file_paths])
+            command_str = ' '.join(command)
+            print(f"{issue_id}: executing this command to check preservation status: {command_str}")
+            try:
+                execute_shell_command_with_logging(command, log_file)
+            except Exception as e:
+                print("Exception:", str(e))
+                result.set_preservation_status("FAIL", "Min program is not showing issue with modular analyses")
+                return result
         
     expected_log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_input, repo_name, specimin_project_name, "expected_log.txt")
     if not os.path.exists(expected_log_file):
