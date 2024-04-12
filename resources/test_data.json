@@ -548,9 +548,7 @@
         "bug_type": "error",
         "bug_pattern": {
             "file_pattern": "(\\w+\\.java)",
-            "error_pattern": "incompatible types: (.*)",
-            "upper_bound_patter": "upper bounds: (.*)",
-            "equality_pattern": "equality constraints: (.*)"
+            "error_pattern": "(incompatible types:)"
         },
         "build_system": "javac",
         "compiler_option": "export _JAVA_OPTIONS=\"-XX:+UnlockExperimentalVMOptions -XX:hashCode=2\"",
