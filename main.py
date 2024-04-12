@@ -14,6 +14,9 @@ import tarfile
 import glob
 import stat
 import argparse
+import time
+import math
+import statistics
 
 issue_folder_dir = 'ISSUES'
 specimin_input = 'input'
@@ -28,6 +31,7 @@ minimized_program_build_log_file = "build_log.txt"
 linux_system_identifier = "Linux"
 macos_system_identifier = "Darwin"
 preservation_status_file_name = "preservation_status.json"
+run_time = {}
 
 def read_json_from_file(file_path):
     '''
@@ -440,8 +444,15 @@ def performEvaluation(issue_data, isJarMode = False) -> Result:
     result: Result = None
     
     specimin_command = build_specimin_command(repo_name, os.path.join(issue_folder_abs_dir, issue_id), issue_data[JsonKeys.ROOT_DIR.value], issue_data[JsonKeys.TARGETS.value], jar_path if os.path.exists(jar_path) else "", isJarMode)
-    
+    start_time = time.time()
     result = run_specimin(issue_id ,specimin_command, specimin_path)   
+    end_time = time.time()
+
+    duration = end_time - start_time
+
+    global run_time
+    run_time[f"{issue_id}"] = duration
+
     print(f"{result.name} - {result.status}")
 
     if result.status.lower() == "fail":
@@ -773,6 +784,11 @@ def main():
         json.dump(json_status, json_file, indent= 2)
     with open(prev_status_file, "w") as json_file:
         json.dump(preservation_status, json_file, indent= 2)
+
+    global run_time
+    print(json.dumps(run_time))
+    mean_runtime = statistics.mean(list(run_time.values()))
+    print(f"Avg runtime = {mean_runtime}")
 
     print("\n\n\n\n")
     print(f"issue_name    |    status    |  Fail reason  | preservation_status | preservation reason ")
