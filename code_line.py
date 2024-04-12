@@ -51,6 +51,17 @@ def main():
     pretty_json = json.dumps(code_count, indent=4)
     print(pretty_json)
 
+    total_specimin_line = 0
+    total_hand_written_line = 0
+    for key in code_count:
+        total_specimin_line += code_count.get(key).get("specimin")
+        total_hand_written_line += code_count.get(key).get("test")
+
+    sp_avg = round(total_specimin_line/19)
+    hand_avg = round(total_hand_written_line/18)
+    print(f"sp_avg: {sp_avg}")
+    print(f"hand_avg: {hand_avg}")
+
 
 if __name__ == "__main__":
     main()
