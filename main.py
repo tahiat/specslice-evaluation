@@ -458,7 +458,7 @@ def performEvaluation(issue_data, isJarMode = False) -> Result:
     result = run_specimin(issue_id ,specimin_command, specimin_path)   
     end_time = time.time()
 
-    duration = end_time - start_time
+    duration = round(end_time - start_time)
 
     global run_time
     run_time[f"{issue_id}"] = duration
@@ -840,6 +840,7 @@ def main():
     global run_time
     print(json.dumps(run_time))
     mean_runtime = statistics.mean(list(run_time.values()))
+    mean_runtime = round(mean_runtime)
     print(f"Avg runtime = {mean_runtime}")
 
     print("\n\n\n\n")
