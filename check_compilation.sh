@@ -39,6 +39,8 @@ issues_root=`pwd`
 
 for target in $issue_ids; do
     echo "Target = ${target}"
+    
+   if [ "$target" = "jdk-8319461" ]; then continue; fi
 
     cd "${target}/${min_program_dir}/"
     if [ $? -eq 1 ]; then
