@@ -18,3 +18,5 @@ jdk*
 .vscode/
 
 .idea
+
+*config.properties
