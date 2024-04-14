@@ -41,7 +41,7 @@ def run(ashe_path: str, csv_path: str, clone_path: str, props_file_path: str):
     rank_script = os.path.join(current_dir, 'specimin_exception_rank.py')
 
     # run Specimin scripts
-    log_path: str = ""
+    log_path: str = os.path.join(ashe_path, "logs", "app.log")
     print("Running statistics script...")
     __run_command(f"python3 {stats_script} {log_path}")
 
