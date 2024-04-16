@@ -16,3 +16,7 @@ checker-framework*
 jdk*
 
 .vscode/
+
+.idea
+
+*config.properties
