@@ -1,7 +1,7 @@
 [
     {
         "issue_id" : "cf-1291",
-        "url": "https://github.com/tahiat/daikon.git",
+        "url": "https://github.com/njit-jerse/daikon.git",
         "branch": "cf-1291",
         "commit_hash": "",
         "project_name": "daikon",
@@ -30,7 +30,7 @@
     },
     {
         "issue_id" : "cf-6282",
-        "url": "https://github.com/tahiat/Chronicle-Core.git",
+        "url": "https://github.com/njit-jerse/Chronicle-Core.git",
         "branch": "",
         "commit_hash": "",
         "project_name": "Chronicle-Core",
@@ -52,7 +52,7 @@
     },
     {
         "issue_id" : "cf-6077",
-        "url": "https://github.com/tahiat/cassandra.git",
+        "url": "https://github.com/njit-jerse/cassandra.git",
         "branch": "cf-6077",
         "commit_hash": "",
         "project_name": "cassandra",
@@ -80,7 +80,7 @@
     },
     {
         "issue_id" : "cf-6060",
-        "url": "https://github.com/tahiat/jOOQ.git",
+        "url": "https://github.com/njit-jerse/jOOQ.git",
         "branch": "specimin",
         "commit_hash": "",
         "project_name": "jOOQ",
@@ -102,7 +102,7 @@
     },
     {
         "issue_id" : "cf-6030",
-        "url": "https://github.com/tahiat/cassandra.git",
+        "url": "https://github.com/njit-jerse/cassandra.git",
         "branch": "cf-6030b",
         "commit_hash": "",
         "project_name": "cassandra",
@@ -124,7 +124,7 @@
     },
     {
         "issue_id" : "cf-6019",
-        "url": "https://github.com/tahiat/kafka-sensors.git",
+        "url": "https://github.com/njit-jerse/kafka-sensors.git",
         "branch": "cf-6019",
         "commit_hash": "",
         "project_name": "kafka-sensors",
@@ -147,7 +147,7 @@
     },
     {
         "issue_id" : "cf-4614",
-        "url": "https://github.com/tahiat/cf-parser-error.git",
+        "url": "https://github.com/njit-jerse/cf-parser-error.git",
         "branch": "",
         "commit_hash": "",
         "project_name": "cf-parser-error",
@@ -176,7 +176,7 @@
     },
     {
         "issue_id" : "cf-3850",
-        "url": "https://github.com/tahiat/calcite.git",
+        "url": "https://github.com/njit-jerse/calcite.git",
         "branch": "cf-3850",
         "commit_hash": "",
         "project_name": "calcite",
@@ -198,7 +198,7 @@
     },
     {
         "issue_id" : "cf-577",
-        "url": "https://github.com/tahiat/issue-577.git",
+        "url": "https://github.com/njit-jerse/issue-577.git",
         "branch": "",
         "commit_hash": "",
         "project_name": "issue-577",
@@ -232,7 +232,7 @@
     },
     {
         "issue_id" : "cf-3032",
-        "url": "https://github.com/tahiat/nomulus.git",
+        "url": "https://github.com/njit-jerse/nomulus.git",
         "branch": "cf-3032",
         "commit_hash": "",
         "project_name": "nomulus",
@@ -262,7 +262,7 @@
     },
     {
         "issue_id" : "cf-3619",
-        "url": "https://github.com/tahiat/calcite.git",
+        "url": "https://github.com/njit-jerse/calcite.git",
         "branch": "cf-3619",
         "commit_hash": "",
         "project_name": "calcite",
@@ -289,7 +289,7 @@
     },
     {
         "issue_id" : "cf-3021",
-        "url": "https://github.com/tahiat/guava.git",
+        "url": "https://github.com/njit-jerse/guava.git",
         "branch": "cf-3021",
         "commit_hash": "",
         "project_name": "guava",
@@ -319,7 +319,7 @@
     },
     {
         "issue_id" : "cf-3020",
-        "url": "https://github.com/tahiat/guava.git",
+        "url": "https://github.com/njit-jerse/guava.git",
         "branch": "cf-3020",
         "commit_hash": "",
         "project_name": "guava",
@@ -348,7 +348,7 @@
     },
     {
         "issue_id" : "cf-3022",
-        "url": "https://github.com/tahiat/guava.git",
+        "url": "https://github.com/njit-jerse/guava.git",
         "branch": "cf-3022",
         "commit_hash": "",
         "project_name": "guava",
@@ -378,7 +378,7 @@
     },
     {
         "issue_id" : "cf-691",
-        "url": "https://github.com/tahiat/Issue691.git",
+        "url": "https://github.com/njit-jerse/Issue691.git",
         "branch": "",
         "commit_hash": "",
         "project_name": "Issue691",
@@ -412,7 +412,7 @@
     },
     {
         "issue_id" : "Issue689",
-        "url": "https://github.com/tahiat/Issue689.git",
+        "url": "https://github.com/njit-jerse/Issue689.git",
         "branch": "",
         "commit_hash": "",
         "project_name": "Issue689",
@@ -446,7 +446,7 @@
     },
     {
         "issue_id" : "cf-6388",
-        "url": "https://github.com/tahiat/beam.git",
+        "url": "https://github.com/njit-jerse/beam.git",
         "branch": "cf-6388",
         "commit_hash": "",
         "project_name": "beam",
@@ -469,7 +469,7 @@
     },
     {
         "issue_id" : "cf-3025",
-        "url": "https://github.com/tahiat/guava.git",
+        "url": "https://github.com/njit-jerse/guava.git",
         "issue_url": "https://github.com/typetools/checker-framework/issues/3025",
         "branch": "cf-3025",
         "commit_hash": "",
@@ -499,7 +499,7 @@
     },
     {
         "issue_id" : "jdk-8319461",
-        "url": "https://github.com/tahiat/property.git",
+        "url": "https://github.com/njit-jerse/property.git",
         "issue_url": "https://bugs.openjdk.org/browse/JDK-8319461",
         "test_case_url": "https://bugs.openjdk.org/browse/JDK-8319461",
         "branch": "test",
@@ -528,7 +528,7 @@
     },
     {
         "issue_id" : "jdk-8288590",
-        "url": "https://github.com/tahiat/assertj.git",
+        "url": "https://github.com/njit-jerse/assertj.git",
         "issue_url": "https://bugs.openjdk.org/browse/JDK-8288590",
         "test_case_url": "https://bugs.openjdk.org/browse/JDK-8288590",
         "branch": "JDK-8288590",
