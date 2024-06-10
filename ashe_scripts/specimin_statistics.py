@@ -40,26 +40,55 @@ def analyze_log(file_path: str):
             'full_success': 0
         }
         repo_path: str = ""
-        branch_name: str = ""
+        branch_name: str = "N/A"  # default branch name before RepositoryAutomationEngine starts
+        context: str = "AsheAutomation"  # default context
+        project_root: str = ""
+        processing_new_repo: bool = False  # flag to check if repo stats are present to prevent duplicate printing
 
         for line in lines:
             line: str = line.strip()
 
             # get the repository path and branch name from the log line
             if "Processing repository at:" in line:
-                # if Ashe Repository Automation Engine finished processing a repository
-                # and moved on to the next repository, print and reset the statistics
-                if repo_path:
-                    __print_and_write_stats(repo_stats, repo_path, branch_name, output_file)
-                    repo_stats = repo_stats.fromkeys(repo_stats, 0)
-
+                context = "RepositoryAutomationEngine"  # we know we are using the RepositoryAutomationEngine
                 repo_path, branch_name = __extract_repo_and_branch(line)
+                break
 
-            __update_stats(line, repo_stats)
+        for line in lines:
+            line: str = line.strip()
 
-            if "Completed processing repository at:" in line:
-                __print_and_write_stats(repo_stats, repo_path, branch_name, output_file)
-                repo_stats = repo_stats.fromkeys(repo_stats, 0)  # reset statistics for new repo
+            if context == "RepositoryAutomationEngine":
+                if "Processing repository at:" in line:
+                    # if Ashe Repository Automation Engine finished processing a repository
+                    # and moved on to the next repository, print and reset the statistics
+                    if repo_path and processing_new_repo:
+                        __print_and_write_stats(repo_stats, repo_path, branch_name, output_file)
+                        repo_stats = repo_stats.fromkeys(repo_stats, 0)
+
+                    repo_path, branch_name = __extract_repo_and_branch(line)
+                    processing_new_repo = True
+
+                __update_stats(line, repo_stats)
+
+                if "Completed processing repository at:" in line:
+                    if repo_path and processing_new_repo:
+                        __print_and_write_stats(repo_stats, repo_path, branch_name, output_file)
+                        repo_stats = repo_stats.fromkeys(repo_stats, 0)  # reset statistics for new repo
+                        processing_new_repo = False
+
+            elif context == "AsheAutomation":
+                if "Project root path:" in line:
+                    project_root = __extract_project_root(line)
+
+                if "Processing Java file:" in line:
+                    repo_path = project_root
+                    processing_new_repo = True
+
+                __update_stats(line, repo_stats)
+
+        if repo_path and processing_new_repo:
+            __print_and_write_stats(repo_stats, repo_path, branch_name, output_file)
+
     print("Write successful")
 
 
@@ -91,7 +120,22 @@ def __print_and_write_stats(stats, repo_path, branch_name, output_file):
     full_success_percent = (stats['full_success'] / stats['minimization_attempts'] * 100) if stats[
         'minimization_attempts'] else 0
 
-    output_content = f"""
+    if branch_name == "N/A":
+        output_content = f"""
+Running Specimin on directory: {repo_path}
+Attempted minimization - {stats['minimization_attempts']}:
+Successfully minimized {stats['successful_minimization']} ({successful_min_percent:.2f}%) target methods.
+Failed to minimize {stats['failed_minimization']} ({failed_min_percent:.2f}%) target methods.
+
+Attempted compilation - {stats['compilation_attempts']}:
+Successful: {stats['successful_compilation']} ({successful_comp_percent:.2f}%)
+Failed: {stats['failed_compilation']} ({failed_comp_percent:.2f}%)
+
+Fully successful from minimization to compilation: {stats['full_success']} ({full_success_percent:.2f}%)
+
+"""
+    else:
+        output_content = f"""
 Running Specimin on repository: {repo_path} for branch: {branch_name}
 Attempted minimization - {stats['minimization_attempts']}:
 Successfully minimized {stats['successful_minimization']} ({successful_min_percent:.2f}%) target methods.
@@ -127,6 +171,24 @@ def __extract_repo_and_branch(log_line: str):
         return repo_path, branch_name
     else:
         return "", ""
+
+
+def __extract_project_root(log_line: str):
+    """
+    Extracts the project root path from a log line.
+    Parameters:
+    - log_line (str): A string from the log file containing the root path.
+
+    Returns:
+    - str: The project root path.
+    """
+    pattern = r"Project root path: (.+)"
+    match = re.search(pattern, log_line)
+    if match:
+        project_root = match.group(1).strip()
+        return project_root
+    else:
+        return ""
 
 
 if __name__ == '__main__':
