@@ -30,6 +30,7 @@ json_status_file_name = "target_status.json"
 minimized_program_build_log_file = "build_log.txt"
 linux_system_identifier = "Linux"
 macos_system_identifier = "Darwin"
+windows_system_identifier = "Windows"
 preservation_status_file_name = "preservation_status.json"
 run_time = {}
 
@@ -294,7 +295,13 @@ def build_specimin_command(project_name: str,
         shutil.rmtree(output_dir)
 
     root_dir = os.path.join(target_base_dir_path, specimin_input, project_name, root_dir)
-    root_dir = root_dir.rstrip('/') + os.sep
+    root_dir = root_dir.rstrip(os.sep) + os.sep
+
+    # avoid mixed slashes + convert \ to / for gradlew
+    if isWindows():
+        output_dir = os.path.normpath(output_dir).replace('\\', '/')
+        root_dir = os.path.normpath(root_dir).replace('\\', '/')
+        jar_path = os.path.normpath(jar_path).replace('\\', '/')
 
     target_file_list = []
     target_method_list = []
@@ -311,6 +318,9 @@ def build_specimin_command(project_name: str,
 
         if file_name:
             qualified_file_name = os.path.join(dot_replaced_package_name, file_name)
+            # avoid mixed slashes + convert \ to / for gradlew
+            if isWindows():
+                qualified_file_name = os.path.normpath(qualified_file_name).replace('\\', '/')
             target_file_list.append(qualified_file_name)
 
         inner_class_name = ""
@@ -349,7 +359,21 @@ def build_specimin_command(project_name: str,
         jar_path_subcommand = " --jarPath" + " " + f"\"{jar_path}\""
 
     command_args = root_dir_subcommand + " " + output_dir_subcommand + " " + target_file_subcommand + " " + target_method_subcommand +  target_field_subcommand + jar_path_subcommand
-    command = "./gradlew" + " " + "run" + " " + "--args=" + f"\'{command_args}\'"
+    
+
+    command = ""
+
+    if not isWindows():
+        command = "./"
+
+    command += "gradlew" + " " + "run" + " " + "--args="
+
+    if isWindows():
+        command_args = command_args.replace("\"", "\'")
+        command += f"\"{command_args}\""
+    else:
+        command += f"\'{command_args}\'"
+
     
     return command
 
@@ -392,7 +416,16 @@ def run_specimin(issue_name, command, directory) -> Result:
 
 
 def pullDependencies(script_path, specimin_path):
-    status = subprocess.run(f"./gradlew -b  {script_path} pullJar", cwd = specimin_path, shell=True)
+    # avoid mixed slashes + convert \ to / for gradlew
+    if isWindows():
+        script_path = os.path.normpath(script_path).replace('\\', '/')
+
+    command = f"gradlew -b {script_path} pullJar"
+
+    if not isWindows():
+        command = f"./{command}"
+    
+    status = subprocess.run(command, cwd = specimin_path, shell=True)
     print(f"Jar pull status = {status.returncode}")
 
 def copyFiles(src_dir, des_dir):
@@ -503,7 +536,16 @@ def performEvaluation(issue_data, isJarMode = False) -> Result:
         # Open the log file in write mode
         min_prgrm_build_status = None
         with open(log_file, "w") as log_file_obj:
-            min_prgrm_build_status = subprocess.run(f"./gradlew -b  {target_gradle_script} compileJava", cwd = specimin_path, shell=True, stderr=log_file_obj)
+            # avoid mixed slashes + convert \ to / for gradlew
+            if isWindows():
+                target_gradle_script = os.path.normpath(target_gradle_script).replace('\\', '/')
+                
+            command = f"gradlew -b  {target_gradle_script} compileJava"
+
+            if not isWindows():
+                command = f"./{command}"
+
+            min_prgrm_build_status = subprocess.run(command, cwd = specimin_path, shell=True, stderr=log_file_obj)
             print(f"{issue_id} Minimized program gradle build status = {min_prgrm_build_status.returncode}")
         if min_prgrm_build_status.returncode == 0:
             print(f"{issue_id} Minimized program gradle build successful. Expected: Fail")
@@ -774,13 +816,17 @@ def compare_crash_log(expected_log_path, actual_log_path, require_stack = True):
                 return True
     return False
 
+def isWindows():
+    op_sys = platform.system()
+    return op_sys == windows_system_identifier
+
 
 def main():
     '''
     Main method of the script. It iterates over the json data and perform minimization for each cases.   
     '''
     op_sys = platform.system()
-    if op_sys != linux_system_identifier and op_sys != macos_system_identifier:
+    if op_sys != linux_system_identifier and op_sys != macos_system_identifier and op_sys != windows_system_identifier:
         print(f"{op_sys} no supported")
         sys.exit(1)
 
