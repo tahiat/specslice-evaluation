@@ -363,10 +363,12 @@ def build_specimin_command(project_name: str,
 
     command = ""
 
-    if not isWindows():
-        command = "./"
+    if isWindows():
+        command = "gradlew.bat"
+    else:
+        command = "./gradlew"
 
-    command += "gradlew" + " " + "run" + " " + "--args="
+    command += " " + "run" + " " + "--args="
 
     if isWindows():
         command_args = command_args.replace("\"", "\'")
@@ -416,14 +418,16 @@ def run_specimin(issue_name, command, directory) -> Result:
 
 
 def pullDependencies(script_path, specimin_path):
+    command = ""
+
     # avoid mixed slashes + convert \ to / for gradlew
     if isWindows():
         script_path = os.path.normpath(script_path).replace('\\', '/')
+        command = "gradlew.bat"
+    else:
+        command = "./gradlew"
 
-    command = f"gradlew -b {script_path} pullJar"
-
-    if not isWindows():
-        command = f"./{command}"
+    command = f"{command} -b {script_path} pullJar"
     
     status = subprocess.run(command, cwd = specimin_path, shell=True)
     print(f"Jar pull status = {status.returncode}")
@@ -536,14 +540,15 @@ def performEvaluation(issue_data, isJarMode = False) -> Result:
         # Open the log file in write mode
         min_prgrm_build_status = None
         with open(log_file, "w") as log_file_obj:
+            command = ""
             # avoid mixed slashes + convert \ to / for gradlew
             if isWindows():
                 target_gradle_script = os.path.normpath(target_gradle_script).replace('\\', '/')
+                command = "gradlew.bat"
+            else:
+                command = "./gradlew"
                 
-            command = f"gradlew -b  {target_gradle_script} compileJava"
-
-            if not isWindows():
-                command = f"./{command}"
+            command = f"{command} -b  {target_gradle_script} compileJava"
 
             min_prgrm_build_status = subprocess.run(command, cwd = specimin_path, shell=True, stderr=log_file_obj)
             print(f"{issue_id} Minimized program gradle build status = {min_prgrm_build_status.returncode}")
