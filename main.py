@@ -65,13 +65,33 @@ def get_specimin_env_var():
     return specimin_env_value
 
 def set_directory_exec_permission(directory_path):
-    current_permissions = os.stat(directory_path).st_mode
-    new_permissions = current_permissions | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH # owner, group, other
-    os.chmod(directory_path, new_permissions)
+    if isWindows():
+        # Code borrowed and modified from https://stackoverflow.com/questions/12168110/how-to-set-folder-permissions-in-windows
+        # Licensed under CC BY-SA 3.0
+        import win32security
+        import ntsecuritycon as con
 
-def download_with_wget(url, save_as):
+        user, _, _ = win32security.LookupAccountName ("", os.getlogin())
+        sd = win32security.GetFileSecurity(directory_path, win32security.DACL_SECURITY_INFORMATION)
+        
+        dacl = sd.GetSecurityDescriptorDacl()
+
+        dacl.AddAccessAllowedAce(win32security.ACL_REVISION, con.FILE_EXECUTE, user)
+
+        sd.SetSecurityDescriptorDacl(1, dacl, 0)
+        win32security.SetFileSecurity(directory_path, win32security.DACL_SECURITY_INFORMATION, sd)
+    else:
+        current_permissions = os.stat(directory_path).st_mode
+        new_permissions = current_permissions | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH # owner, group, other
+        os.chmod(directory_path, new_permissions)
+
+def download_with_wget_or_curl(url, save_as):
     try:
-        subprocess.run(["wget", "-q", "--show-progress", "-O", save_as, url], check=True)
+        # Windows doesn't have wget by default
+        if isWindows():
+            subprocess.run(["curl", "-L", "-o", save_as, url])
+        else:
+            subprocess.run(["wget", "-q", "--show-progress", "-O", save_as, url], check=True)
         print("File downloaded successfully.")
     except subprocess.CalledProcessError as e:
         print("Failed to download file:", e)
@@ -83,11 +103,20 @@ def unzip_file(zip_file):
     with zipfile.ZipFile(zip_file, 'r') as zip_ref:
         zip_ref.extractall()
 
-def extract_and_rename(tar_file, target_name):
-    with tarfile.open(tar_file, "r:gz") as tar:
-        tar.extractall()
-        extracted_dir = tar.getnames()[0]
-        set_directory_exec_permission(extracted_dir)
+def extract_and_rename(tar_or_zip_file, target_name):
+    if isWindows():
+        with zipfile.ZipFile(tar_or_zip_file, 'r') as zip_ref:
+            zip_ref.extractall()
+            extracted_dir = zip_ref.namelist()[0]
+            set_directory_exec_permission(extracted_dir)
+        # Windows doesn't allow overwrite when renaming
+        if os.path.exists(target_name):
+            shutil.rmtree(target_name)
+    else:
+        with tarfile.open(tar_or_zip_file, "r:gz") as tar:
+            tar.extractall()
+            extracted_dir = tar.getnames()[0]
+            set_directory_exec_permission(extracted_dir)
     os.rename(extracted_dir, target_name)
 
 def execute_shell_command_with_logging(command, log_file_path):
@@ -530,9 +559,18 @@ def performEvaluation(issue_data, isJarMode = False) -> Result:
             #../ISSUES/cf-xx/output/projectname/build_log.txt
             log_file = os.path.join(issue_folder_abs_dir, issue_id, specimin_output, repo_name, minimized_program_build_log_file)
 
-        copy_command = f"cp {build_gradle_path} {settings_gradle_path} {gradle_files_destination_path}"
-        subprocess.run(copy_command, shell=True)
-    
+        if isWindows():
+            build_gradle_path = os.path.normpath(build_gradle_path)
+            settings_gradle_path = os.path.normpath(settings_gradle_path)
+            gradle_files_destination_path = os.path.normpath(gradle_files_destination_path)
+            copy_command = f"copy {build_gradle_path} {gradle_files_destination_path}"
+            subprocess.run(copy_command, shell=True)
+            copy_command = f"copy {settings_gradle_path} {gradle_files_destination_path}"
+            subprocess.run(copy_command, shell=True)
+        else:
+            copy_command = f"cp {build_gradle_path} {settings_gradle_path} {gradle_files_destination_path}"
+            subprocess.run(copy_command, shell=True)
+
         if os.path.exists(log_file):
             os.remove(log_file)
 
@@ -565,15 +603,21 @@ def performEvaluation(issue_data, isJarMode = False) -> Result:
             cf_zip = f"{cf_abs_path}.zip"
             full_url = cf_url + "/" + cf_path + "/" + cf_path + ".zip"
             if not os.path.exists(cf_zip):
-                download_with_wget(full_url, cf_zip)
+                download_with_wget_or_curl(full_url, cf_zip)
 
             if os.path.exists(cf_zip) and not os.path.exists(cf_abs_path):
                 unzip_file(cf_zip)
         
-        if build_system == "javac":
-            jdk_template_url = "https://download.oracle.com/java/17/archive/jdk-{version}_{os}-{arch}_bin.tar.gz"
+        if isWindows():
+            if build_system == "javac":
+                jdk_template_url = "https://download.oracle.com/java/17/archive/jdk-{version}_{os}-{arch}_bin.zip"
+            else:
+                jdk_template_url = "https://corretto.aws/downloads/latest/amazon-corretto-{version}-{arch}-{os}-jdk.zip"
         else:
-            jdk_template_url = "https://corretto.aws/downloads/latest/amazon-corretto-{version}-{arch}-{os}-jdk.tar.gz"
+            if build_system == "javac":
+                jdk_template_url = "https://download.oracle.com/java/17/archive/jdk-{version}_{os}-{arch}_bin.tar.gz"
+            else:
+                jdk_template_url = "https://corretto.aws/downloads/latest/amazon-corretto-{version}-{arch}-{os}-jdk.tar.gz"
         
         version = issue_data.get(JsonKeys.JAVA_VERSION.value, "11")
         #TODO: if version is not 8, no need to pull jdk
@@ -586,6 +630,8 @@ def performEvaluation(issue_data, isJarMode = False) -> Result:
             op = "linux"
         elif platform_system == macos_system_identifier:
             op = "macos"
+        elif platform_system == windows_system_identifier:
+            op = "windows"
         else:
             result.set_preservation_status("FAIL", f"{platform_system} not supported")
             raise Exception(f"{platform_system} not supported")
@@ -597,29 +643,41 @@ def performEvaluation(issue_data, isJarMode = False) -> Result:
         else:
             jdk_name = f"amazon-corretto-{version}"
         
-        jdk_tar_name = f"{jdk_name}.tar.gz"
-        jdk_tar_abs_path = os.path.abspath(jdk_tar_name)
+        if isWindows():
+            jdk_file_name = f"{jdk_name}.zip"
+        else:
+            jdk_file_name = f"{jdk_name}.tar.gz"
 
-        if not os.path.exists(jdk_tar_abs_path):
-            download_with_wget(jdk_url, jdk_tar_abs_path)
-        
+        jdk_file_abs_path = os.path.abspath(jdk_file_name)
 
-        if platform_system ==linux_system_identifier:
+        if not os.path.exists(jdk_file_abs_path):
+            download_with_wget_or_curl(jdk_url, jdk_file_abs_path)
+
+        if platform_system == linux_system_identifier:
             extracted_jdk_abs_path = os.path.abspath(jdk_name) #/../amazon-corretto-8
         elif platform_system == macos_system_identifier:
             extracted_jdk_abs_path = os.path.abspath(jdk_name) + ".jdk" #//.//amazon-corretto-8.jdk
+        elif platform_system == windows_system_identifier:
+            extracted_jdk_abs_path = os.path.abspath(jdk_name) #C:\.\amazon-corretto-8
         else:
             raise Exception(f"{platform_system} not supported")
         
         if not os.path.exists(extracted_jdk_abs_path):
             os.makedirs(extracted_jdk_abs_path, exist_ok=True)
-            if os.path.exists(extracted_jdk_abs_path):
-                if build_system == "javac":
-                    with tarfile.open(jdk_tar_abs_path, "r:gz") as tar:
-                            tar.extractall()
-                    set_directory_exec_permission(extracted_jdk_abs_path)
+        if os.path.exists(extracted_jdk_abs_path):
+            if build_system == "javac":
+                if isWindows():
+                    unzip_file(jdk_file_abs_path)
                 else:
-                    extract_and_rename(jdk_tar_abs_path, extracted_jdk_abs_path)
+                    with tarfile.open(jdk_file_abs_path, "r:gz") as tar:
+                        tar.extractall()
+                set_directory_exec_permission(extracted_jdk_abs_path)
+            else:
+                if isWindows():
+                    # Windows doesn't allow overwrite when renaming
+                    if os.path.exists(extracted_jdk_abs_path):
+                        shutil.rmtree(extracted_jdk_abs_path)
+                extract_and_rename(jdk_file_abs_path, extracted_jdk_abs_path)
         # https://checkerframework.org/manual/#external-tools
         # using option 3 for CF invokation with downloaded jdk
         #Option 3: Whenever this document tells you to run javac, instead run checker.jar via java (not javac) as in:
@@ -634,6 +692,11 @@ def performEvaluation(issue_data, isJarMode = False) -> Result:
                 java_path = os.path.join(extracted_jdk_abs_path, "Contents", "Home", "bin", "javac")
             else:
                 java_path = os.path.join(extracted_jdk_abs_path, "Contents", "Home", "bin", "java")
+        elif platform.system() == windows_system_identifier:
+            if build_system == "javac":
+                java_path = os.path.join(extracted_jdk_abs_path, "bin", "javac.exe")
+            else:
+                java_path = os.path.join(extracted_jdk_abs_path, "bin", "java.exe")
         else:
             raise Exception(f"{platform_system} not supported")
 
@@ -664,13 +727,26 @@ def performEvaluation(issue_data, isJarMode = False) -> Result:
             ## generate a shell script and execute that
             print(f"{issue_id}: executing this command to check preservation status: {command_str}")
             ##
-            shell_script = os.path.join(issue_folder_abs_dir, issue_id, specimin_jar_output if isJarMode else specimin_output, repo_name, "build.sh")
+            if isWindows():
+                shell_script = os.path.join(issue_folder_abs_dir, issue_id, specimin_jar_output if isJarMode else specimin_output, repo_name, "build.bat")
+                shell_script = os.path.normpath(shell_script)
+            else:
+                shell_script = os.path.join(issue_folder_abs_dir, issue_id, specimin_jar_output if isJarMode else specimin_output, repo_name, "build.sh")
             with open(shell_script, 'w') as script:
-                script.write("#!/bin/sh\n")
-                script.write(compiler_option + "\n")
-                script.write(command_str + "\n")
+                if isWindows():
+                    script.write("@echo off\n")
+                    # compiler_option is export ___="___", so we want to use set "___=___" instead
+                    script.write(compiler_option.replace("\"", "", 1).replace("export", "set \"") + "\n")
+                    script.write(command_str + "\n")
+                else:
+                    script.write("#!/bin/sh\n")
+                    script.write(compiler_option + "\n")
+                    script.write(command_str + "\n")
             with open(log_file, 'w') as f:
-                st = subprocess.run(["bash", shell_script], stderr=f)
+                if isWindows():
+                    st = subprocess.run(shell_script, stderr=f)
+                else:
+                    st = subprocess.run(["bash", shell_script], stderr=f)
                 if st.returncode == 0:
                     result.set_preservation_status("FAIL", "Min program is not showing issue with modular analyses")
                     return result
@@ -772,7 +848,10 @@ def get_exception_data(log_file: str, require_stack = False):
         crashed_class_name = os.path.basename(class_name_abs_path)
 
         exception_line = -1
-        for i in range(crashed_class_name_line, crashed_class_name_line + 5): # should be immediate next line of crash line
+        # + 10 is necessary for Windows; the error log has random empty lines which we should ignore
+        for i in range(crashed_class_name_line, crashed_class_name_line + 10): # should be immediate next line of crash line
+            if i >= len(lines_of_logs):
+                break
             if lines_of_logs[i].strip().startswith("Exception:"):
                 exception_line = i
                 break
