@@ -673,10 +673,6 @@ def performEvaluation(issue_data, isJarMode = False) -> Result:
                         tar.extractall()
                 set_directory_exec_permission(extracted_jdk_abs_path)
             else:
-                if isWindows():
-                    # Windows doesn't allow overwrite when renaming
-                    if os.path.exists(extracted_jdk_abs_path):
-                        shutil.rmtree(extracted_jdk_abs_path)
                 extract_and_rename(jdk_file_abs_path, extracted_jdk_abs_path)
         # https://checkerframework.org/manual/#external-tools
         # using option 3 for CF invokation with downloaded jdk
