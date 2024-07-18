@@ -169,7 +169,7 @@
             "error_pattern": "error: \\[(.+?)\\]",
             "source_pattern": "(\\.map\\(.*?\\)\\)\\))",
             "found_pattern": "found   : (.*)",
-            "required_pattern": "required: (.*)"
+            "required_pattern": "required: (.*)<IDENTIFIER>"
         },
         "checker_qual_required": false,
         "has_dependency": false
