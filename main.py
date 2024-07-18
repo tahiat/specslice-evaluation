@@ -103,7 +103,7 @@ def extract_and_rename(tar_or_zip_file, target_name):
             tar.extractall()
             extracted_dir = tar.getnames()[0]
             set_directory_exec_permission(extracted_dir)
-            os.rename(extracted_dir, target_name)
+        os.rename(extracted_dir, target_name)
 
 def execute_shell_command_with_logging(command, log_file_path):
     with open(log_file_path, 'w') as f:
@@ -657,16 +657,16 @@ def performEvaluation(issue_data, isJarMode = False) -> Result:
         
         if not os.path.exists(extracted_jdk_abs_path):
             os.makedirs(extracted_jdk_abs_path, exist_ok=True)
-        if os.path.exists(extracted_jdk_abs_path):
-            if build_system == "javac":
-                if isWindows():
-                    unzip_file(jdk_file_abs_path)
+            if os.path.exists(extracted_jdk_abs_path):
+                if build_system == "javac":
+                    if isWindows():
+                        unzip_file(jdk_file_abs_path)
+                    else:
+                        with tarfile.open(jdk_file_abs_path, "r:gz") as tar:
+                            tar.extractall()
+                    set_directory_exec_permission(extracted_jdk_abs_path)
                 else:
-                    with tarfile.open(jdk_file_abs_path, "r:gz") as tar:
-                        tar.extractall()
-                set_directory_exec_permission(extracted_jdk_abs_path)
-            else:
-                extract_and_rename(jdk_file_abs_path, extracted_jdk_abs_path)
+                    extract_and_rename(jdk_file_abs_path, extracted_jdk_abs_path)
         # https://checkerframework.org/manual/#external-tools
         # using option 3 for CF invokation with downloaded jdk
         #Option 3: Whenever this document tells you to run javac, instead run checker.jar via java (not javac) as in:
