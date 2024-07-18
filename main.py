@@ -65,25 +65,9 @@ def get_specimin_env_var():
     return specimin_env_value
 
 def set_directory_exec_permission(directory_path):
-    if isWindows():
-        # Code borrowed and modified from https://stackoverflow.com/questions/12168110/how-to-set-folder-permissions-in-windows
-        # Licensed under CC BY-SA 3.0
-        import win32security
-        import ntsecuritycon as con
-
-        user, _, _ = win32security.LookupAccountName ("", os.getlogin())
-        sd = win32security.GetFileSecurity(directory_path, win32security.DACL_SECURITY_INFORMATION)
-        
-        dacl = sd.GetSecurityDescriptorDacl()
-
-        dacl.AddAccessAllowedAce(win32security.ACL_REVISION, con.FILE_EXECUTE, user)
-
-        sd.SetSecurityDescriptorDacl(1, dacl, 0)
-        win32security.SetFileSecurity(directory_path, win32security.DACL_SECURITY_INFORMATION, sd)
-    else:
-        current_permissions = os.stat(directory_path).st_mode
-        new_permissions = current_permissions | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH # owner, group, other
-        os.chmod(directory_path, new_permissions)
+    current_permissions = os.stat(directory_path).st_mode
+    new_permissions = current_permissions | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH # owner, group, other
+    os.chmod(directory_path, new_permissions)
 
 def download_with_wget_or_curl(url, save_as):
     try:
@@ -112,12 +96,14 @@ def extract_and_rename(tar_or_zip_file, target_name):
         # Windows doesn't allow overwrite when renaming
         if os.path.exists(target_name):
             shutil.rmtree(target_name)
+        # Use shutil.move to prevent Windows permission error with os.rename
+        shutil.move(extracted_dir, target_name)
     else:
         with tarfile.open(tar_or_zip_file, "r:gz") as tar:
             tar.extractall()
             extracted_dir = tar.getnames()[0]
             set_directory_exec_permission(extracted_dir)
-    os.rename(extracted_dir, target_name)
+            os.rename(extracted_dir, target_name)
 
 def execute_shell_command_with_logging(command, log_file_path):
     with open(log_file_path, 'w') as f:
@@ -321,7 +307,13 @@ def build_specimin_command(project_name: str,
         output_dir = os.path.join(target_base_dir_path, specimin_output, project_name, "src", "main", "java")
                                   
     if os.path.exists(output_dir):
-        shutil.rmtree(output_dir)
+        # Add \\?\ to enable long path support for Windows
+        # For long paths (> 260 chars), a [WinError 3] The system cannot find the path specified
+        # error will occur upon deletion
+        if isWindows():
+            shutil.rmtree(rf'\\?\{output_dir}')
+        else:
+            shutil.rmtree(output_dir)
 
     root_dir = os.path.join(target_base_dir_path, specimin_input, project_name, root_dir)
     root_dir = root_dir.rstrip(os.sep) + os.sep
@@ -330,7 +322,8 @@ def build_specimin_command(project_name: str,
     if isWindows():
         output_dir = os.path.normpath(output_dir).replace('\\', '/')
         root_dir = os.path.normpath(root_dir).replace('\\', '/')
-        jar_path = os.path.normpath(jar_path).replace('\\', '/')
+        if jar_path:
+            jar_path = os.path.normpath(jar_path).replace('\\', '/')
 
     target_file_list = []
     target_method_list = []
