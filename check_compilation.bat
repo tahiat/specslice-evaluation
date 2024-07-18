@@ -56,7 +56,7 @@ set LF=^
 
 
 rem TWO empty lines are required
-echo !issue_ids!
+
 for %%t in (!issue_ids!) do (
    set testcase=%%t
    echo Target = !testcase!
