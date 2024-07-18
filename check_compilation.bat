@@ -66,7 +66,17 @@ for %%t in (!issue_ids!) do (
    if "!testcase!"=="jdk-8319461" set continue=1
 
    if !continue!==0 (
-      cd !testcase!\!min_program_dir!\
+      cd !testcase!
+      if !errorlevel!==1 (
+         rem Due to how the specimin CI runs (choosing only a few test cases to run), we should
+         rem ignore test cases which were not run
+         echo !testcase! not found. Ignoring it.
+         set continue=1
+      )
+   )
+
+   if !continue!==0 (
+      cd !min_program_dir!\
       if !errorlevel!==1 (
          set compile_status_json=!compile_status_json!^!LF!  "!testcase!": "FAIL",
          set continue=1
@@ -104,8 +114,8 @@ for %%t in (!issue_ids!) do (
          set compile_status_json=!compile_status_json!^!LF!  "!testcase!": "FAIL",
          set returnval=2
       )
-      cd !issues_root! || exit /b 1
    )
+   cd !issues_root! || exit /b 1
 )
 
 if "!compile_status_json:~-1!"=="," set compile_status_json=!compile_status_json:~0,-1!
