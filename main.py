@@ -765,7 +765,8 @@ def performEvaluation(issue_data, isJarMode = False) -> Result:
         return result
     
     status = False
-    if (JsonKeys.BUG_TYPE.value in issue_data and issue_data[JsonKeys.BUG_TYPE.value] == "crash"):
+    # NullAway issues all use regexes for verification
+    if (not issue_id.startswith("na") and JsonKeys.BUG_TYPE.value in issue_data and issue_data[JsonKeys.BUG_TYPE.value] == "crash"):
         require_stack = issue_data.get("require_stack", False)
         status = compare_crash_log(expected_log_file, log_file, require_stack)
     else:
