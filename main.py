@@ -578,8 +578,11 @@ def performEvaluation(issue_data, isJarMode = False) -> Result:
                 command = "gradlew.bat"
             else:
                 command = "./gradlew"
-                
-            command = f"{command} -b  {target_gradle_script} compileJava"
+            
+            if issue_id.startswith("na"):
+                command = f"{command} -b {target_gradle_script} build"
+            else:
+                command = f"{command} -b {target_gradle_script} compileJava"
 
             min_prgrm_build_status = subprocess.run(command, cwd = specimin_path, shell=True, stderr=log_file_obj)
             print(f"{issue_id} Minimized program gradle build status = {min_prgrm_build_status.returncode}")
@@ -589,17 +592,19 @@ def performEvaluation(issue_data, isJarMode = False) -> Result:
             return result
     else:
         if build_system != "javac":
-            cf_url = issue_data.get("cf_release_url", "")
-            version = issue_data.get("cf_version", "1.9.13")
-            cf_path = f"checker-framework-{version}"
-            cf_abs_path = os.path.abspath(cf_path)
-            cf_zip = f"{cf_abs_path}.zip"
-            full_url = cf_url + "/" + cf_path + "/" + cf_path + ".zip"
-            if not os.path.exists(cf_zip):
-                download_with_wget_or_curl(full_url, cf_zip)
+            # NullAway uses gradle to resolve its dependencies
+            if not issue_id.startswith("na"):
+                cf_url = issue_data.get("release_url", "")
+                version = issue_data.get("version", "1.9.13")
+                cf_path = f"checker-framework-{version}"
+                cf_abs_path = os.path.abspath(cf_path)
+                cf_zip = f"{cf_abs_path}.zip"
+                full_url = cf_url + "/" + cf_path + "/" + cf_path + ".zip"
+                if not os.path.exists(cf_zip):
+                    download_with_wget_or_curl(full_url, cf_zip)
 
-            if os.path.exists(cf_zip) and not os.path.exists(cf_abs_path):
-                unzip_file(cf_zip)
+                if os.path.exists(cf_zip) and not os.path.exists(cf_abs_path):
+                    unzip_file(cf_zip)
         
         if isWindows():
             if build_system == "javac":
@@ -797,6 +802,10 @@ def compare_pattern_data(expected_log_path, actual_log_path, bug_pattern_data):
         if key == "file_pattern":
             expected_content = os.path.basename(expected_content)
             actual_content = [os.path.basename(item) for item in actual_content]
+        
+        # Treat all whitespace the same
+        expected_content = ' '.join(expected_content.split())
+        actual_content = [' '.join(item.split()) for item in actual_content]
 
         if expected_content in actual_content:
             continue

@@ -14,7 +14,7 @@
                 "package": "daikon.chicory"
             }
         ],
-        "cf_version": "2.1.10",
+        "version": "2.1.10",
         "java_version": "",
         "note": "",
         "bug_type": "error",
@@ -43,7 +43,7 @@
                 "package": "net.openhft.chronicle.core.internal"
             }
         ],
-        "cf_version": "3.40.0",
+        "version": "3.40.0",
         "java_version": "17",
         "note": "",
         "bug_type": "crash",
@@ -65,7 +65,7 @@
                 "package": "org.apache.cassandra.index.sasi.conf"
             }
         ],
-        "cf_version": "3.36.0",
+        "version": "3.36.0",
         "java_version": "",
         "note": "",
         "bug_type": "error",
@@ -93,7 +93,7 @@
                 "package": "org.jooq"
             }
         ],
-        "cf_version": "",
+        "version": "",
         "java_version": "",
         "note": "",
         "bug_type": "crash",
@@ -115,7 +115,7 @@
                 "package": "org.apache.cassandra.io.sstable.format"
             }
         ],
-        "cf_version": "3.35.0",
+        "version": "3.35.0",
         "java_version": "11",
         "note": "This issue describes multiple bugs. This is the second one (\"ant cf-only -Dcf.check.only=org/apache/cassandra/io/sstable/format/SSTableScanner.java\"). Based on the comments in the issue, the maintainers could not reproduce the first crash at the time (https://github.com/typetools/checker-framework/issues/6030#issuecomment-1601171591), so there's no reason that we should either.",
         "bug_type": "crash",
@@ -137,7 +137,7 @@
                 "package": "com.fillmore_labs.kafka.sensors.serde.confluent.interop"
             }
         ],
-        "cf_version": "3.35.0",
+        "version": "3.35.0",
         "java_version": "17",
         "note": "",
         "bug_type": "crash",
@@ -160,7 +160,7 @@
                 "package": "net.mtu.eggplant.checker.parser_error"
             }
         ],
-        "cf_version": "3.12.0",
+        "version": "3.12.0",
         "java_version": "11",
         "note": "",
         "bug_type": "false_positive",
@@ -189,7 +189,7 @@
                 "package": "org.apache.calcite.sql.parser"
             }
         ],
-        "cf_version": "3.7.1",
+        "version": "3.7.1",
         "java_version": "",
         "note": "Condsider adding Util.transform method in target method.",
         "bug_type": "crash",
@@ -212,7 +212,7 @@
                 "inner_class": "Splitr"
             }
         ],
-        "cf_version": "1.9.11",
+        "version": "1.9.11",
         "java_version": "8",
         "note": "java.util.stream -> com.example.stream",
         "bug_type": "error",
@@ -225,7 +225,7 @@
         "build_system": "shell",
         "build_flags": ["-processor", "nullness", "-AprintErrorStack"],
         "build_targets": "src/**/*.java",
-        "cf_release_url": "https://github.com/typetools/checker-framework/releases/download",
+        "release_url": "https://github.com/typetools/checker-framework/releases/download",
         "checker_qual_required": true,
         "has_dependency": false
 
@@ -246,7 +246,7 @@
                 "inner_class": "GenerateInvoiceRows"
             }
         ],
-        "cf_version": "3.1.0",
+        "version": "3.1.0",
         "java_version": "11",
         "note": "",
         "bug_type": "error",
@@ -275,7 +275,7 @@
                 "package": "org.apache.calcite.util"
             }
         ],
-        "cf_version": "3.6.0",
+        "version": "3.6.0",
         "java_version": "11",
         "note": "Project build: ./gradlew build. Error should occur on nullness checker",
         "bug_type": "error",
@@ -302,7 +302,7 @@
                 "package": "com.google.common.collect"
             }
         ],
-        "cf_version": "3.0.1",
+        "version": "3.0.1",
         "java_version": "8",
         "note": "",
         "bug_type": "semi_crash",
@@ -333,7 +333,7 @@
                 "inner_class": "GetCheckedTypeValidatorHolder"
             }
         ],
-        "cf_version": "3.0.1",
+        "version": "3.0.1",
         "java_version": "8",
         "note": "",
         "bug_type": "semi_crash",
@@ -362,7 +362,7 @@
                 "inner_class": "CustomMultimap"
             }
         ],
-        "cf_version": "3.0.1",
+        "version": "3.0.1",
         "java_version": "8",
         "note": "",
         "bug_type": "error",
@@ -393,7 +393,7 @@
 		"inner_class": "UnmodifiableNavigableSet"
             }
         ],
-        "cf_version": "1.9.13",
+        "version": "1.9.13",
         "java_version": "8",
         "note": "target method is not confirmed. package name changed.",
         "bug_type": "error",
@@ -407,7 +407,7 @@
         "build_system": "shell",
         "build_flags": ["-processor", "formatter", "-AprintErrorStack"],
         "build_targets": "src/**/*.java",
-        "cf_release_url": "https://github.com/typetools/checker-framework/releases/download",
+        "release_url": "https://github.com/typetools/checker-framework/releases/download",
         "has_dependency": false
     },
     {
@@ -427,7 +427,7 @@
                 "non_primary_class": "SubList"
             }
         ],
-        "cf_version": "1.9.13",
+        "version": "1.9.13",
         "java_version": "8",
         "note": "package java.util changed to com.example",
         "bug_type": "error",
@@ -441,7 +441,7 @@
         "build_system": "shell",
         "build_flags": ["-processor", "guieffect", "-AprintErrorStack"],
         "build_targets": "src/**/*.java",
-        "cf_release_url": "https://github.com/typetools/checker-framework/releases/download",
+        "release_url": "https://github.com/typetools/checker-framework/releases/download",
         "has_dependency": false
     },
     {
@@ -460,7 +460,7 @@
                 "inner_class": "Write"
             }
         ],
-        "cf_version": "3.40.0",
+        "version": "3.40.0",
         "java_version": "17",
         "note": "",
         "bug_type": "crash",
@@ -484,7 +484,7 @@
                 "inner_class": ""
             }
         ],
-        "cf_version": "3.0.1",
+        "version": "3.0.1",
         "java_version": "8",
         "note": "",
         "bug_type": "semi_crash",
@@ -515,7 +515,7 @@
                 "inner_class": ""
             }
         ],
-        "cf_version": "",
+        "version": "",
         "java_version": "21.0.1",
         "note": "",
         "bug_type": "error",
@@ -544,7 +544,7 @@
                 "inner_class": ""
             }
         ],
-        "cf_version": "",
+        "version": "",
         "java_version": "17.0.9",
         "note": "Issue occurs in oracle jdk.",
         "bug_type": "error",
@@ -554,6 +554,368 @@
         },
         "build_system": "javac",
         "compiler_option": "export _JAVA_OPTIONS=\"-XX:+UnlockExperimentalVMOptions -XX:hashCode=2\"",
+        "checker_qual_required": false,
+        "has_dependency": false
+    },
+    {
+        "issue_id" : "na-89",
+        "url": "https://github.com/theron-wang/guava-89.git",
+        "issue_url": "https://github.com/uber/NullAway/issues/89",
+        "test_case_url": "https://github.com/uber/NullAway/blob/e9fc11b92e4f65f428827ccccdcca7da1879b724/nullaway/src/test/resources/com/uber/nullaway/testdata/NullAwayNativeModels.java",
+        "branch": "na-89",
+        "commit_hash": "",
+        "project_name": "guava",
+        "build_command": "",
+        "root_dir": "guava/src/", 
+        "targets": [
+            {
+                "method": "toArray()",
+                "file": "ForwardingCollection.java",
+                "package": "com.google.common.collect",
+                "inner_class": ""
+            }
+        ],
+        "version": "0.2.2",
+        "java_version": "",
+        "note": "Test case is in guavaStuff()",
+        "bug_type": "crash",
+        "release_url": "https://github.com/uber/NullAway/archive/refs/tags",
+        "checker_qual_required": false,
+        "has_dependency": false
+    },
+    {
+        "issue_id" : "na-97",
+        "url": "https://github.com/theron-wang/jdk.git",
+        "issue_url": "https://github.com/uber/NullAway/issues/97",
+        "test_case_url": "https://github.com/uber/NullAway/blob/cd6320bfcac74656e5074916a386e17815742e87/nullaway/src/test/resources/com/uber/nullaway/testdata/NullAwayNegativeCases.java#L49",
+        "branch": "na-97",
+        "commit_hash": "",
+        "project_name": "jdk",
+        "build_command": "",
+        "root_dir": "src/java.base/share/classes/", 
+        "targets": [
+            {
+                "method": "longAccumulate(long, LongBinaryOperator, boolean)",
+                "file": "Striped64.java",
+                "package": "java.util.concurrent.atomic",
+                "inner_class": ""
+            }
+        ],
+        "bug_pattern": {
+            "error_pattern": "error: (.*)",
+            "code_pattern": "if (.*)"
+        },
+        "version": "0.3.0",
+        "java_version": "8",
+        "note": "Test case is in assignmentExpression2()",
+        "bug_type": "false_positive",
+        "release_url": "https://github.com/uber/NullAway/archive/refs/tags",
+        "checker_qual_required": false,
+        "has_dependency": false
+    },
+    {
+        "issue_id" : "na-102",
+        "url": "https://github.com/theron-wang/caffeine.git",
+        "issue_url": "https://github.com/uber/NullAway/issues/102",
+        "test_case_url": "https://github.com/uber/NullAway/blob/9c5760fd85a4b4fe264a25d71a78a077bfb1379d/nullaway/src/test/resources/com/uber/nullaway/testdata/NullAwayNegativeCases.java#L748",
+        "branch": "na-102",
+        "commit_hash": "",
+        "project_name": "caffeine",
+        "build_command": "",
+        "root_dir": "caffeine/src/main/java/", 
+        "targets": [
+            {
+                "method": "iterator()",
+                "file": "AbstractLinkedDeque.java",
+                "package": "com.github.benmanes.caffeine.cache",
+                "inner_class": ""
+            }
+        ],
+        "bug_pattern": {
+            "file_pattern": "(\\w+\\.java)",
+            "error_pattern": "(error:\\s*[\\s\\S]*?)(?=\\s*return)",
+            "code_pattern": "return (.*)"
+        },
+        "version": "0.3.0",
+        "java_version": "",
+        "note": "",
+        "bug_type": "false_positive",
+        "release_url": "https://github.com/uber/NullAway/archive/refs/tags",
+        "checker_qual_required": false,
+        "has_dependency": false
+    },
+    {
+        "issue_id" : "na-103",
+        "url": "https://github.com/theron-wang/caffeine.git",
+        "issue_url": "https://github.com/uber/NullAway/issues/103",
+        "test_case_url": "",
+        "branch": "na-103",
+        "commit_hash": "",
+        "project_name": "caffeine",
+        "build_command": "",
+        "root_dir": "caffeine/src/main/java/", 
+        "targets": [
+            {
+                "method": "evictFromMain(int)",
+                "file": "BoundedLocalCache.java",
+                "package": "com.github.benmanes.caffeine.cache",
+                "inner_class": ""
+            }
+        ],
+        "bug_pattern": {
+            "file_pattern": "(\\w+\\.java)",
+            "error_pattern": "error: (.*)",
+            "code_pattern": "candidate.(.*)"
+        },
+        "version": "0.3.0",
+        "java_version": "",
+        "note": "Issue has not been resolved yet; no test case",
+        "bug_type": "false_positive",
+        "release_url": "https://github.com/uber/NullAway/archive/refs/tags",
+        "checker_qual_required": false,
+        "has_dependency": false
+    },
+    {
+        "issue_id" : "na-176",
+        "url": "https://github.com/theron-wang/dropwizard.git",
+        "issue_url": "https://github.com/uber/NullAway/issues/176",
+        "test_case_url": "https://github.com/subarnob/NullAway/blob/d021221dbdd551d362fd361191b02f069a5414ae/nullaway/src/test/java/com/uber/nullaway/NullAwayTest.java#L756",
+        "branch": "na-176",
+        "commit_hash": "",
+        "project_name": "dropwizard",
+        "build_command": "",
+        "root_dir": "dropwizard-hibernate/src/test/java/", 
+        "targets": [
+            {
+                "method": "setUp()",
+                "file": "UnitOfWorkAwareProxyFactoryTest.java",
+                "package": "io.dropwizard.hibernate",
+                "inner_class": ""
+            }
+        ],
+        "bug_pattern": {
+            "error_pattern": "\\s*Stack Trace:\\n(.*)"
+        },
+        "version": "0.4.6",
+        "java_version": "",
+        "note": "",
+        "bug_type": "crash",
+        "release_url": "https://github.com/uber/NullAway/archive/refs/tags",
+        "checker_qual_required": false,
+        "has_dependency": false
+    },
+    {
+        "issue_id" : "na-323",
+        "url": "https://github.com/theron-wang/Issue323.git",
+        "issue_url": "https://github.com/uber/NullAway/issues/323",
+        "test_case_url": "https://github.com/uber/NullAway/blob/4f5cc7a21ae0ac9ccb161b9fc013dd83bafb8567/nullaway/src/test/resources/com/uber/nullaway/testdata/CheckFieldInitNegativeCases.java#L175",
+        "branch": "na-323",
+        "commit_hash": "",
+        "project_name": "cogvio",
+        "build_command": "",
+        "root_dir": "src/main/java/", 
+        "targets": [
+            {
+                "method": "MutableClock(Instant, ZoneId)",
+                "file": "MutableClock.java",
+                "package": "com.cogvio.time",
+                "inner_class": ""
+            }
+        ],
+        "bug_pattern": {
+            "file_pattern": "(\\w+\\.java)",
+            "error_pattern": "[NullAway] (.*)"
+        },
+        "version": "0.7.3",
+        "java_version": "",
+        "note": "",
+        "bug_type": "false_positive",
+        "release_url": "https://github.com/uber/NullAway/archive/refs/tags",
+        "checker_qual_required": false,
+        "has_dependency": false
+    },
+    {
+        "issue_id" : "na-347",
+        "url": "https://github.com/theron-wang/otr4j.git",
+        "issue_url": "https://github.com/uber/NullAway/issues/347",
+        "test_case_url": "https://github.com/uber/NullAway/blob/d384f6e810f55e45a4787b8350f64490071913e4/nullaway/src/test/resources/com/uber/nullaway/testdata/ReadBeforeInitNegativeCases.java#L279",
+        "branch": "na-347",
+        "commit_hash": "",
+        "project_name": "otr4j",
+        "build_command": "",
+        "root_dir": "src/main/java/", 
+        "targets": [
+            {
+                "method": "SignatureX(DSAPublicKey, int, byte[])",
+                "file": "SignatureX.java",
+                "package": "net.java.otr4j.messages",
+                "inner_class": ""
+            }
+        ],
+        "bug_pattern": {
+            "file_pattern": "(\\w+\\.java)",
+            "error_pattern": "[NullAway] (.*)"
+        },
+        "version": "0.7.5",
+        "java_version": "",
+        "note": "",
+        "bug_type": "false_positive",
+        "release_url": "https://github.com/uber/NullAway/archive/refs/tags",
+        "checker_qual_required": false,
+        "has_dependency": false
+    },
+    {
+        "issue_id" : "na-389",
+        "url": "https://github.com/theron-wang/acs-aem-commons.git",
+        "issue_url": "https://github.com/uber/NullAway/issues/389",
+        "test_case_url": "https://github.com/uber/NullAway/blob/47f8d7b9eb0381c373839c0e8151a7f6b2142a14/nullaway/src/test/java/com/uber/nullaway/NullAwayTest.java#L2365",
+        "branch": "na-389",
+        "commit_hash": "",
+        "project_name": "acs-aem-commons",
+        "build_command": "",
+        "root_dir": "bundle/src/main/java/", 
+        "targets": [
+            {
+                "method": "getStatistics()",
+                "file": "ActionManagerFactoryImpl.java",
+                "package": "com.adobe.acs.commons.fam.impl",
+                "inner_class": ""
+            }
+        ],
+        "bug_pattern": {
+            "file_pattern": "(\\w+\\.java)",
+            "error_pattern": "error: (.*)",
+            "code_pattern": "stats\\.(.*)"
+        },
+        "version": "0.7.9",
+        "java_version": "",
+        "note": "",
+        "bug_type": "crash",
+        "release_url": "https://github.com/uber/NullAway/archive/refs/tags",
+        "checker_qual_required": false,
+        "has_dependency": false
+    },
+    {
+        "issue_id" : "na-705",
+        "url": "https://github.com/theron-wang/caffeine.git",
+        "issue_url": "https://github.com/uber/NullAway/issues/705",
+        "test_case_url": "https://github.com/uber/NullAway/issues/705#issuecomment-1368082909",
+        "branch": "na-705",
+        "commit_hash": "",
+        "project_name": "caffeine",
+        "build_command": "",
+        "root_dir": "guava/src/main/java/", 
+        "targets": [
+            {
+                "method": "",
+                "field": "entrySet",
+                "file": "CaffeinatedGuavaCache.java",
+                "package": "com.github.benmanes.caffeine.guava",
+                "inner_class": "AsMapView"
+            }
+        ],
+        "bug_pattern": {
+            "file_pattern": "(\\w+\\.java)",
+            "error_pattern": "warning: (.*)"
+        },
+        "version": "0.10.6",
+        "java_version": "11",
+        "note": "",
+        "bug_type": "false_positive",
+        "release_url": "https://github.com/uber/NullAway/archive/refs/tags",
+        "checker_qual_required": false,
+        "has_dependency": false
+    },
+    {
+        "issue_id" : "na-705",
+        "url": "https://github.com/theron-wang/caffeine.git",
+        "issue_url": "https://github.com/uber/NullAway/issues/705",
+        "test_case_url": "https://github.com/uber/NullAway/issues/705#issuecomment-1368082909",
+        "branch": "na-705",
+        "commit_hash": "",
+        "project_name": "caffeine",
+        "build_command": "",
+        "root_dir": "guava/src/main/java/", 
+        "targets": [
+            {
+                "method": "",
+                "field": "entrySet",
+                "file": "CaffeinatedGuavaCache.java",
+                "package": "com.github.benmanes.caffeine.guava",
+                "inner_class": "AsMapView"
+            }
+        ],
+        "bug_pattern": {
+            "file_pattern": "(\\w+\\.java)",
+            "error_pattern": "warning: (.*)"
+        },
+        "version": "0.10.6",
+        "java_version": "11",
+        "note": "",
+        "bug_type": "false_positive",
+        "release_url": "https://github.com/uber/NullAway/archive/refs/tags",
+        "checker_qual_required": false,
+        "has_dependency": false
+    },
+    {
+        "issue_id" : "na-791a",
+        "url": "https://github.com/theron-wang/caffeine.git",
+        "issue_url": "https://github.com/uber/NullAway/issues/791",
+        "test_case_url": "https://github.com/uber/NullAway/issues/791#issuecomment-1650227291",
+        "branch": "na-791a",
+        "commit_hash": "",
+        "project_name": "caffeine",
+        "build_command": "",
+        "root_dir": "caffeine/src/main/java/", 
+        "targets": [
+            {
+                "method": "getEvictionListener(boolean)",
+                "file": "Caffeine.java",
+                "package": "com.github.benmanes.caffeine.cache",
+                "inner_class": ""
+            }
+        ],
+        "bug_pattern": {
+            "file_pattern": "(\\w+\\.java)",
+            "code_pattern": "? new (.*)",
+            "error_pattern": "\\s*Stack Trace:\\n(.*)"
+        },
+        "version": "0.10.11",
+        "java_version": "",
+        "note": "",
+        "bug_type": "crash",
+        "release_url": "https://github.com/uber/NullAway/archive/refs/tags",
+        "checker_qual_required": false,
+        "has_dependency": false
+    },
+    {
+        "issue_id" : "na-791b",
+        "url": "https://github.com/theron-wang/caffeine.git",
+        "issue_url": "https://github.com/uber/NullAway/issues/791",
+        "test_case_url": "https://github.com/uber/NullAway/blob/4af912ddd49f6c674b6853fb395e0d4b8974e3d7/nullaway/src/test/java/com/uber/nullaway/NullAwayJSpecifyGenericsTests.java#L1526",
+        "branch": "na-791b",
+        "commit_hash": "",
+        "project_name": "caffeine",
+        "build_command": "",
+        "root_dir": "caffeine/src/javaPoet/java/", 
+        "targets": [
+            {
+                "method": "getFeatures(List<Object>)",
+                "file": "NodeFactoryGenerator.java",
+                "package": "com.github.benmanes.caffeine.cache",
+                "inner_class": ""
+            }
+        ],
+        "bug_pattern": {
+            "file_pattern": "(\\w+\\.java)",
+            "code_pattern": "features.(.*)",
+            "error_pattern": "\\s*Stack Trace:\\n(.*)"
+        },
+        "version": "0.10.12",
+        "java_version": "",
+        "note": "",
+        "bug_type": "crash",
+        "release_url": "https://github.com/uber/NullAway/archive/refs/tags",
         "checker_qual_required": false,
         "has_dependency": false
     }

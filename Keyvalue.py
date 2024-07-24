@@ -13,7 +13,7 @@ class JsonKeys(Enum):
     METHOD_NAME = 'method'
     FIELD_NAME = 'field'
     FILE_NAME = 'file'
-    CF_Version = 'cf_version'
+    Version = 'version'
     JAVA_VERSION = 'java_version'
     NOTE = 'note'
     INNER_CLASS = 'inner_class'
