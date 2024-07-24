@@ -877,7 +877,7 @@
         ],
         "bug_pattern": {
             "file_pattern": "(\\w+\\.java)",
-            "code_pattern": "? new (.*)",
+            "code_pattern": "\\? new (.*)",
             "error_pattern": "\\s*Stack Trace:\\n(.*)"
         },
         "version": "0.10.11",
@@ -908,7 +908,7 @@
         ],
         "bug_pattern": {
             "file_pattern": "(\\w+\\.java)",
-            "code_pattern": "features.(.*)",
+            "code_pattern": "features\\.(.*)",
             "error_pattern": "\\s*Stack Trace:\\n(.*)"
         },
         "version": "0.10.12",
