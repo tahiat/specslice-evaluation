@@ -75,7 +75,7 @@ def download_with_wget_or_curl(url, save_as):
         if isWindows():
             subprocess.run(["curl", "-L", "-o", save_as, url])
         else:
-            subprocess.run(["wget", "-q", "--show-progress", "-O", save_as, url], check=True)
+            subprocess.run(["wget", "-q", "-O", save_as, url], check=True)
         print("File downloaded successfully.")
     except subprocess.CalledProcessError as e:
         print("Failed to download file:", e)
@@ -786,6 +786,15 @@ def compare_pattern_data(expected_log_path, actual_log_path, bug_pattern_data):
 
     with open(actual_log_path, "r") as file:
         actual_log_file_content = file.read()
+    
+    print('expected:')
+    print(expected_log_file_content)
+
+    print()
+
+    print('actual:')
+    print(actual_log_file_content)
+    print()
 
     #Algorithm steps:
     #1.extract data from expected log file. One matched item should be there since only desired log information is in expected log file
