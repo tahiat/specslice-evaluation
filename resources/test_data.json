@@ -827,37 +827,6 @@
         "has_dependency": false
     },
     {
-        "issue_id" : "na-705",
-        "url": "https://github.com/theron-wang/caffeine.git",
-        "issue_url": "https://github.com/uber/NullAway/issues/705",
-        "test_case_url": "https://github.com/uber/NullAway/issues/705#issuecomment-1368082909",
-        "branch": "na-705",
-        "commit_hash": "",
-        "project_name": "caffeine",
-        "build_command": "",
-        "root_dir": "guava/src/main/java/", 
-        "targets": [
-            {
-                "method": "",
-                "field": "entrySet",
-                "file": "CaffeinatedGuavaCache.java",
-                "package": "com.github.benmanes.caffeine.guava",
-                "inner_class": "AsMapView"
-            }
-        ],
-        "bug_pattern": {
-            "file_pattern": "(\\w+\\.java)",
-            "error_pattern": "warning: (.*)"
-        },
-        "version": "0.10.6",
-        "java_version": "11",
-        "note": "",
-        "bug_type": "false_positive",
-        "release_url": "https://github.com/uber/NullAway/archive/refs/tags",
-        "checker_qual_required": false,
-        "has_dependency": false
-    },
-    {
         "issue_id" : "na-791a",
         "url": "https://github.com/theron-wang/caffeine.git",
         "issue_url": "https://github.com/uber/NullAway/issues/791",
