@@ -102,6 +102,7 @@ jobs:
           python main.py --debug cf-577
           python main.py --debug cf-691
           python main.py --debug cf-4614
+          python main.py --debug na-97
         shell: cmd
       - name: Compile minimized programs
         run: |
