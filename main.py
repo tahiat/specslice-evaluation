@@ -292,7 +292,7 @@ def build_specimin_command(project_name: str,
         project_name (str): Name of the target project. Example: daikon
         target_base_dir (str): path of the target project directory. Ex: ISSUES/cf-1291
         root_dir (str): A directory path relative to the project base directory where java package stored.
-        targets ({'method': '' or 'field': '', 'file': '', 'package': ''}) : target java file and method/field name data
+        targets ({'method': '' or 'field': '', 'file': '', 'package': '', 'model' : ''}) : target java file, modularity model, and method/field name data
     
     Retruns:
         command (str): The gradle command of SPECIMIN for the issue.
@@ -335,6 +335,7 @@ def build_specimin_command(project_name: str,
         field_name = target.get(JsonKeys.FIELD_NAME.value)
         file_name = target[JsonKeys.FILE_NAME.value]
         package_name = target[JsonKeys.PACKAGE.value]
+        modularity_model = target[JsonKeys.MODEL.value]
 
         dot_replaced_package_name = package_name.replace('.', '/')
 
@@ -380,7 +381,11 @@ def build_specimin_command(project_name: str,
     if jar_path:
         jar_path_subcommand = " --jarPath" + " " + f"\"{jar_path}\""
 
-    command_args = root_dir_subcommand + " " + output_dir_subcommand + " " + target_file_subcommand + " " + target_method_subcommand +  target_field_subcommand + jar_path_subcommand
+    model_subcommand = ""
+    if modularity_model:
+        model_subcommand = " --modularityModel " + f"\"{modularity_model}\""
+
+    command_args = root_dir_subcommand + " " + output_dir_subcommand + " " + model_subcommand + " " + target_file_subcommand + " " + target_method_subcommand +  target_field_subcommand + jar_path_subcommand
     
 
     command = ""

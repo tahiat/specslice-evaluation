@@ -11,7 +11,8 @@
             {
                 "method": "executePureMethod(Method, Object, Object[])",
                 "file": "PureMethodInfo.java",
-                "package": "daikon.chicory"
+                "package": "daikon.chicory",
+                "model": "cf"
             }
         ],
         "version": "2.1.10",
@@ -40,7 +41,8 @@
             {
                 "method": "setAccessible(AccessibleObject)",
                 "file": "ClassUtil.java",
-                "package": "net.openhft.chronicle.core.internal"
+                "package": "net.openhft.chronicle.core.internal",
+                "model": "cf"
             }
         ],
         "version": "3.40.0",
@@ -62,7 +64,8 @@
             {
                 "method": "getMode(ColumnMetadata, Map<String, String>)",
                 "file": "IndexMode.java",
-                "package": "org.apache.cassandra.index.sasi.conf"
+                "package": "org.apache.cassandra.index.sasi.conf",
+                "model": "cf"
             }
         ],
         "version": "3.36.0",
@@ -90,7 +93,8 @@
             {
                 "method": "spliterator()",
                 "file": "ResultQuery.java",
-                "package": "org.jooq"
+                "package": "org.jooq",
+                "model": "cf"
             }
         ],
         "version": "",
@@ -112,7 +116,8 @@
             {
                 "method": "hasNext()",
                 "file": "SSTableScanner.java",
-                "package": "org.apache.cassandra.io.sstable.format"
+                "package": "org.apache.cassandra.io.sstable.format",
+                "model": "cf"
             }
         ],
         "version": "3.35.0",
@@ -134,7 +139,8 @@
             {
                 "method": "transform(String, byte[])",
                 "file": "Avro2Confluent.java",
-                "package": "com.fillmore_labs.kafka.sensors.serde.confluent.interop"
+                "package": "com.fillmore_labs.kafka.sensors.serde.confluent.interop",
+                "model": "cf"
             }
         ],
         "version": "3.35.0",
@@ -157,7 +163,8 @@
             {
                 "method": "method()",
                 "file": "Version.java",
-                "package": "net.mtu.eggplant.checker.parser_error"
+                "package": "net.mtu.eggplant.checker.parser_error",
+                "model": "cf"
             }
         ],
         "version": "3.12.0",
@@ -186,7 +193,8 @@
             {
                 "method": "toPos(Iterable<? extends SqlNode>)",
                 "file": "SqlParserPos.java",
-                "package": "org.apache.calcite.sql.parser"
+                "package": "org.apache.calcite.sql.parser",
+                "model": "cf"
             }
         ],
         "version": "3.7.1",
@@ -209,7 +217,8 @@
                 "method": "arrayForOne(int[], int, IntConsumer)",
                 "file": "IncomparableTypes.java",
                 "package": "com.example.stream",
-                "inner_class": "Splitr"
+                "inner_class": "Splitr",
+                "model": "cf"
             }
         ],
         "version": "1.9.11",
@@ -243,7 +252,8 @@
                 "method": "expand(PCollection<BillingEvent>)",
                 "file": "InvoicingPipeline.java",
                 "package": "google.registry.beam.invoicing",
-                "inner_class": "GenerateInvoiceRows"
+                "inner_class": "GenerateInvoiceRows",
+                "model": "cf"
             }
         ],
         "version": "3.1.0",
@@ -272,7 +282,8 @@
             {
                 "method": "equals(Object)",
                 "file": "ImmutableIntList.java",
-                "package": "org.apache.calcite.util"
+                "package": "org.apache.calcite.util",
+                "model": "cf"
             }
         ],
         "version": "3.6.0",
@@ -299,7 +310,8 @@
             {
                 "method": "checkedEntry(Entry<Class<? extends B>, B>)",
                 "file": "MutableClassToInstanceMap.java",
-                "package": "com.google.common.collect"
+                "package": "com.google.common.collect",
+                "model": "cf"
             }
         ],
         "version": "3.0.1",
@@ -330,7 +342,8 @@
                 "method": "getBestValidator()",
                 "file": "FuturesGetChecked.java",
                 "package": "com.google.common.util.concurrent",
-                "inner_class": "GetCheckedTypeValidatorHolder"
+                "inner_class": "GetCheckedTypeValidatorHolder",
+                "model": "cf"
             }
         ],
         "version": "3.0.1",
@@ -359,7 +372,8 @@
                 "method": "wrapCollection(K, Collection<V>)",
                 "file": "Multimaps.java",
                 "package": "com.google.common.collect",
-                "inner_class": "CustomMultimap"
+                "inner_class": "CustomMultimap",
+                "model": "cf"
             }
         ],
         "version": "3.0.1",
@@ -386,11 +400,12 @@
         "root_dir": "", 
         "targets": [
             {
-		"method": "",
+                "method": "",
                 "field": "EMPTY_NAVIGABLE_SET",
                 "file": "Collections.java",
                 "package": "com.example",
-		"inner_class": "UnmodifiableNavigableSet"
+                "inner_class": "UnmodifiableNavigableSet",
+                "model": "cf"
             }
         ],
         "version": "1.9.13",
@@ -424,7 +439,8 @@
                 "file": "AbstractList.java",
                 "package": "com.example",
                 "inner_class": "",
-                "non_primary_class": "SubList"
+                "non_primary_class": "SubList",
+                "model": "cf"
             }
         ],
         "version": "1.9.13",
@@ -457,7 +473,8 @@
                 "method": "via(Contextful<Fn<UserT, OutputT>>, Contextful<Fn<DestinationT, Sink<OutputT>>>)",
                 "file": "FileIO.java",
                 "package": "org.apache.beam.sdk.io",
-                "inner_class": "Write"
+                "inner_class": "Write",
+                "model": "cf"
             }
         ],
         "version": "3.40.0",
@@ -481,7 +498,8 @@
                 "method": "difference(Map<? extends K, ? extends V>, Map<? extends K, ? extends V>, Equivalence<? super V>)",
                 "file": "Maps.java",
                 "package": "com.google.common.collect",
-                "inner_class": ""
+                "inner_class": "",
+                "model": "javac"
             }
         ],
         "version": "3.0.1",
@@ -512,7 +530,8 @@
                 "method": "create(Class<P>, Class<V>, String, PropertyMetadata<V>)",
                 "file": "PropertyFactoryManager.java",
                 "package": "io.github.mmm.property.factory",
-                "inner_class": ""
+                "inner_class": "",
+                "model": "javac"
             }
         ],
         "version": "",
@@ -541,7 +560,8 @@
                 "method": "simpleFieldValues(String, Class<T>, Iterable<?>)",
                 "file": "FieldSupport.java",
                 "package": "org.assertj.core.util.introspection",
-                "inner_class": ""
+                "inner_class": "",
+                "model": "javac"
             }
         ],
         "version": "",
@@ -572,7 +592,8 @@
                 "method": "toArray()",
                 "file": "ForwardingCollection.java",
                 "package": "com.google.common.collect",
-                "inner_class": ""
+                "inner_class": "",
+                "model": "nullaway"
             }
         ],
         "version": "0.2.2",
@@ -598,7 +619,8 @@
                 "method": "longAccumulate(long, LongBinaryOperator, boolean)",
                 "file": "Striped64.java",
                 "package": "java.util.concurrent.atomic",
-                "inner_class": ""
+                "inner_class": "",
+                "model": "nullaway"
             }
         ],
         "bug_pattern": {
@@ -628,7 +650,8 @@
                 "method": "iterator()",
                 "file": "AbstractLinkedDeque.java",
                 "package": "com.github.benmanes.caffeine.cache",
-                "inner_class": ""
+                "inner_class": "",
+                "model": "nullaway"
             }
         ],
         "bug_pattern": {
@@ -659,7 +682,8 @@
                 "method": "evictFromMain(int)",
                 "file": "BoundedLocalCache.java",
                 "package": "com.github.benmanes.caffeine.cache",
-                "inner_class": ""
+                "inner_class": "",
+                "model": "nullaway"
             }
         ],
         "bug_pattern": {
@@ -690,7 +714,8 @@
                 "method": "setUp()",
                 "file": "UnitOfWorkAwareProxyFactoryTest.java",
                 "package": "io.dropwizard.hibernate",
-                "inner_class": ""
+                "inner_class": "",
+                "model": "nullaway"
             }
         ],
         "bug_pattern": {
@@ -719,12 +744,13 @@
                 "method": "MutableClock(Instant, ZoneId)",
                 "file": "MutableClock.java",
                 "package": "com.cogvio.time",
-                "inner_class": ""
+                "inner_class": "",
+                "model": "nullaway"
             }
         ],
         "bug_pattern": {
             "file_pattern": "(\\w+\\.java)",
-            "error_pattern": "[NullAway] (.*)"
+            "error_pattern": "\\[NullAway\\] initializer (.*)"
         },
         "version": "0.7.3",
         "java_version": "",
@@ -749,12 +775,13 @@
                 "method": "SignatureX(DSAPublicKey, int, byte[])",
                 "file": "SignatureX.java",
                 "package": "net.java.otr4j.messages",
-                "inner_class": ""
+                "inner_class": "",
+                "model": "nullaway"
             }
         ],
         "bug_pattern": {
             "file_pattern": "(\\w+\\.java)",
-            "error_pattern": "[NullAway] (.*)"
+            "error_pattern": "\\[NullAway\\] (.*)"
         },
         "version": "0.7.5",
         "java_version": "",
@@ -779,7 +806,8 @@
                 "method": "getStatistics()",
                 "file": "ActionManagerFactoryImpl.java",
                 "package": "com.adobe.acs.commons.fam.impl",
-                "inner_class": ""
+                "inner_class": "",
+                "model": "nullaway"
             }
         ],
         "bug_pattern": {
@@ -811,7 +839,8 @@
                 "field": "entrySet",
                 "file": "CaffeinatedGuavaCache.java",
                 "package": "com.github.benmanes.caffeine.guava",
-                "inner_class": "AsMapView"
+                "inner_class": "AsMapView",
+                "model": "nullaway"
             }
         ],
         "bug_pattern": {
@@ -841,7 +870,8 @@
                 "method": "getEvictionListener(boolean)",
                 "file": "Caffeine.java",
                 "package": "com.github.benmanes.caffeine.cache",
-                "inner_class": ""
+                "inner_class": "",
+                "model": "nullaway"
             }
         ],
         "bug_pattern": {
@@ -872,7 +902,8 @@
                 "method": "getFeatures(List<Object>)",
                 "file": "NodeFactoryGenerator.java",
                 "package": "com.github.benmanes.caffeine.cache",
-                "inner_class": ""
+                "inner_class": "",
+                "model": "nullaway"
             }
         ],
         "bug_pattern": {

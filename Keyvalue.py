@@ -21,3 +21,4 @@ class JsonKeys(Enum):
     BUG_TYPE = 'bug_type'
     CHECKER_QUAL_REQURIED = 'checker_qual_required'
     BUG_PATTERN = 'bug_pattern'
+    MODEL = 'model'
